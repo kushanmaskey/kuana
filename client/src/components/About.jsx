@@ -45,19 +45,20 @@ export default function About() {
           </div>
           <div className="bg-gradient-to-br from-[#0e1b4d] to-[#060c22] rounded-2xl p-8 text-white">
             <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-16 w-auto object-contain mb-4" />
-            <div className="text-2xl font-bold mb-4">Kathmandu University</div>
+            <div className="text-2xl font-bold mb-4">Kathmandu University Alumni, North America (KUANA)</div>
             <p className="text-white/80 text-sm leading-relaxed mb-6">
-              Established in 1991, Kathmandu University is a public, autonomous, non-profit, non-governmental
-              institution of higher learning in Nepal, dedicated to quality education for leadership.
+              Formed in 2023, is a non-profit organization of alumni of Kathmandu University, Nepal, located
+              in North America. We are recognized by the IRS, under section 501(c)(3) code, as a Tax Exempt
+              organization.
             </p>
             <div className="grid grid-cols-2 gap-4 mt-6">
               <div className="text-center bg-white/10 rounded-xl p-4">
-                <div className="text-[#ffc31d] font-bold text-2xl">1991</div>
+                <div className="text-[#ffc31d] font-bold text-2xl">2023</div>
                 <div className="text-white/70 text-xs mt-1">Founded</div>
               </div>
               <div className="text-center bg-white/10 rounded-xl p-4">
-                <div className="text-[#ffc31d] font-bold text-2xl">Dhulikhel</div>
-                <div className="text-white/70 text-xs mt-1">Bagmati, Nepal</div>
+                <div className="text-[#ffc31d] font-bold text-2xl">501(c)(3)</div>
+                <div className="text-white/70 text-xs mt-1">IRS Tax Exempt</div>
               </div>
             </div>
           </div>
