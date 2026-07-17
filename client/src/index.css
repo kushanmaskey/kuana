@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-maroon-50: #fdf2f2;
+  --color-maroon-100: #fce4e4;
+  --color-maroon-200: #facece;
+  --color-maroon-300: #f5a0a0;
+  --color-maroon-400: #ee6464;
+  --color-maroon-500: #e23030;
+  --color-maroon-600: #c01010;
+  --color-maroon-700: #dc143c;
+  --color-maroon-800: #b01030;
+  --color-maroon-900: #0e1b4d;
+  --color-gold-400: #ffd54f;
+  --color-gold-500: #ffc31d;
+  --color-gold-600: #e6aa00;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+}
+
+#root {
+  width: 100%;
+  text-align: left;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s ease-out forwards;
+}
+
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #ffc31d;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
