@@ -43,8 +43,8 @@ export default function Hero() {
             Connecting KU graduates across the United States and Canada.
             One community. One mission. Reuniting every two years.
           </p>
-          <p className="text-[#ffc31d]/90 text-base font-medium mb-12">
-            Next Reunion &bull; Aug 30–31, 2027 &bull; Boston, MA
+          <p className="text-[#ffc31d]/90 text-3xl md:text-4xl font-bold mb-12">
+            Reunion 2027<br />Boston, MA
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -70,7 +70,7 @@ export default function Hero() {
           {[
             { value: '500+', label: 'Alumni Members' },
             { value: '2', label: 'Reunions Held' },
-            { value: '2027', label: 'Next Reunion' },
+            { value: '2027', label: 'Reunion 2027' },
           ].map((stat) => (
             <div key={stat.label}>
               <div className="text-[#ffc31d] font-bold text-xl md:text-2xl">{stat.value}</div>
