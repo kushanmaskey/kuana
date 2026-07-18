@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { sendContactNotification } = require('../mailer');
 
 const router = express.Router();
 
@@ -26,10 +27,24 @@ router.post('/', contactLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Input too long' });
   }
   try {
+    const trimmedName    = name.trim();
+    const trimmedEmail   = email.trim().toLowerCase();
+    const trimmedSubject = subject?.trim();
+    const trimmedMessage = message.trim();
+
     await pool.query(
       'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1,$2,$3,$4)',
-      [name.trim(), email.trim().toLowerCase(), subject?.trim(), message.trim()]
+      [trimmedName, trimmedEmail, trimmedSubject, trimmedMessage]
     );
+
+    // Send email notification — non-blocking so a mail failure doesn't break the response
+    sendContactNotification({
+      name: trimmedName,
+      email: trimmedEmail,
+      subject: trimmedSubject,
+      message: trimmedMessage,
+    }).catch((err) => console.error('Mail error:', err.message));
+
     res.json({ success: true, message: 'Your message has been received. We will get back to you soon!' });
   } catch {
     res.status(500).json({ error: 'Server error' });
