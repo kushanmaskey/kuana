@@ -29,6 +29,9 @@ export default function About() {
         <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Mission</h3>
+            <p className="text-gray-900 font-bold text-lg leading-relaxed mb-4">
+              Honoring KU Spirit, Strengthening the Alumni Network
+            </p>
             <p className="text-gray-600 leading-relaxed mb-4">
               As we have branched out from the same trunk, it is high time we reconnect, re-network, rewind old
               memories and bring it back to life by joining hands together.
@@ -96,7 +99,7 @@ export default function About() {
             ))}
           </div>
           <p className="text-center text-gray-400 text-sm mt-8">
-            Board members for the 2025–2027 term will be announced following the Boston, MA reunion.
+            Board members for the &ldquo;Reunion 2027&rdquo; will be announced soon.
           </p>
         </div>
       </div>
