@@ -64,6 +64,11 @@ export default function Donate() {
           <p className="text-gray-600 max-w-xl mx-auto">
             Your donations fund reunions, scholarships, and support for Kathmandu University's mission.
           </p>
+          <div className="mt-4 inline-flex items-center gap-2 bg-gradient-to-r from-[#ffc31d] to-[#f59e0b] text-[#0e1b4d] font-black text-sm px-4 py-2 rounded-full shadow-lg shadow-[#ffc31d]/40 ring-2 ring-[#ffc31d]/60 tracking-wide">
+            <span>★</span>
+            <span>IRS Recognized 501(c)(3) Non-Profit</span>
+            <span>★</span>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start">
