@@ -5,15 +5,20 @@ const NAV_ITEMS = [
   { label: 'Home', id: 'home' },
   { label: 'About', id: 'about' },
   { label: 'Events', id: 'events', dropdown: [
-    { label: 'Upcoming Event', filter: 'upcoming', event: 'kuana:events-filter' },
-    { label: 'Past Events', filter: 'past', event: 'kuana:events-filter' },
+    { label: '2027 — Boston, MA', filter: '2027', event: 'kuana:events-year', badge: 'Upcoming' },
+    { label: '2025 — Lewisville, TX', filter: '2025', event: 'kuana:events-year' },
+    { label: '2023 — Trophy Club, TX', filter: '2023', event: 'kuana:events-year' },
   ]},
   { label: 'Speakers', id: 'speakers', dropdown: [
     { label: '2027 — Boston, MA', filter: '2027', event: 'kuana:speakers-year', badge: 'Upcoming' },
     { label: '2025 — Lewisville, TX', filter: '2025', event: 'kuana:speakers-year' },
     { label: '2023 — Trophy Club, TX', filter: '2023', event: 'kuana:speakers-year' },
   ]},
-  { label: 'Media', id: 'media' },
+  { label: 'Media', id: 'media', dropdown: [
+    { label: '2027 — Boston, MA', filter: '2027', event: 'kuana:media-year', badge: 'Upcoming' },
+    { label: '2025 — Lewisville, TX', filter: '2025', event: 'kuana:media-year' },
+    { label: '2023 — Trophy Club, TX', filter: '2023', event: 'kuana:media-year' },
+  ]},
   { label: 'Donate', id: 'donate' },
   { label: 'Contact Us', id: 'contact' },
 ];

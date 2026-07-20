@@ -133,9 +133,11 @@ function EventCard({ event, isFeatured }) {
   );
 }
 
+const YEARS = ['2027', '2025', '2023'];
+
 export default function Events() {
   const [events, setEvents] = useState(SAMPLE_EVENTS);
-  const [filter, setFilter] = useState('all');
+  const [year, setYear] = useState('2027');
 
   useEffect(() => {
     getEvents()
@@ -144,20 +146,12 @@ export default function Events() {
   }, []);
 
   useEffect(() => {
-    const handler = (e) => setFilter(e.detail);
-    window.addEventListener('kuana:events-filter', handler);
-    return () => window.removeEventListener('kuana:events-filter', handler);
+    const handler = (e) => setYear(e.detail);
+    window.addEventListener('kuana:events-year', handler);
+    return () => window.removeEventListener('kuana:events-year', handler);
   }, []);
 
-  const now = new Date();
-  const upcoming = events.filter((e) => new Date(e.event_date) >= now);
-  const past = events.filter((e) => new Date(e.event_date) < now);
-
-  const featured = upcoming.find((e) => e.is_featured) ?? upcoming[0];
-  const upcomingRest = upcoming.filter((e) => e !== featured);
-
-  const showUpcoming = filter !== 'past';
-  const showPast = filter !== 'upcoming';
+  const eventForYear = (y) => events.find((e) => String(new Date(e.event_date).getFullYear()) === y);
 
   return (
     <section id="events" className="py-24 bg-gray-50">
@@ -171,68 +165,39 @@ export default function Events() {
           </p>
         </div>
 
-        {/* Filter tabs */}
+        {/* Year tabs */}
         <div className="flex gap-2 justify-center mb-10">
-          {[
-            { label: 'All Events', value: 'all' },
-            { label: 'Upcoming Event', value: 'upcoming' },
-            { label: 'Past Events', value: 'past' },
-          ].map(({ label, value }) => (
+          {YEARS.map((y) => (
             <button
-              key={value}
-              onClick={() => setFilter(value)}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${
-                filter === value
-                  ? 'bg-[#0e1b4d] text-white'
+              key={y}
+              onClick={() => setYear(y)}
+              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+                year === y
+                  ? 'bg-[#0e1b4d] text-white shadow'
                   : 'bg-white border border-gray-200 text-gray-600 hover:border-[#0e1b4d] hover:text-[#0e1b4d]'
               }`}
             >
-              {label}
+              {y}
+              {y === '2027' && (
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${year === y ? 'bg-[#ffc31d] text-[#0e1b4d]' : 'bg-green-100 text-green-700'}`}>
+                  Upcoming
+                </span>
+              )}
             </button>
           ))}
         </div>
 
-        {/* Upcoming */}
-        {showUpcoming && upcoming.length > 0 && (
-          <div className="mb-10">
-            {filter === 'all' && (
-              <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
-                Upcoming
-              </h3>
-            )}
-            <div className="grid md:grid-cols-2 gap-6">
-              {featured && <EventCard event={featured} isFeatured={true} />}
-              {upcomingRest.map((event) => (
-                <EventCard key={event.id} event={event} isFeatured={false} />
-              ))}
+        {/* Event for selected year */}
+        {YEARS.map((y) => {
+          if (year !== y) return null;
+          const event = eventForYear(y);
+          if (!event) return <p key={y} className="text-center text-gray-400 py-12">No event data available.</p>;
+          return (
+            <div key={y} className="max-w-3xl mx-auto">
+              <EventCard event={event} isFeatured={event.is_featured} />
             </div>
-          </div>
-        )}
-
-        {/* Past */}
-        {showPast && past.length > 0 && (
-          <div>
-            {filter === 'all' && (
-              <h3 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-gray-400 inline-block" />
-                Past Events
-              </h3>
-            )}
-            <div className="grid md:grid-cols-2 gap-6">
-              {past.map((event) => (
-                <EventCard key={event.id} event={event} isFeatured={false} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {upcoming.length === 0 && showUpcoming && filter !== 'all' && (
-          <p className="text-center text-gray-400 py-12">No upcoming events at this time.</p>
-        )}
-        {past.length === 0 && showPast && filter !== 'all' && (
-          <p className="text-center text-gray-400 py-12">No past events found.</p>
-        )}
+          );
+        })}
       </div>
     </section>
   );
