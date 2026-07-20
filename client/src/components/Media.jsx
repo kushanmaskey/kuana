@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, Clock, MapPin, Image, ZoomIn } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Clock, MapPin, Image, ZoomIn, Video } from 'lucide-react';
 
 const BASE = 'https://kuana.org/assets/img';
 
@@ -71,6 +71,18 @@ const YEARS = [
   { value: '2025', label: '2025' },
   { value: '2023', label: '2023' },
 ];
+
+// YouTube video IDs — add IDs here as videos become available
+const VIDEOS_2025 = [
+  // { id: 'v1', title: 'Highlights', youtubeId: 'YOUTUBE_ID_HERE' },
+];
+const VIDEOS_2023 = [
+  // { id: 'v1', title: 'Highlights', youtubeId: 'YOUTUBE_ID_HERE' },
+];
+const VIDEOS_2027 = [];
+
+const VIDEOS = { '2025': VIDEOS_2025, '2023': VIDEOS_2023, '2027': VIDEOS_2027 };
+const PHOTOS = { '2025': MEDIA_2025, '2023': MEDIA_2023, '2027': [] };
 
 function LazyThumb({ src, alt }) {
   const ref = useRef(null);
@@ -255,14 +267,67 @@ function Carousel({ items, city, year }) {
   );
 }
 
+const CITY = { '2027': 'Boston, MA', '2025': 'Lewisville, TX', '2023': 'Trophy Club, TX' };
+
+function VideoGallery({ videos, year }) {
+  if (videos.length === 0) {
+    return (
+      <div className="rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center p-16" style={{ minHeight: '300px' }}>
+        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+          <Video size={26} className="text-gray-400" />
+        </div>
+        <h4 className="font-semibold text-gray-500 mb-2">No videos yet for {year}</h4>
+        <p className="text-gray-400 text-sm">Videos will appear here once they are available.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="grid sm:grid-cols-2 gap-6">
+      {videos.map((v) => (
+        <div key={v.id} className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+          <div className="aspect-video">
+            <iframe
+              src={`https://www.youtube.com/embed/${v.youtubeId}`}
+              title={v.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
+          <div className="p-3 bg-white">
+            <p className="text-sm font-semibold text-gray-800">{v.title}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Media() {
   const [activeYear, setActiveYear] = useState('2025');
+  const [activeType, setActiveType] = useState('photos');
 
   useEffect(() => {
-    const handler = (e) => setActiveYear(e.detail);
+    const handler = (e) => {
+      if (typeof e.detail === 'object') {
+        setActiveType(e.detail.type);
+        setActiveYear(e.detail.year);
+      } else {
+        setActiveYear(e.detail);
+      }
+    };
+    window.addEventListener('kuana:media-select', handler);
     window.addEventListener('kuana:media-year', handler);
-    return () => window.removeEventListener('kuana:media-year', handler);
+    return () => {
+      window.removeEventListener('kuana:media-select', handler);
+      window.removeEventListener('kuana:media-year', handler);
+    };
   }, []);
+
+  const is2027 = activeYear === '2027';
+  const photos = PHOTOS[activeYear] || [];
+  const videos = VIDEOS[activeYear] || [];
+  const city = CITY[activeYear];
 
   return (
     <section id="media" className="py-24 bg-white">
@@ -274,6 +339,26 @@ export default function Media() {
           <p className="text-gray-600 max-w-xl mx-auto">
             Memories from our reunions across North America.
           </p>
+        </div>
+
+        {/* Type tabs — Photos / Videos */}
+        <div className="flex gap-2 justify-center mb-6">
+          {[
+            { value: 'photos', label: 'Photos', Icon: Image },
+            { value: 'videos', label: 'Videos', Icon: Video },
+          ].map(({ value, label, Icon }) => (
+            <button
+              key={value}
+              onClick={() => setActiveType(value)}
+              className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
+                activeType === value
+                  ? 'bg-[#dc143c] text-white shadow'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Icon size={14} /> {label}
+            </button>
+          ))}
         </div>
 
         {/* Year tabs */}
@@ -300,8 +385,8 @@ export default function Media() {
           ))}
         </div>
 
-        {/* 2027 — TBD */}
-        {activeYear === '2027' && (
+        {/* 2027 — Coming soon */}
+        {is2027 && (
           <div className="rounded-2xl overflow-hidden relative bg-gray-900" style={{ minHeight: '400px', maxHeight: '70vh' }}>
             <img
               src={`${BASE}/venue-gallery/a.avif`}
@@ -315,7 +400,7 @@ export default function Media() {
               </div>
               <h4 className="text-2xl font-bold text-white mb-3">KUANA Reunion 2027 — Boston, MA</h4>
               <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">
-                Photos and videos will be available once the venue is confirmed. Stay tuned!
+                {activeType === 'photos' ? 'Photos' : 'Videos'} will be available after the reunion. Stay tuned!
               </p>
               <div className="inline-flex items-center gap-2 text-[#0e1b4d] font-semibold text-sm bg-[#ffc31d] px-4 py-2 rounded-full">
                 <MapPin size={14} />
@@ -325,31 +410,31 @@ export default function Media() {
           </div>
         )}
 
-        {/* 2025 carousel */}
-        {activeYear === '2025' && (
+        {/* Photos */}
+        {!is2027 && activeType === 'photos' && (
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px flex-1 bg-gray-200" />
               <span className="text-sm font-semibold text-gray-500 flex items-center gap-2">
-                <Image size={14} /> {MEDIA_2025.length} photos · Lewisville, TX
+                <Image size={14} /> {photos.length} photos · {city}
               </span>
               <div className="h-px flex-1 bg-gray-200" />
             </div>
-            <Carousel items={MEDIA_2025} city="Lewisville, TX" year="2025" />
+            <Carousel items={photos} city={city} year={activeYear} />
           </div>
         )}
 
-        {/* 2023 carousel */}
-        {activeYear === '2023' && (
+        {/* Videos */}
+        {!is2027 && activeType === 'videos' && (
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px flex-1 bg-gray-200" />
               <span className="text-sm font-semibold text-gray-500 flex items-center gap-2">
-                <Image size={14} /> {MEDIA_2023.length} photos · Trophy Club, TX
+                <Video size={14} /> {videos.length} videos · {city}
               </span>
               <div className="h-px flex-1 bg-gray-200" />
             </div>
-            <Carousel items={MEDIA_2023} city="Trophy Club, TX" year="2023" />
+            <VideoGallery videos={videos} year={activeYear} />
           </div>
         )}
       </div>
