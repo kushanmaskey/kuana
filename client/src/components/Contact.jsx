@@ -198,7 +198,7 @@ export default function Contact() {
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#dc143c] transition-colors resize-none mb-4"
                 />
                 {status === 'error' && (
-                  <p className="text-red-500 text-sm mb-4">Failed to send. Please try again.</p>
+                  <p className="text-red-500 text-sm mb-4">Coming soon. Try again later.</p>
                 )}
                 <button
                   type="submit"

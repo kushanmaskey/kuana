@@ -12,20 +12,35 @@ const MEDIA_2025 = [
   { id: 'v6', title: 'Venue Gallery', url: `${BASE}/venue-gallery/f.avif` },
   { id: 'v7', title: 'Venue Gallery', url: `${BASE}/venue-gallery/g.avif` },
   { id: 'v8', title: 'Venue Gallery', url: `${BASE}/venue-gallery/h.avif` },
-  { id: 's1', title: 'Arrival', url: `${BASE}/speakers/arrival.jpg` },
-  { id: 's2', title: 'Kickoff', url: `${BASE}/speakers/kickoff.jpg` },
   { id: 's3', title: 'Keynote Address', url: `${BASE}/speakers/keynote.jpg` },
-  { id: 's4', title: 'Panel Discussion', url: `${BASE}/speakers/paneldiscussion.jpg` },
-  { id: 's5', title: 'Felicitations', url: `${BASE}/speakers/felicitations.jpg` },
-  { id: 's6', title: 'Cultural Program', url: `${BASE}/speakers/culture.jpg` },
-  { id: 's7', title: 'Networking Session', url: `${BASE}/speakers/networking.jpg` },
-  { id: 's8', title: 'Mingle & Connect', url: `${BASE}/speakers/mingle.jpg` },
-  { id: 's9', title: 'Banquet Dinner', url: `${BASE}/speakers/dinner.jpg` },
-  { id: 's10', title: 'DJ Night', url: `${BASE}/speakers/dj.jpg` },
-  { id: 's11', title: 'Photo Booth', url: `${BASE}/speakers/photobooth.jpg` },
-  { id: 's12', title: 'Farewell', url: `${BASE}/speakers/bye.jpg` },
   { id: 's13', title: 'Hawaiian Waters — The Colony', url: `${BASE}/speakers/hawaiian-waters-the-colony.jpg` },
   { id: 's14', title: 'Online Call — Pre-event', url: `${BASE}/Images/online_call.jpg` },
+  { id: 'g1',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0009.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0009.jpg' },
+  { id: 'g2',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0025.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0025.jpg' },
+  { id: 'g3',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0034.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0034.jpg' },
+  { id: 'g4',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0044.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0044.jpg' },
+  { id: 'g5',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0047.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0047.jpg' },
+  { id: 'g6',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0050.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0050.jpg' },
+  { id: 'g7',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0065.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0065.jpg' },
+  { id: 'g8',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0171.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0171.jpg' },
+  { id: 'g9',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0191.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0191.jpg' },
+  { id: 'g10', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0218.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0218.jpg' },
+  { id: 'g11', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0386.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0386.jpg' },
+  { id: 'g12', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0509.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0509.jpg' },
+  { id: 'g13', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0510.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0510.jpg' },
+  { id: 'g14', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9783.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9783.jpg' },
+  { id: 'g15', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9786.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9786.jpg' },
+  { id: 'g16', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9787.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9787.jpg' },
+  { id: 'g17', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9793.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9793.jpg' },
+  { id: 'g18', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9829.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9829.jpg' },
+  { id: 'g19', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9847.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9847.jpg' },
+  { id: 'g20', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9900.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9900.jpg' },
+  { id: 'g21', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9902.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9902.jpg' },
+  { id: 'g22', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9911.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9911.jpg' },
+  { id: 'g23', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9922.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9922.jpg' },
+  { id: 'g24', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9969.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9969.jpg' },
+  { id: 'g25', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9972.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9972.jpg' },
+  { id: 'g26', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9980.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9980.jpg' },
 ];
 
 const MEDIA_2023 = [
@@ -57,10 +72,36 @@ const YEARS = [
   { value: '2023', label: '2023' },
 ];
 
+function LazyThumb({ src, alt }) {
+  const ref = useRef(null);
+  const [activeSrc, setActiveSrc] = useState(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setActiveSrc(src); obs.disconnect(); } },
+      { rootMargin: '300px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [src]);
+
+  return (
+    <div ref={ref} className="w-full h-full bg-gray-800">
+      {activeSrc && <img src={activeSrc} alt={alt} className="w-full h-full object-cover" decoding="async" />}
+    </div>
+  );
+}
+
 function Carousel({ items, city, year }) {
   const [current, setCurrent] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const thumbsRef = useRef(null);
+
+  const scrollThumbs = (dir) => {
+    thumbsRef.current?.scrollBy({ left: dir * 200, behavior: 'smooth' });
+  };
 
   const go = (idx) => {
     const next = (idx + items.length) % items.length;
@@ -87,11 +128,12 @@ function Carousel({ items, city, year }) {
   return (
     <div>
       {/* Main image */}
-      <div className="relative rounded-2xl overflow-hidden bg-gray-900 aspect-video mb-3 group">
+      <div className="relative rounded-2xl overflow-hidden bg-gray-900 mb-3 group flex items-center justify-center" style={{ minHeight: '400px', maxHeight: '70vh' }}>
         <img
           src={item.url}
           alt={item.title}
-          className="w-full h-full object-cover transition-opacity duration-300"
+          className="w-full h-full object-contain transition-opacity duration-300"
+          style={{ maxHeight: '70vh' }}
           loading="lazy"
         />
 
@@ -116,13 +158,13 @@ function Carousel({ items, city, year }) {
         {/* Prev / Next arrows */}
         <button
           onClick={() => go(current - 1)}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors cursor-pointer"
         >
           <ChevronLeft size={20} />
         </button>
         <button
           onClick={() => go(current + 1)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors cursor-pointer"
         >
           <ChevronRight size={20} />
         </button>
@@ -142,22 +184,36 @@ function Carousel({ items, city, year }) {
       </div>
 
       {/* Thumbnail strip */}
-      <div
-        ref={thumbsRef}
-        className="flex gap-2 overflow-x-auto pb-2 scroll-smooth"
-        style={{ scrollbarWidth: 'thin' }}
-      >
-        {items.map((img, i) => (
-          <button
-            key={img.id}
-            onClick={() => go(i)}
-            className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-              i === current ? 'border-[#0e1b4d] opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-90'
-            }`}
-          >
-            <img src={img.url} alt={img.title} className="w-full h-full object-cover" loading="lazy" />
-          </button>
-        ))}
+      <div className="relative flex items-center gap-1">
+        <button
+          onClick={() => scrollThumbs(-1)}
+          className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition-colors cursor-pointer"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        <div
+          ref={thumbsRef}
+          className="flex gap-2 overflow-x-auto pb-2 scroll-smooth flex-1"
+          style={{ scrollbarWidth: 'none' }}
+        >
+          {items.map((img, i) => (
+            <button
+              key={img.id}
+              onClick={() => go(i)}
+              className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                i === current ? 'border-[#0e1b4d] opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-90'
+              }`}
+            >
+              <LazyThumb src={img.thumb || img.url} alt={img.title} />
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => scrollThumbs(1)}
+          className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition-colors cursor-pointer"
+        >
+          <ChevronRight size={16} />
+        </button>
       </div>
 
       {/* Lightbox */}
@@ -240,17 +296,25 @@ export default function Media() {
 
         {/* 2027 — TBD */}
         {activeYear === '2027' && (
-          <div className="rounded-2xl border-2 border-dashed border-[#ffc31d] bg-[#0e1b4d]/5 p-12 text-center max-w-2xl mx-auto">
-            <div className="w-14 h-14 rounded-full bg-[#0e1b4d]/10 flex items-center justify-center mx-auto mb-4">
-              <Clock size={26} className="text-[#0e1b4d]" />
-            </div>
-            <h4 className="text-xl font-bold text-gray-900 mb-2">KUANA Reunion 2027 — Boston, MA</h4>
-            <p className="text-gray-500 text-sm mb-4 max-w-md mx-auto">
-              Photos and videos will be available once the venue is confirmed. Stay tuned!
-            </p>
-            <div className="inline-flex items-center gap-2 text-[#0e1b4d] font-semibold text-sm bg-[#ffc31d]/20 px-4 py-2 rounded-full">
-              <MapPin size={14} />
-              Venue TBD &bull; Aug 30–31, 2027
+          <div className="rounded-2xl overflow-hidden relative bg-gray-900" style={{ minHeight: '400px', maxHeight: '70vh' }}>
+            <img
+              src={`${BASE}/venue-gallery/a.avif`}
+              alt="Coming soon placeholder"
+              className="w-full h-full object-cover absolute inset-0"
+              style={{ filter: 'blur(6px) brightness(0.35)', transform: 'scale(1.05)' }}
+            />
+            <div className="relative z-10 flex flex-col items-center justify-center text-center p-12 h-full" style={{ minHeight: '400px' }}>
+              <div className="w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-5">
+                <Clock size={26} className="text-[#ffc31d]" />
+              </div>
+              <h4 className="text-2xl font-bold text-white mb-3">KUANA Reunion 2027 — Boston, MA</h4>
+              <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">
+                Photos and videos will be available once the venue is confirmed. Stay tuned!
+              </p>
+              <div className="inline-flex items-center gap-2 text-[#0e1b4d] font-semibold text-sm bg-[#ffc31d] px-4 py-2 rounded-full">
+                <MapPin size={14} />
+                Venue TBD &bull; Aug 30–31, 2027
+              </div>
             </div>
           </div>
         )}
