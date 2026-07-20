@@ -1,10 +1,9 @@
 import { GraduationCap, Globe, Heart, Users } from 'lucide-react';
 
 const BOARD = [
-  { name: 'President', title: 'Chapter President', initials: 'P' },
-  { name: 'Vice President', title: 'Vice President', initials: 'VP' },
-  { name: 'Secretary', title: 'General Secretary', initials: 'S' },
-  { name: 'Treasurer', title: 'Treasurer', initials: 'T' },
+  { year: 'Reunion 2023', location: 'Trophy Club, TX',  m1: 'Kushan Maskey', m2: 'Dipendra Bantawa', m3: 'Rajan Rijal', m4: '',    m5: ''  },
+  { year: 'Reunion 2025', location: 'Lewisville, TX',   m1: 'Kushan Maskey', m2: 'Dipendra Bantawa', m3: 'Rajan Rijal', m4: 'Keshab Simkhada', m5: 'Binam Acharya' },
+  { year: 'Reunion 2027', location: 'Boston, MA',       m1: 'Bijay Dhungana', m2: 'Nirmal Karki', m3: 'Saurav Man Singh Basnet', m4: 'Projjwol Dhakal', m5: '' },
 ];
 
 const VALUES = [
@@ -20,8 +19,7 @@ export default function About() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <p className="text-[#ffc31d] text-sm font-semibold uppercase tracking-widest mb-3">Who We Are</p>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">About KUANA</h2>
+<h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">About KUANA</h2>
           <div className="w-16 h-1 bg-[#ffc31d] mx-auto mb-8 rounded" />
         </div>
 
@@ -85,22 +83,41 @@ export default function About() {
 
         {/* Board */}
         <div>
-          <h3 className="text-2xl font-bold text-gray-900 text-center mb-10">Executive Board</h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {BOARD.map(({ name, title, initials }) => (
-              <div key={name} className="text-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#0e1b4d] to-[#060c22] flex items-center justify-center text-white font-bold text-xl mx-auto mb-3">
-                  {initials}
-                </div>
-                <div className="font-bold text-gray-900">{name}</div>
-                <div className="text-[#0e1b4d] text-sm font-medium">{title}</div>
-                <div className="text-gray-400 text-xs mt-1">To be announced</div>
-              </div>
-            ))}
+          <h3 className="text-2xl font-bold text-gray-900 text-center mb-10">Executive Board Members</h3>
+          <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gradient-to-r from-[#0e1b4d] to-[#060c22] text-white">
+                  <th className="px-6 py-4 text-left font-semibold">Reunion Year</th>
+                  <th className="px-6 py-4 text-center font-semibold">Executive Member 1</th>
+                  <th className="px-6 py-4 text-center font-semibold">Executive Member 2</th>
+                  <th className="px-6 py-4 text-center font-semibold">Executive Member 3</th>
+                  <th className="px-6 py-4 text-center font-semibold">Executive Member 4</th>
+                  <th className="px-6 py-4 text-center font-semibold">Executive Member 5</th>
+                </tr>
+              </thead>
+              <tbody>
+                {BOARD.map(({ year, location, m1, m2, m3, m4, m5 }, i) => (
+                  <tr key={year} className={year === 'Reunion 2027' ? 'bg-[#ffc31d]/20' : i % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-[#0e1b4d]">{year}</span>
+                        {year === 'Reunion 2027' && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">Upcoming</span>
+                        )}
+                      </div>
+                      <div className="text-gray-400 text-xs mt-0.5">{location}</div>
+                    </td>
+                    <td className="px-6 py-4 text-center text-gray-700">{m1}</td>
+                    <td className="px-6 py-4 text-center text-gray-700">{m2}</td>
+                    <td className="px-6 py-4 text-center text-gray-700">{m3}</td>
+                    <td className="px-6 py-4 text-center text-gray-700">{m4}</td>
+                    <td className="px-6 py-4 text-center text-gray-700">{m5}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <p className="text-center text-gray-400 text-sm mt-8">
-            Board members for the &ldquo;Reunion 2027&rdquo; will be announced soon.
-          </p>
         </div>
       </div>
     </section>
