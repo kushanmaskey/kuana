@@ -7,11 +7,13 @@ import Media from '../components/Media';
 import Donate from '../components/Donate';
 import Contact from '../components/Contact';
 import Footer from '../components/Footer';
+import FloatDonate from '../components/FloatDonate';
 
 export default function Home() {
   return (
     <>
       <Navbar />
+      <FloatDonate />
       <main>
         <Hero />
         <About />
