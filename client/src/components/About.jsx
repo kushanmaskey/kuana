@@ -1,10 +1,126 @@
-import { GraduationCap, Globe, Heart, Users } from 'lucide-react';
+import { useState } from 'react';
+import { GraduationCap, Globe, Heart, Users, X } from 'lucide-react';
+
+
+const PROFILES = {
+  'Kushan Maskey':           { photo: '/assets/img/profile/kushan.png', facebook: 'https://www.facebook.com/Mailai.Dai/', linkedin: 'https://www.linkedin.com/in/kushanmaskey/', instagram: 'https://www.instagram.com/mailadai/' },
+  'Dipendra Bantawa':        { photo: '/assets/img/profile/dipendra.png', facebook: 'https://www.facebook.com/dipendra.bantawa', linkedin: 'https://www.linkedin.com/in/dipendra-bantawa/', instagram: 'https://www.instagram.com/dipendra.bantawa/' },
+  'Rajan Rijal':             { photo: '/assets/img/profile/rajan.png', facebook: 'https://www.facebook.com/rajan.rijal.7', linkedin: 'https://www.linkedin.com/in/rajan-rijal-0715b1b4/', instagram: 'https://www.instagram.com/rajan.rijal.7/' },
+  'Keshab Simkhada':         { photo: '/assets/img/profile/keshab.png', facebook: 'https://www.facebook.com/keshabs', linkedin: 'https://www.linkedin.com/in/keshab-simkhada-ms-mba-aa8aa980/', instagram: 'https://www.instagram.com/simkhada_keshab/' },
+  'Binam Acharya':           { photo: '/assets/img/profile/binam.png', facebook: 'https://www.facebook.com/binam.acharya.5', linkedin: 'https://www.linkedin.com/in/binamacharya/', instagram: 'https://www.instagram.com/binamach/' },
+  'Bijay Dhungana':          { photo: '/assets/img/profile/bijay.png', facebook: null, linkedin: 'https://www.linkedin.com/in/bijaydhungana/', instagram: 'https://www.instagram.com/bijaydhungana/' },
+  'Nirmal Karki':            { photo: '/assets/img/profile/nirmal.png', facebook: 'https://www.facebook.com/nirmal.karki.777', linkedin: 'https://www.linkedin.com/in/nirmal-karki-24808b157/', instagram: 'https://www.instagram.com/nirmalkarkie/' },
+  'Saurav Man Singh Basnet': { photo: '/assets/img/profile/saurav.png', facebook: 'https://www.facebook.com/saurav.m.basnet', linkedin: 'https://www.linkedin.com/in/smsbasnet/', instagram: null },
+  'Projjwol Dhakal':         { photo: '/assets/img/profile/projjwol.png', facebook: 'https://www.facebook.com/projjwol', linkedin: 'https://www.linkedin.com/in/projjwol-dhakal-76701516/', instagram: 'https://www.instagram.com/pj_from_nh/' },
+};
 
 const BOARD = [
   { year: 'Reunion 2023', location: 'Trophy Club, TX',  m1: 'Kushan Maskey', m2: 'Dipendra Bantawa', m3: 'Rajan Rijal', m4: '',    m5: ''  },
   { year: 'Reunion 2025', location: 'Lewisville, TX',   m1: 'Kushan Maskey', m2: 'Dipendra Bantawa', m3: 'Rajan Rijal', m4: 'Keshab Simkhada', m5: 'Binam Acharya' },
   { year: 'Reunion 2027', location: 'Boston, MA',       m1: 'Bijay Dhungana', m2: 'Nirmal Karki', m3: 'Saurav Man Singh Basnet', m4: 'Projjwol Dhakal', m5: '' },
 ];
+
+function IconFacebook({ size = 12 }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" width={size} height={size}>
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
+function IconLinkedIn({ size = 12 }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" width={size} height={size}>
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+      <rect x="2" y="9" width="4" height="12" />
+      <circle cx="4" cy="4" r="2" />
+    </svg>
+  );
+}
+
+function IconInstagram({ size = 12 }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width={size} height={size}>
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function Initials({ name }) {
+  const parts = name.trim().split(' ');
+  const letters = (parts[0][0] + (parts[parts.length - 1][0] || '')).toUpperCase();
+  return (
+    <div className="w-full rounded-2xl shadow-2xl bg-gradient-to-br from-[#0e1b4d] to-[#060c22] flex items-center justify-center" style={{ minHeight: '280px' }}>
+      <span className="text-7xl font-bold text-[#ffc31d] select-none">{letters}</span>
+    </div>
+  );
+}
+
+function ProfileModal({ name, profile, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors cursor-pointer z-10">
+          <X size={18} />
+        </button>
+        {profile.photo
+          ? <img src={profile.photo} alt={name} className="w-full rounded-2xl shadow-2xl object-contain max-h-[75vh]" />
+          : <Initials name={name} />
+        }
+        <div className="mt-3 flex items-center justify-center gap-3">
+          <p className="text-white font-semibold text-lg">{name}</p>
+          {(profile.facebook || profile.linkedin || profile.instagram) && (
+            <div className="flex gap-2">
+              {profile.facebook && (
+                <a href={profile.facebook} target="_blank" rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-full bg-[#1877f2] flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform"
+                  onClick={(e) => e.stopPropagation()}>
+                  <IconFacebook size={16} />
+                </a>
+              )}
+              {profile.linkedin && (
+                <a href={profile.linkedin} target="_blank" rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-full bg-[#0a66c2] flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform"
+                  onClick={(e) => e.stopPropagation()}>
+                  <IconLinkedIn size={16} />
+                </a>
+              )}
+              {profile.instagram && (
+                <a href={profile.instagram} target="_blank" rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-full bg-[#e1306c] flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform"
+                  onClick={(e) => e.stopPropagation()}>
+                  <IconInstagram size={16} />
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemberCell({ name }) {
+  const [open, setOpen] = useState(false);
+  const profile = PROFILES[name];
+  if (!name) return null;
+  return (
+    <>
+      {open && profile && <ProfileModal name={name} profile={profile} onClose={() => setOpen(false)} />}
+      {profile ? (
+        <button onClick={() => setOpen(true)}
+          className="text-[#0e1b4d] font-semibold hover:text-[#dc143c] hover:underline underline-offset-2 transition-colors cursor-pointer">
+          {name}
+        </button>
+      ) : (
+        <span>{name}</span>
+      )}
+    </>
+  );
+}
 
 const VALUES = [
   { icon: GraduationCap, title: 'Academic Excellence', desc: 'Honoring the KU tradition of rigorous education and intellectual curiosity.' },
@@ -108,11 +224,11 @@ export default function About() {
                       </div>
                       <div className="text-gray-400 text-xs mt-0.5">{location}</div>
                     </td>
-                    <td className="px-6 py-4 text-center text-gray-700">{m1}</td>
-                    <td className="px-6 py-4 text-center text-gray-700">{m2}</td>
-                    <td className="px-6 py-4 text-center text-gray-700">{m3}</td>
-                    <td className="px-6 py-4 text-center text-gray-700">{m4}</td>
-                    <td className="px-6 py-4 text-center text-gray-700">{m5}</td>
+                    <td className="px-6 py-4 text-center text-gray-700"><MemberCell name={m1} /></td>
+                    <td className="px-6 py-4 text-center text-gray-700"><MemberCell name={m2} /></td>
+                    <td className="px-6 py-4 text-center text-gray-700"><MemberCell name={m3} /></td>
+                    <td className="px-6 py-4 text-center text-gray-700"><MemberCell name={m4} /></td>
+                    <td className="px-6 py-4 text-center text-gray-700"><MemberCell name={m5} /></td>
                   </tr>
                 ))}
               </tbody>

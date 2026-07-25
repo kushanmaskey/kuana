@@ -95,7 +95,7 @@ const SPEAKERS_2025 = [
     photoPosition: 'center 30%',
     tag: 'Moderator',
     tagColor: 'bg-gray-600 text-white',
-    social: { facebook: 'https://www.facebook.com/rajan.rijal.7', linkedin: 'https://www.linkedin.com/in/rajan-rijal-0715b1b4/', instagram: null },
+    social: { facebook: 'https://www.facebook.com/rajan.rijal.7', linkedin: 'https://www.linkedin.com/in/rajan-rijal-0715b1b4/', instagram: 'https://www.instagram.com/rajan.rijal.7/' },
   },
 ];
 
@@ -180,6 +180,10 @@ function SpeakerModal({ speaker, onClose }) {
               <Mic size={56} className="text-white/40" />
             </div>
         }
+        <div className="mt-3 flex items-center justify-center gap-3">
+          <p className="text-white font-semibold text-lg">{speaker.name}</p>
+          <SocialLinks social={speaker.social} size={8} />
+        </div>
       </div>
     </div>
   );
@@ -208,9 +212,7 @@ function SpeakerCard({ speaker, onClick }) {
         <span className={`absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full ${speaker.tagColor}`}>
           {speaker.tag}
         </span>
-        <div className="absolute bottom-3 right-3 z-10">
-          <SocialLinks social={speaker.social} size={8} />
-        </div>
+
       </div>
       <div className="p-5">
         <h4 className="font-bold text-gray-900 text-lg leading-tight mb-1">{speaker.name}</h4>
