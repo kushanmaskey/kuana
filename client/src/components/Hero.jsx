@@ -47,20 +47,6 @@ export default function Hero() {
             Reunion 2027<br />Boston, MA
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => scrollTo('events')}
-              className="px-8 py-3.5 bg-[#ffc31d] text-[#0e1b4d] font-bold rounded-lg hover:bg-[#ffd54f] transition-all duration-200 text-sm uppercase tracking-wide shadow-lg cursor-pointer"
-            >
-              View Events
-            </button>
-            <button
-              onClick={() => scrollTo('donate')}
-              className="px-8 py-3.5 border-2 border-white/50 text-white font-bold rounded-lg hover:border-[#ffc31d] hover:text-[#ffc31d] transition-all duration-200 text-sm uppercase tracking-wide cursor-pointer"
-            >
-              Support KUANA
-            </button>
-          </div>
         </div>
       </div>
 
