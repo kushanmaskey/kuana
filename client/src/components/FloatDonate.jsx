@@ -2,20 +2,17 @@ import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
 
 export default function FloatDonate() {
-  const [visible, setVisible] = useState(false);
   const [nearDonate, setNearDonate] = useState(false);
 
   useEffect(() => {
     const onScroll = () => {
-      const scrollY = window.scrollY;
-      setVisible(scrollY > 300);
-
       const donateEl = document.getElementById('donate');
       if (donateEl) {
         const rect = donateEl.getBoundingClientRect();
         setNearDonate(rect.top < window.innerHeight && rect.bottom > 0);
       }
     };
+    onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -24,7 +21,7 @@ export default function FloatDonate() {
     document.getElementById('donate')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (!visible || nearDonate) return null;
+  if (nearDonate) return null;
 
   return (
     <button
