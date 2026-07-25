@@ -205,11 +205,11 @@ export default function About() {
               <thead>
                 <tr className="bg-gradient-to-r from-[#0e1b4d] to-[#060c22] text-white">
                   <th className="px-6 py-4 text-left font-semibold">Reunion Year</th>
-                  <th className="px-6 py-4 text-center font-semibold">Executive Member 1</th>
-                  <th className="px-6 py-4 text-center font-semibold">Executive Member 2</th>
-                  <th className="px-6 py-4 text-center font-semibold">Executive Member 3</th>
-                  <th className="px-6 py-4 text-center font-semibold">Executive Member 4</th>
-                  <th className="px-6 py-4 text-center font-semibold">Executive Member 5</th>
+                  <th className="px-6 py-4 text-center font-semibold">Member 1</th>
+                  <th className="px-6 py-4 text-center font-semibold">Member 2</th>
+                  <th className="px-6 py-4 text-center font-semibold">Member 3</th>
+                  <th className="px-6 py-4 text-center font-semibold">Member 4</th>
+                  <th className="px-6 py-4 text-center font-semibold">Member 5</th>
                 </tr>
               </thead>
               <tbody>
