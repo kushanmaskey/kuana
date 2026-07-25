@@ -109,7 +109,7 @@ const SPEAKERS_2023 = [
     photo: '/assets/img/speakers/bhola_thapa.jpg',
     tag: 'Keynote',
     tagColor: 'bg-[#ffc31d] text-[#0e1b4d]',
-    social: { facebook: 'https://www.facebook.com/bhola.thapa.399', linkedin: 'https://www.linkedin.com/in/bhola-thapa-51666221/', instagram: null },
+    social: { facebook: 'https://www.facebook.com/bhola.thapa.399', linkedin: 'https://www.linkedin.com/in/bhola-thapa-51666221/', instagram: 'https://www.instagram.com/bhola_thapa__/' },
   },
   {
     id: 2,
