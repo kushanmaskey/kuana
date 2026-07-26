@@ -1,4 +1,4 @@
-name: Deploy to Staging
+name: Deploy to Production
 
 on:
   workflow_dispatch:
@@ -27,10 +27,10 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: p3plzcpnl475181.prod.phx3.secureserver.net
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          username: ${{ secrets.FTP_PROD_USERNAME }}
+          password: ${{ secrets.FTP_PROD_PASSWORD }}
           local-dir: client/dist/
-          server-dir: /public_html/staging.kuana.org/
+          server-dir: /public_html/
           exclude: |
             **/.git*
             **/.git*/**
