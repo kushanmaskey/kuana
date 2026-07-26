@@ -6,7 +6,6 @@ const { pool } = require('../db');
 
 const router = express.Router();
 
-// Max 10 login attempts per IP per 15 minutes
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
@@ -21,9 +20,8 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Email and password required' });
   }
   try {
-    const { rows } = await pool.query('SELECT * FROM admins WHERE email = $1', [email]);
+    const [rows] = await pool.query('SELECT * FROM admins WHERE email = ?', [email]);
 
-    // Always run bcrypt to prevent timing attacks (even if user not found)
     const fakeHash = '$2a$12$invalidhashtopreventtimingattacksXXXXXXXXXXXXXXXXXXXXXX';
     const hash = rows[0]?.password_hash || fakeHash;
     const valid = await bcrypt.compare(password, hash);
@@ -44,7 +42,6 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-// One-time setup — disabled in production after first admin exists
 router.post('/setup', async (req, res) => {
   if (process.env.NODE_ENV === 'production' && process.env.DISABLE_SETUP === 'true') {
     return res.status(403).json({ error: 'Setup disabled' });
@@ -57,17 +54,16 @@ router.post('/setup', async (req, res) => {
     return res.status(400).json({ error: 'Name, email, and password (min 10 chars) required' });
   }
   try {
-    // Only allow one admin to be created via setup
-    const existing = await pool.query('SELECT id FROM admins LIMIT 1');
-    if (existing.rows.length > 0) {
+    const [existing] = await pool.query('SELECT id FROM admins LIMIT 1');
+    if (existing.length > 0) {
       return res.status(409).json({ error: 'Admin already exists. Use the admin panel to add more.' });
     }
     const hash = await bcrypt.hash(password, 12);
-    const { rows } = await pool.query(
-      'INSERT INTO admins (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email',
+    const [result] = await pool.query(
+      'INSERT INTO admins (name, email, password_hash) VALUES (?, ?, ?)',
       [name, email, hash]
     );
-    res.json({ admin: rows[0] });
+    res.json({ admin: { id: result.insertId, name, email } });
   } catch {
     res.status(500).json({ error: 'Server error' });
   }
