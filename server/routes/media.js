@@ -42,8 +42,8 @@ router.post('/', requireAuth, async (req, res) => {
       [title, description, media_type, url, thumbnail_url, event_id || null, year, city, is_published ?? true, sort_order ?? 0]
     );
     res.status(201).json(rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -51,8 +51,8 @@ router.delete('/:id', requireAuth, async (req, res) => {
   try {
     await pool.query('DELETE FROM media WHERE id = $1', [req.params.id]);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
