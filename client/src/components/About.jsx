@@ -198,7 +198,7 @@ export default function About() {
         </div>
 
         {/* Board */}
-        <div>
+        <div id="board">
           <h3 className="text-2xl font-bold text-gray-900 text-center mb-10">Executive Board Members</h3>
           <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
             <table className="w-full text-sm">
