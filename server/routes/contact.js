@@ -28,7 +28,7 @@ router.post('/', contactLimiter, async (req, res) => {
   try {
     const trimmed = { name: name.trim(), email: email.trim().toLowerCase(), subject: subject?.trim(), message: message.trim() };
     await pool.query(
-      'INSERT INTO contact_messages (name, email, subject, message) VALUES (?,?,?,?)',
+      'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1,$2,$3,$4)',
       [trimmed.name, trimmed.email, trimmed.subject || null, trimmed.message]
     );
     sendContactEmail(trimmed).catch((err) => console.error('Email send failed:', err));
@@ -40,7 +40,7 @@ router.post('/', contactLimiter, async (req, res) => {
 
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
+    const { rows } = await pool.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
     res.json(rows);
   } catch {
     res.status(500).json({ error: 'Server error' });
@@ -49,7 +49,7 @@ router.get('/', requireAuth, async (req, res) => {
 
 router.patch('/:id/read', requireAuth, async (req, res) => {
   try {
-    await pool.query('UPDATE contact_messages SET is_read = 1 WHERE id = ?', [req.params.id]);
+    await pool.query('UPDATE contact_messages SET is_read = true WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: 'Server error' });

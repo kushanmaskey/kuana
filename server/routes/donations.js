@@ -32,15 +32,15 @@ router.post('/', donationLimiter, async (req, res) => {
   }
 
   try {
-    const [alumniRows] = await pool.query('SELECT id FROM alumni WHERE email = ?', [donor_email.toLowerCase()]);
-    const alumni_id = alumniRows[0]?.id || null;
+    const alumniResult = await pool.query('SELECT id FROM alumni WHERE email = $1', [donor_email.toLowerCase()]);
+    const alumni_id = alumniResult.rows[0]?.id || null;
 
-    const [result] = await pool.query(
+    const { rows } = await pool.query(
       `INSERT INTO donations (alumni_id, donor_name, donor_email, amount, currency, purpose, message, payment_reference, payment_method, status)
-       VALUES (?,?,?,?,?,?,?,?,?,'completed')`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'completed') RETURNING id, amount, donor_name`,
       [alumni_id, donor_name.trim(), donor_email.trim().toLowerCase(), numAmount, currency ?? 'USD', purpose?.trim() || null, message?.substring(0, 1000) || null, payment_reference || null, payment_method || null]
     );
-    res.status(201).json({ success: true, donation: { id: result.insertId, amount: numAmount, donor_name } });
+    res.status(201).json({ success: true, donation: rows[0] });
   } catch {
     res.status(500).json({ error: 'Server error' });
   }
@@ -48,7 +48,7 @@ router.post('/', donationLimiter, async (req, res) => {
 
 router.get('/', requireAuth, async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const { rows } = await pool.query(
       `SELECT d.*, a.first_name, a.last_name FROM donations d
        LEFT JOIN alumni a ON d.alumni_id = a.id
        ORDER BY d.donated_at DESC`
@@ -61,7 +61,7 @@ router.get('/', requireAuth, async (req, res) => {
 
 router.get('/stats', requireAuth, async (req, res) => {
   try {
-    const [rows] = await pool.query(
+    const { rows } = await pool.query(
       `SELECT COUNT(*) as total_donations, SUM(amount) as total_amount,
               AVG(amount) as average_amount, COUNT(DISTINCT donor_email) as unique_donors
        FROM donations WHERE status = 'completed'`

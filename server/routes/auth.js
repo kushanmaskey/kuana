@@ -20,7 +20,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Email and password required' });
   }
   try {
-    const [rows] = await pool.query('SELECT * FROM admins WHERE email = ?', [email]);
+    const { rows } = await pool.query('SELECT * FROM admins WHERE email = $1', [email]);
 
     const fakeHash = '$2a$12$invalidhashtopreventtimingattacksXXXXXXXXXXXXXXXXXXXXXX';
     const hash = rows[0]?.password_hash || fakeHash;
@@ -54,16 +54,16 @@ router.post('/setup', async (req, res) => {
     return res.status(400).json({ error: 'Name, email, and password (min 10 chars) required' });
   }
   try {
-    const [existing] = await pool.query('SELECT id FROM admins LIMIT 1');
-    if (existing.length > 0) {
+    const existing = await pool.query('SELECT id FROM admins LIMIT 1');
+    if (existing.rows.length > 0) {
       return res.status(409).json({ error: 'Admin already exists. Use the admin panel to add more.' });
     }
     const hash = await bcrypt.hash(password, 12);
-    const [result] = await pool.query(
-      'INSERT INTO admins (name, email, password_hash) VALUES (?, ?, ?)',
+    const { rows } = await pool.query(
+      'INSERT INTO admins (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email',
       [name, email, hash]
     );
-    res.json({ admin: { id: result.insertId, name, email } });
+    res.json({ admin: rows[0] });
   } catch {
     res.status(500).json({ error: 'Server error' });
   }
