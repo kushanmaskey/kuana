@@ -3,4 +3,6 @@ client/node_modules/
 server/node_modules/
 client/dist/
 .env
+.env.staging
+.env.production
 .DS_Store
