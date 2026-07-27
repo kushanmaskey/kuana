@@ -147,15 +147,15 @@ export default function About() {
               Honoring KU Spirit, Strengthening the Alumni Network
             </p>
             <p className="text-gray-600 leading-relaxed mb-4">
-              As we have branched out from the same trunk, it is high time we reconnect, re-network, rewind old
-              memories and bring it back to life by joining hands together.
+              As we have branched out from the same trunk, KUANA organizes reunions in different cities across North America, creating opportunities
+              to reconnect, re-network, and celebrate the shared journey of being part of one of Nepal's premier universities.
             </p>
             <p className="text-gray-600 leading-relaxed mb-4">
               A small group of friends seeded the idea to translate this vision into reality — bringing together
               Kathmandu University graduates living and working across the United States and Canada.
             </p>
             <p className="text-gray-600 leading-relaxed">
-              KUANA organizes biennial reunions in different cities across North America, creating opportunities
+              KUANA organizes reunions in different cities across North America, creating opportunities
               to reconnect, re-network, and celebrate the shared journey of being part of one of Nepal's
               premier universities.
             </p>

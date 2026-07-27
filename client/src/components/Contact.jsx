@@ -108,7 +108,7 @@ export default function Contact() {
               <div className="flex gap-3">
                 {[
                   { icon: FacebookIcon, label: 'Facebook', href: 'https://www.facebook.com/kualumnina' },
-                  { icon: InstagramIcon, label: 'Instagram', href: 'https://www.instagram.com/kuanadallas/' },
+                  { icon: InstagramIcon, label: 'Instagram', href: 'https://www.instagram.com/kualumnina/' },
                   { icon: LinkedInIcon, label: 'LinkedIn', href: 'https://www.linkedin.com/company/ku-alumni-na/' },
                   { icon: YouTubeIcon, label: 'YouTube', href: 'https://www.youtube.com/@KUALUMNA' },
                 ].map(({ icon: Icon, label, href }) => (

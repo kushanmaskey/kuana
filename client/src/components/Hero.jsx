@@ -41,7 +41,7 @@ export default function Hero() {
           <div className="w-24 h-1 bg-[#ffc31d] mx-auto mb-8 rounded" />
           <p className="text-white/80 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-4">
             Connecting KU graduates across the United States, Canada, and Mexico.
-            One community. One mission. Reuniting every two years.
+            One community. One mission. Lifelong connections.
           </p>
           <p className="text-[#ffc31d]/90 text-3xl md:text-4xl font-bold mb-12">
             Reunion 2027<br />Boston, MA
