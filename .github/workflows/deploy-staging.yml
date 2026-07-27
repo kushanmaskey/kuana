@@ -30,7 +30,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: client/dist/
-          server-dir: /public_html/staging.kuana.org/
+          server-dir: /
           exclude: |
             **/.git*
             **/.git*/**
