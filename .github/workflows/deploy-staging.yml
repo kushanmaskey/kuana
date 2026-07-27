@@ -26,7 +26,7 @@ jobs:
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: p3plzcpnl475181.prod.phx3.secureserver.net
+          server: ftp.staging.kuana.org
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: client/dist/
