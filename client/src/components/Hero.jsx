@@ -27,7 +27,7 @@ export default function Hero() {
           <img
             src="https://kuana.org/assets/img/KUANA.png"
             alt="KUANA Logo"
-            className="h-28 w-auto object-contain mx-auto drop-shadow-2xl"
+            className="h-56 w-auto object-contain mx-auto drop-shadow-2xl"
           />
         </div>
 
