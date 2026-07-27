@@ -31,6 +31,9 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: client/dist/
           server-dir: /
+          dangerous-clean-slate: false
+          state-name: .staging-ftp-state
           exclude: |
             **/.git*
             **/.git*/**
+            **/assets/img/**
