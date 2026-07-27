@@ -30,12 +30,8 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H p3plzcpnl475181.prod.phx3.secureserver.net >> ~/.ssh/known_hosts
 
-      - name: Deploy via SSH
+      - name: Deploy via SCP
         run: |
-          cd client/dist && zip -r ../../deploy.zip . && cd ../..
-          scp -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
-            deploy.zip \
+          scp -r -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
+            client/dist/. \
             ${{ secrets.SSH_USERNAME }}@p3plzcpnl475181.prod.phx3.secureserver.net:public_html/staging.kuana.org/
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
-            ${{ secrets.SSH_USERNAME }}@p3plzcpnl475181.prod.phx3.secureserver.net \
-            "cd public_html/staging.kuana.org && unzip -o deploy.zip && rm deploy.zip"
