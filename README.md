@@ -1,7 +1,7 @@
 # KUANA Website — Project Documentation
 
 **Kathmandu University Alumni North America (KUANA)**
-Official website for KU alumni community in the USA and Canada.
+Official website for KU alumni community in the USA, Canada, and Mexico.
 
 ---
 
@@ -197,10 +197,26 @@ Same process as staging but uses **Deploy to Production** workflow.
 
 ### Images
 
-Images are not deployed via GitHub Actions (too large). Upload manually via GoDaddy File Manager:
+Gallery images are committed to git and deployed automatically via FTP with the rest of the build.
+
+**Before committing new images**, compress them to web size (max 1920px wide, ~80% quality) using macOS `sips`:
+```bash
+# Resize all JPGs in a folder in-place
+for f in client/public/assets/img/gallery/2025/*.jpg; do
+  sips --resampleWidth 1920 --setProperty formatOptions 82 "$f"
+done
+```
+Full-resolution camera files (10–12 MB each) will time out during FTP upload. Target size: 500 KB–1.5 MB per image.
+
+**If images show 404 after a deploy** (FTP state file issue), upload manually via GoDaddy File Manager:
+1. Create a zip of just the images: `cd client/dist/assets && zip -r ~/Desktop/gallery-images.zip img/gallery/`
+2. Upload the zip to `public_html/staging.kuana.org/assets/` in File Manager
+3. Right-click → Extract
+
+Image directories:
 - Profile photos: `public_html/staging.kuana.org/assets/img/profile/`
-- Gallery 2023: `public_html/staging.kuana.org/assets/img/gallery/2023/`
-- Gallery 2025: `public_html/staging.kuana.org/assets/img/gallery/2025/`
+- Gallery 2023: `public_html/staging.kuana.org/assets/img/gallery/2023/` + `thumbs/`
+- Gallery 2025: `public_html/staging.kuana.org/assets/img/gallery/2025/` + `thumbs/`
 
 ---
 
