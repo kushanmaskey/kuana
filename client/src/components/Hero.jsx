@@ -21,7 +21,7 @@ export default function Hero() {
       <div className="absolute top-20 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#ffc31d] to-transparent opacity-50" />
 
       {/* Content */}
-      <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+      <div className="relative z-10 text-center px-6 max-w-5xl mx-auto pt-24 pb-8">
         {/* KUANA Logo */}
         <div className="mx-auto mb-8">
           <img
