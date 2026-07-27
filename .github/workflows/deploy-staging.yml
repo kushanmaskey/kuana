@@ -23,6 +23,9 @@ jobs:
         run: npm run build
         working-directory: client
 
+      - name: List dist contents
+        run: find client/dist -type f | sort
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -33,6 +36,7 @@ jobs:
           server-dir: /
           dangerous-clean-slate: false
           state-name: .staging-ftp-state
+          log-level: verbose
           exclude: |
             **/.git*
             **/.git*/**
