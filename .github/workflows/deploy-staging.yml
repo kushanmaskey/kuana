@@ -23,19 +23,17 @@ jobs:
         run: npm run build
         working-directory: client
 
-      - name: Clear FTP state file
-        run: curl -s --ftp-create-dirs -T /dev/null "ftp://${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}@p3plzcpnl475181.prod.phx3.secureserver.net/.staging-ftp-state" || true
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
 
       - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: p3plzcpnl475181.prod.phx3.secureserver.net
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: client/dist/
-          server-dir: /
-          dangerous-clean-slate: false
-          state-name: .staging-ftp-state
-          exclude: |
-            **/.git*
-            **/.git*/**
+        run: |
+          lftp -e "
+            set ftp:ssl-auth TLS;
+            set ftp:ssl-force true;
+            set ssl:verify-certificate false;
+            set ftp:passive-mode true;
+            open -u '${{ secrets.FTP_USERNAME }}','${{ secrets.FTP_PASSWORD }}' ftp://p3plzcpnl475181.prod.phx3.secureserver.net;
+            mirror --reverse --delete --no-perms --no-umask --parallel=4 --verbose client/dist/ /;
+            bye
+          "
