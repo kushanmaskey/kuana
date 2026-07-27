@@ -34,7 +34,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: client/dist/
           server-dir: /
-          dangerous-clean-slate: false
+          dangerous-clean-slate: true
           state-name: .staging-ftp-state
           log-level: verbose
           exclude: |
