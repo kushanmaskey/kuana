@@ -91,13 +91,13 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <button onClick={() => scrollTo('home')} className="flex items-center gap-3 cursor-pointer">
             <img
               src="https://kuana.org/assets/img/KUANA.png"
               alt="KUANA Logo"
-              className="h-10 w-auto object-contain"
+              className="h-14 w-14 object-contain"
             />
           </button>
 
