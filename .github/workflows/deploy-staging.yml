@@ -23,17 +23,62 @@ jobs:
         run: npm run build
         working-directory: client
 
-      - name: Install lftp
-        run: sudo apt-get install -y lftp
-
       - name: Deploy via FTP
+        env:
+          FTP_HOST: p3plzcpnl475181.prod.phx3.secureserver.net
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
-          lftp -e "
-            set ftp:ssl-auth TLS;
-            set ftp:ssl-force true;
-            set ssl:verify-certificate false;
-            set ftp:passive-mode true;
-            open -u '${{ secrets.FTP_USERNAME }}','${{ secrets.FTP_PASSWORD }}' ftp://p3plzcpnl475181.prod.phx3.secureserver.net;
-            mirror --reverse --delete --no-perms --no-umask --parallel=4 --verbose client/dist/ /;
-            bye
-          "
+          python3 << 'PYEOF'
+          import ftplib, os, ssl, sys
+
+          host = os.environ['FTP_HOST']
+          user = os.environ['FTP_USER']
+          passwd = os.environ['FTP_PASS']
+          local_dir = 'client/dist'
+
+          ctx = ssl.create_default_context()
+          ctx.check_hostname = False
+          ctx.verify_mode = ssl.CERT_NONE
+
+          ftp = ftplib.FTP_TLS(context=ctx)
+          ftp.connect(host, 21)
+          ftp.login(user, passwd)
+          ftp.prot_p()
+          print(f"Connected to {host}")
+
+          def mkdirs(ftp, path):
+              parts = [p for p in path.strip('/').split('/') if p]
+              cur = ''
+              for part in parts:
+                  cur += '/' + part
+                  try:
+                      ftp.mkd(cur)
+                  except ftplib.error_perm:
+                      pass
+
+          errors = []
+          def upload_tree(ftp, local_path, remote_base='/'):
+              for name in sorted(os.listdir(local_path)):
+                  local_item = os.path.join(local_path, name)
+                  remote_item = remote_base + name
+                  if os.path.isdir(local_item):
+                      mkdirs(ftp, remote_item)
+                      upload_tree(ftp, local_item, remote_item + '/')
+                  else:
+                      with open(local_item, 'rb') as f:
+                          try:
+                              ftp.storbinary(f'STOR {remote_item}', f)
+                              print(f'  uploaded: {remote_item}')
+                          except Exception as e:
+                              print(f'  ERROR {remote_item}: {e}', file=sys.stderr)
+                              errors.append(remote_item)
+
+          upload_tree(ftp, local_dir)
+          ftp.quit()
+
+          if errors:
+              print(f'\nFailed files: {errors}', file=sys.stderr)
+              sys.exit(1)
+          print('\nDeploy complete.')
+          PYEOF
