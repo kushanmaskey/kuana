@@ -90,7 +90,7 @@ const SPEAKERS_2025 = [
     name: 'Rajan Rijal',
     role: 'Moderator',
     org: '',
-    bio: "Professor at Collins College in McKinney, Texas, bringing both academic expertise and a deep commitment to community engagement to his work. Held every two years across various cities in the United States and Canada, this reunion brings together Kathmandu University alumni to reconnect and celebrate their shared heritage, and Professor Rijal's active involvement in community service makes him an ideal guide for today's proceedings. Please join me in welcoming him to the stage.",
+    bio: "Brings a strong record of civic engagement and academic experience to his role as moderator. A proud member of the Kathmandu University alumni community, he is honored to help lead today's reunion gathering.",
     photo: '/assets/img/gallery/2025/R6_B9793.jpg',
     photoPosition: 'center 30%',
     tag: 'Moderator',
@@ -164,26 +164,57 @@ function SpeakerModal({ speaker, onClose }) {
     };
   }, [onClose]);
 
+  const hasBio = !!speaker.bio;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
       onClick={onClose}>
-      <div className="relative max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`relative w-full flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-2xl ${hasBio ? 'max-w-3xl' : 'max-w-lg'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <button onClick={onClose}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/80 transition-colors cursor-pointer z-10">
           <X size={18} />
         </button>
-        {speaker.photo
-          ? <img src={speaker.photo} alt={speaker.name}
-              className="w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl"
-              style={{ objectPosition: speaker.photoPosition || 'center top' }} />
-          : <div className="w-full h-96 bg-gradient-to-br from-[#0e1b4d] to-[#dc143c] rounded-2xl flex items-center justify-center">
-              <Mic size={56} className="text-white/40" />
-            </div>
-        }
-        <div className="mt-3 flex items-center justify-center gap-3">
-          <p className="text-white font-semibold text-lg">{speaker.name}</p>
-          <SocialLinks social={speaker.social} size={8} />
+
+        {/* Photo */}
+        <div className={`flex-shrink-0 ${hasBio ? 'md:w-64' : 'w-full'}`}>
+          {speaker.photo
+            ? <img src={speaker.photo} alt={speaker.name}
+                className="w-full h-72 md:h-full object-cover"
+                style={{ objectPosition: speaker.photoPosition || 'center top' }} />
+            : <div className="w-full h-72 md:h-full bg-gradient-to-br from-[#0e1b4d] to-[#dc143c] flex items-center justify-center">
+                <Mic size={56} className="text-white/40" />
+              </div>
+          }
         </div>
+
+        {/* Bio panel */}
+        {hasBio && (
+          <div className="flex-1 bg-gradient-to-br from-[#0e1b4d] to-[#060c22] p-6 flex flex-col justify-between">
+            <div>
+              <span className={`text-xs font-bold px-3 py-1 rounded-full ${speaker.tagColor} mb-4 inline-block`}>
+                {speaker.tag}
+              </span>
+              <h3 className="text-white font-bold text-xl mb-1">{speaker.name}</h3>
+              <p className="text-[#ffc31d] text-sm font-semibold mb-0.5">{speaker.role}</p>
+              {speaker.org && <p className="text-white/50 text-xs mb-4">{speaker.org}</p>}
+              <p className="text-white/80 text-sm leading-relaxed">{speaker.bio}</p>
+            </div>
+            <div className="mt-6">
+              <SocialLinks social={speaker.social} size={8} />
+            </div>
+          </div>
+        )}
+
+        {/* Name + socials below photo when no bio */}
+        {!hasBio && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm px-4 py-3 flex items-center justify-between rounded-b-2xl">
+            <p className="text-white font-semibold">{speaker.name}</p>
+            <SocialLinks social={speaker.social} size={8} />
+          </div>
+        )}
       </div>
     </div>
   );
