@@ -83,13 +83,13 @@ function EventCard({ event, isFeatured }) {
             }`}
           >
             <span className={`text-2xl font-bold ${isFeatured ? 'text-[#ffc31d]' : 'text-[#0e1b4d]'}`}>
-              {date.getDate()}
+              {date.getUTCDate()}
             </span>
             <span className={`text-xs uppercase ${isFeatured ? 'text-white/80' : 'text-[#0e1b4d]/80'}`}>
-              {date.toLocaleString('default', { month: 'short' })}
+              {date.toLocaleString('default', { month: 'short', timeZone: 'UTC' })}
             </span>
             <span className={`text-xs ${isFeatured ? 'text-white/60' : 'text-gray-400'}`}>
-              {date.getFullYear()}
+              {date.getUTCFullYear()}
             </span>
           </div>
 
