@@ -32,7 +32,7 @@ export default function Hero() {
         </div>
 
         <div className="animate-fade-in-up">
-          <p className="text-[#ffc31d] text-sm font-semibold uppercase tracking-[0.3em] mb-4">
+          <p className="text-[#ffc31d] text-2xl font-semibold uppercase tracking-[0.3em] mb-4">
             Kathmandu University Alumni
           </p>
           <h1 className="text-white font-bold leading-tight mb-6" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)' }}>
