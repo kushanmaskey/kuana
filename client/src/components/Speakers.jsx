@@ -90,7 +90,7 @@ const SPEAKERS_2025 = [
     name: 'Rajan Rijal',
     role: 'Moderator',
     org: '',
-    bio: '',
+    bio: "Professor at Collins College in McKinney, Texas, bringing both academic expertise and a deep commitment to community engagement to his work. Held every two years across various cities in the United States and Canada, this reunion brings together Kathmandu University alumni to reconnect and celebrate their shared heritage, and Professor Rijal's active involvement in community service makes him an ideal guide for today's proceedings. Please join me in welcoming him to the stage.",
     photo: '/assets/img/gallery/2025/R6_B9793.jpg',
     photoPosition: 'center 30%',
     tag: 'Moderator',
