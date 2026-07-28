@@ -43,8 +43,9 @@ export default function Hero() {
             Connecting KU graduates across the United States, Canada, and Mexico.
             One community. One mission. Lifelong connections.
           </p>
-          <a href="https://ku.edu.np/" target="_blank" rel="noopener noreferrer"
-            className="block text-[#ffc31d]/90 text-3xl md:text-4xl font-bold mb-12 hover:text-[#ffc31d] transition-colors cursor-pointer">
+          <a href="#"
+            className="block text-[#ffc31d]/90 text-3xl md:text-4xl font-bold mb-12 hover:text-[#ffc31d] transition-colors cursor-pointer"
+            onClick={(e) => e.preventDefault()}>
             Reunion 2027<br />Boston, MA
           </a>
 
