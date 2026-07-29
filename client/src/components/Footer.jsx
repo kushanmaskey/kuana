@@ -11,7 +11,7 @@ export default function Footer() {
             />
           </div>
           <div className="text-center text-xs">
-            &copy; {new Date().getFullYear()} KUANA &bull; kuana.org &bull; Non-Profit Organization
+            &copy; 2023 KUANA &bull; kuana.org &bull; Non-Profit Organization
           </div>
           <div className="text-xs flex items-center gap-4">
             <a href="/privacy" className="hover:text-[#ffc31d] transition-colors">
