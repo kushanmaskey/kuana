@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Calendar, MapPin, ExternalLink } from 'lucide-react';
 import { getEvents } from '../api';
 
@@ -174,6 +174,14 @@ const YEARS = ['2027', '2025', '2023'];
 export default function Events() {
   const [events, setEvents] = useState(SAMPLE_EVENTS);
   const [year, setYear] = useState('2027');
+  const location = useLocation();
+
+  useEffect(() => {
+    const id = location.state?.scrollToEvent;
+    if (id) {
+      document.getElementById(`event-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
 
   useEffect(() => {
     getEvents()

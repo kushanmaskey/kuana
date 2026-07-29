@@ -225,11 +225,7 @@ export default function Venue() {
 
   const backToEvents = () => {
     const eventId = location.state?.fromEventId;
-    navigate('/');
-    setTimeout(() => {
-      const target = eventId ? document.getElementById(`event-${eventId}`) : document.getElementById('events');
-      target?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    navigate('/', { state: { scrollToEvent: eventId } });
   };
 
   useEffect(() => {
