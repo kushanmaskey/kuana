@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { sendContactEmail } = require('../utils/mailer');
+const { EMAIL_REGEX, isValidId } = require('../utils/validate');
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ const contactLimiter = rateLimit({
   message: { error: 'Too many messages sent. Please try again later.' },
 });
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PAGE_LIMIT = 50;
 
 router.post('/', contactLimiter, async (req, res) => {
   const { name, email, subject, message } = req.body;
@@ -26,10 +27,15 @@ router.post('/', contactLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Input too long' });
   }
   try {
-    const trimmed = { name: name.trim(), email: email.trim().toLowerCase(), subject: subject?.trim(), message: message.trim() };
+    const trimmed = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      subject: subject?.trim() || null,
+      message: message.trim(),
+    };
     await pool.query(
       'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1,$2,$3,$4)',
-      [trimmed.name, trimmed.email, trimmed.subject || null, trimmed.message]
+      [trimmed.name, trimmed.email, trimmed.subject, trimmed.message]
     );
     sendContactEmail(trimmed).catch((err) => console.error('Email send failed:', err));
     res.json({ success: true, message: 'Your message has been received. We will get back to you soon!' });
@@ -39,8 +45,13 @@ router.post('/', contactLimiter, async (req, res) => {
 });
 
 router.get('/', requireAuth, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const offset = (page - 1) * PAGE_LIMIT;
   try {
-    const { rows } = await pool.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
+    const { rows } = await pool.query(
+      'SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT $1 OFFSET $2',
+      [PAGE_LIMIT, offset]
+    );
     res.json(rows);
   } catch {
     res.status(500).json({ error: 'Server error' });
@@ -48,8 +59,13 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 router.patch('/:id/read', requireAuth, async (req, res) => {
+  if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid message ID' });
   try {
-    await pool.query('UPDATE contact_messages SET is_read = true WHERE id = $1', [req.params.id]);
+    const result = await pool.query(
+      'UPDATE contact_messages SET is_read = true WHERE id = $1 RETURNING id',
+      [req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: 'Server error' });

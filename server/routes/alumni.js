@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { EMAIL_REGEX, isValidId } = require('../utils/validate');
 
 const router = express.Router();
 
@@ -11,31 +12,53 @@ const registerLimiter = rateLimit({
   message: { error: 'Too many registrations from this IP. Try again later.' },
 });
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: { error: 'Too many requests. Please try again later.' },
+});
+
+const MAX_SEARCH_LEN = 100;
+const PAGE_LIMIT = 50;
 
 router.get('/', requireAuth, async (req, res) => {
-  const { search, year, city } = req.query;
-  let query = 'SELECT id, first_name, last_name, email, phone, graduation_year, degree, department, city, state_province, country, linkedin_url, created_at FROM alumni WHERE is_active = true';
+  const { search, year, city, page = 1 } = req.query;
+
+  if (search && search.length > MAX_SEARCH_LEN) {
+    return res.status(400).json({ error: 'Search term too long' });
+  }
+  const offset = (Math.max(1, parseInt(page) || 1) - 1) * PAGE_LIMIT;
+
+  let query = `SELECT id, first_name, last_name, email, phone, graduation_year, degree, department,
+               city, state_province, country, linkedin_url, created_at
+               FROM alumni WHERE is_active = true`;
   const params = [];
   let idx = 1;
 
   if (search) {
     query += ` AND (first_name ILIKE $${idx} OR last_name ILIKE $${idx} OR email ILIKE $${idx})`;
-    params.push(`%${search}%`);
+    params.push(`%${search.substring(0, MAX_SEARCH_LEN)}%`);
     idx++;
   }
   if (year) {
+    const y = parseInt(year, 10);
+    if (isNaN(y) || y < 1991 || y > new Date().getFullYear() + 1) {
+      return res.status(400).json({ error: 'Invalid graduation year filter' });
+    }
     query += ` AND graduation_year = $${idx}`;
-    params.push(year);
+    params.push(y);
     idx++;
   }
   if (city) {
+    if (city.length > 100) return res.status(400).json({ error: 'City filter too long' });
     query += ` AND city ILIKE $${idx}`;
     params.push(`%${city}%`);
     idx++;
   }
 
-  query += ' ORDER BY last_name, first_name';
+  query += ` ORDER BY last_name, first_name LIMIT $${idx} OFFSET $${idx + 1}`;
+  params.push(PAGE_LIMIT, offset);
+
   try {
     const { rows } = await pool.query(query, params);
     res.json(rows);
@@ -78,13 +101,34 @@ router.post('/register', registerLimiter, async (req, res) => {
   }
 });
 
-router.put('/:id', requireAuth, async (req, res) => {
+router.put('/:id', requireAuth, writeLimiter, async (req, res) => {
+  if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid alumni ID' });
+
   const { first_name, last_name, phone, graduation_year, degree, department, city, state_province, country, bio, linkedin_url, is_active } = req.body;
+
+  if (!first_name || !last_name) {
+    return res.status(400).json({ error: 'First name and last name are required' });
+  }
+  if (first_name.length > 100 || last_name.length > 100) {
+    return res.status(400).json({ error: 'Name too long' });
+  }
+  if (graduation_year && (isNaN(graduation_year) || graduation_year < 1991 || graduation_year > new Date().getFullYear() + 1)) {
+    return res.status(400).json({ error: 'Invalid graduation year' });
+  }
+  if (bio && bio.length > 1000) return res.status(400).json({ error: 'Bio must be 1000 characters or fewer' });
+
   try {
     const { rows } = await pool.query(
-      `UPDATE alumni SET first_name=$1, last_name=$2, phone=$3, graduation_year=$4, degree=$5, department=$6, city=$7, state_province=$8, country=$9, bio=$10, linkedin_url=$11, is_active=$12, updated_at=NOW()
+      `UPDATE alumni SET first_name=$1, last_name=$2, phone=$3, graduation_year=$4, degree=$5, department=$6,
+       city=$7, state_province=$8, country=$9, bio=$10, linkedin_url=$11, is_active=$12, updated_at=NOW()
        WHERE id=$13 RETURNING id, first_name, last_name, email, city, graduation_year`,
-      [first_name, last_name, phone, graduation_year, degree, department, city, state_province, country, bio, linkedin_url, is_active, req.params.id]
+      [
+        first_name.trim(), last_name.trim(), phone?.trim() || null,
+        graduation_year || null, degree?.trim() || null, department?.trim() || null,
+        city?.trim() || null, state_province?.trim() || null, country?.trim() || null,
+        bio?.trim() || null, linkedin_url?.trim() || null,
+        is_active ?? true, req.params.id,
+      ]
     );
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
@@ -93,9 +137,11 @@ router.put('/:id', requireAuth, async (req, res) => {
   }
 });
 
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireAuth, writeLimiter, async (req, res) => {
+  if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid alumni ID' });
   try {
-    await pool.query('UPDATE alumni SET is_active = false WHERE id = $1', [req.params.id]);
+    const result = await pool.query('UPDATE alumni SET is_active = false WHERE id = $1 RETURNING id', [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: 'Server error' });

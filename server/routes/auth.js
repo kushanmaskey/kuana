@@ -43,8 +43,8 @@ router.post('/login', loginLimiter, async (req, res) => {
 });
 
 router.post('/setup', async (req, res) => {
-  if (process.env.NODE_ENV === 'production' && process.env.DISABLE_SETUP === 'true') {
-    return res.status(403).json({ error: 'Setup disabled' });
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Setup disabled in production' });
   }
   const { name, email, password, setupKey } = req.body;
   if (!setupKey || setupKey !== process.env.SETUP_KEY) {

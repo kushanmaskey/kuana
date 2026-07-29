@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { EMAIL_REGEX } = require('../utils/validate');
 
 const router = express.Router();
 
@@ -11,8 +12,8 @@ const donationLimiter = rateLimit({
   message: { error: 'Too many requests. Please try again later.' },
 });
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_DONATION = 100000;
+const PAGE_LIMIT = 50;
 
 router.post('/', donationLimiter, async (req, res) => {
   const { donor_name, donor_email, amount, currency, purpose, message, payment_reference, payment_method } = req.body;
@@ -30,6 +31,8 @@ router.post('/', donationLimiter, async (req, res) => {
   if (donor_name.length > 200) {
     return res.status(400).json({ error: 'Name too long' });
   }
+  if (purpose && purpose.length > 200) return res.status(400).json({ error: 'purpose too long' });
+  if (message && message.length > 1000) return res.status(400).json({ error: 'message too long' });
 
   try {
     const alumniResult = await pool.query('SELECT id FROM alumni WHERE email = $1', [donor_email.toLowerCase()]);
@@ -38,7 +41,11 @@ router.post('/', donationLimiter, async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO donations (alumni_id, donor_name, donor_email, amount, currency, purpose, message, payment_reference, payment_method, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'completed') RETURNING id, amount, donor_name`,
-      [alumni_id, donor_name.trim(), donor_email.trim().toLowerCase(), numAmount, currency ?? 'USD', purpose?.trim() || null, message?.substring(0, 1000) || null, payment_reference || null, payment_method || null]
+      [
+        alumni_id, donor_name.trim(), donor_email.trim().toLowerCase(),
+        numAmount, currency ?? 'USD', purpose?.trim() || null,
+        message?.trim() || null, payment_reference || null, payment_method || null,
+      ]
     );
     res.status(201).json({ success: true, donation: rows[0] });
   } catch {
@@ -47,11 +54,14 @@ router.post('/', donationLimiter, async (req, res) => {
 });
 
 router.get('/', requireAuth, async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const offset = (page - 1) * PAGE_LIMIT;
   try {
     const { rows } = await pool.query(
       `SELECT d.*, a.first_name, a.last_name FROM donations d
        LEFT JOIN alumni a ON d.alumni_id = a.id
-       ORDER BY d.donated_at DESC`
+       ORDER BY d.donated_at DESC LIMIT $1 OFFSET $2`,
+      [PAGE_LIMIT, offset]
     );
     res.json(rows);
   } catch {
