@@ -173,13 +173,22 @@ const YEARS = ['2027', '2025', '2023'];
 
 export default function Events() {
   const [events, setEvents] = useState(SAMPLE_EVENTS);
-  const [year, setYear] = useState('2027');
   const location = useLocation();
+  const scrollToEvent = location.state?.scrollToEvent;
+
+  const getInitialYear = () => {
+    if (scrollToEvent) {
+      const match = SAMPLE_EVENTS.find((e) => e.id === scrollToEvent);
+      if (match) return String(new Date(match.event_date).getUTCFullYear());
+    }
+    return '2027';
+  };
+
+  const [year, setYear] = useState(getInitialYear);
 
   useEffect(() => {
-    const id = location.state?.scrollToEvent;
-    if (id) {
-      document.getElementById(`event-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (scrollToEvent) {
+      document.getElementById(`event-${scrollToEvent}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, []);
 
