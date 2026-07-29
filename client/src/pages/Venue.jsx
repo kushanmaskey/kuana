@@ -26,7 +26,6 @@ const VENUES = {
       `${BASE}/venue-gallery/f.avif`,
       `${BASE}/venue-gallery/g.avif`,
       `${BASE}/venue-gallery/h.avif`,
-      `${BASE}/speakers/keynote.jpg`,
     ],
     facilities: [
       { icon: <Wifi size={18} />, label: 'Free WiFi' },
