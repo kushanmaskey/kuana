@@ -56,6 +56,7 @@ function EventCard({ event, isFeatured }) {
 
   return (
     <div
+      id={`event-${event.id}`}
       className={`rounded-2xl overflow-hidden border transition-all duration-200 hover:shadow-xl ${
         isFeatured
           ? 'border-[#ffc31d] bg-gradient-to-br from-[#0e1b4d] to-[#060c22] text-white col-span-full'
@@ -113,6 +114,7 @@ function EventCard({ event, isFeatured }) {
                 venueSlug ? (
                   <Link
                     to={`/venue/${venueSlug}`}
+                    state={{ fromEventId: event.id }}
                     className={`flex items-center gap-1 hover:underline underline-offset-2 transition-colors ${
                       isFeatured ? 'text-[#ffc31d] hover:text-[#ffd54f]' : 'text-[#0e1b4d] hover:text-[#dc143c]'
                     }`}
@@ -149,6 +151,7 @@ function EventCard({ event, isFeatured }) {
               {venueSlug && (
                 <Link
                   to={`/venue/${venueSlug}`}
+                  state={{ fromEventId: event.id }}
                   className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
                     isFeatured
                       ? 'bg-white/10 text-white hover:bg-white/20'

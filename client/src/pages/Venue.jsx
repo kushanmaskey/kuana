@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, MapPin, Phone, Car, Wifi, Dumbbell, Utensils, Navigation, ExternalLink, Building2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Footer from '../components/Footer';
 
@@ -220,12 +220,15 @@ function PhotoGrid({ photos }) {
 export default function Venue() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const venue = VENUES[slug];
 
   const backToEvents = () => {
+    const eventId = location.state?.fromEventId;
     navigate('/');
     setTimeout(() => {
-      document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' });
+      const target = eventId ? document.getElementById(`event-${eventId}`) : document.getElementById('events');
+      target?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
