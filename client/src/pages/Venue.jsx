@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Phone, Car, Wifi, Dumbbell, Utensils, Navigation, ExternalLink, Building2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Footer from '../components/Footer';
@@ -112,50 +112,83 @@ const VENUES = {
 
 function PhotoGrid({ photos }) {
   const [lightbox, setLightbox] = useState(null);
+  const thumbsRef = useRef(null);
+  const PREVIEW = 10;
+
+  const go = (idx) => {
+    const next = (idx + photos.length) % photos.length;
+    setLightbox(next);
+    const thumb = thumbsRef.current?.children[next];
+    thumb?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  };
 
   useEffect(() => {
     if (lightbox === null) return;
     const handler = (e) => {
       if (e.key === 'Escape') setLightbox(null);
-      if (e.key === 'ArrowRight') setLightbox((i) => (i + 1) % photos.length);
-      if (e.key === 'ArrowLeft') setLightbox((i) => (i - 1 + photos.length) % photos.length);
+      if (e.key === 'ArrowRight') go(lightbox + 1);
+      if (e.key === 'ArrowLeft') go(lightbox - 1);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [lightbox, photos.length]);
+  }, [lightbox]);
 
   return (
     <>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {photos.map((src, i) => (
-          <button
-            key={i}
-            onClick={() => setLightbox(i)}
-            className="relative overflow-hidden rounded-xl aspect-video bg-gray-100 cursor-pointer group"
-          >
-            <img src={src} alt={`Venue photo ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+      {/* Grid — first 10 */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {photos.slice(0, PREVIEW).map((src, i) => (
+          <button key={i} onClick={() => go(i)}
+            className="relative overflow-hidden rounded-xl aspect-video bg-gray-100 cursor-pointer group">
+            <img src={src} alt={`Venue photo ${i + 1}`}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+            {/* "+N more" overlay on last visible tile */}
+            {i === PREVIEW - 1 && photos.length > PREVIEW && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">+{photos.length - PREVIEW} more</span>
+              </div>
+            )}
           </button>
         ))}
       </div>
 
+      {/* Lightbox with carousel + thumbnails */}
       {lightbox !== null && (
-        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col" onClick={() => setLightbox(null)}>
+          {/* Close */}
           <button className="absolute top-4 right-4 text-white/70 hover:text-white cursor-pointer z-10" onClick={() => setLightbox(null)}>
             <X size={28} />
           </button>
-          <button className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
-            onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + photos.length) % photos.length); }}>
-            <ChevronLeft size={24} />
-          </button>
-          <div className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
-            <img src={photos[lightbox]} alt={`Venue photo ${lightbox + 1}`} className="w-full max-h-[85vh] object-contain rounded-xl" />
-            <p className="text-white/50 text-center text-xs mt-3">{lightbox + 1} / {photos.length}</p>
+          <p className="absolute top-5 left-1/2 -translate-x-1/2 text-white/50 text-xs z-10">{lightbox + 1} / {photos.length}</p>
+
+          {/* Main image */}
+          <div className="flex-1 flex items-center justify-center p-4 relative" onClick={(e) => e.stopPropagation()}>
+            <button className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
+              onClick={() => go(lightbox - 1)}>
+              <ChevronLeft size={24} />
+            </button>
+            <img src={photos[lightbox]} alt={`Venue photo ${lightbox + 1}`}
+              className="max-w-full max-h-[75vh] object-contain rounded-xl" />
+            <button className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
+              onClick={() => go(lightbox + 1)}>
+              <ChevronRight size={24} />
+            </button>
           </div>
-          <button className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
-            onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % photos.length); }}>
-            <ChevronRight size={24} />
-          </button>
+
+          {/* Thumbnail strip */}
+          <div className="flex-shrink-0 pb-4 px-4" onClick={(e) => e.stopPropagation()}>
+            <div ref={thumbsRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              {photos.map((src, i) => (
+                <button key={i} onClick={() => go(i)}
+                  className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                    i === lightbox ? 'border-[#ffc31d] opacity-100 scale-105' : 'border-transparent opacity-50 hover:opacity-80'
+                  }`}>
+                  <img src={src} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </>
