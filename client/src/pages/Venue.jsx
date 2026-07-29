@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, Car, Wifi, Dumbbell, Utensils, Navigation, ExternalLink, Building2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Car, Wifi, Dumbbell, Utensils, Navigation, ExternalLink, Building2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Footer from '../components/Footer';
+
+const BASE = 'https://kuana.org/assets/img';
 
 const VENUES = {
   'hilton-lewisville-2025': {
@@ -15,6 +17,17 @@ const VENUES = {
     mapEmbed: 'https://maps.google.com/maps?q=785+State+Hwy+121,+Lewisville,+TX+75067&output=embed',
     parking: 'Free self-parking & EV charging on-site',
     about: 'A full-service hotel located off I-35 in Lewisville, Texas, featuring 165 guest rooms and 17,000 square feet of divisible event space accommodating up to 840 guests. Conveniently located near restaurants, shopping, and just 9 miles from DFW International Airport.',
+    photos: [
+      `${BASE}/venue-gallery/a.avif`,
+      `${BASE}/venue-gallery/b.avif`,
+      `${BASE}/venue-gallery/c.avif`,
+      `${BASE}/venue-gallery/d.avif`,
+      `${BASE}/venue-gallery/e.avif`,
+      `${BASE}/venue-gallery/f.avif`,
+      `${BASE}/venue-gallery/g.avif`,
+      `${BASE}/venue-gallery/h.avif`,
+      `${BASE}/speakers/keynote.jpg`,
+    ],
     facilities: [
       { icon: <Wifi size={18} />, label: 'Free WiFi' },
       { icon: <Dumbbell size={18} />, label: 'Fitness Center' },
@@ -75,6 +88,58 @@ const VENUES = {
     },
   },
 };
+
+function PhotoGrid({ photos }) {
+  const [lightbox, setLightbox] = useState(null);
+
+  useEffect(() => {
+    if (lightbox === null) return;
+    const handler = (e) => {
+      if (e.key === 'Escape') setLightbox(null);
+      if (e.key === 'ArrowRight') setLightbox((i) => (i + 1) % photos.length);
+      if (e.key === 'ArrowLeft') setLightbox((i) => (i - 1 + photos.length) % photos.length);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightbox, photos.length]);
+
+  return (
+    <>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {photos.map((src, i) => (
+          <button
+            key={i}
+            onClick={() => setLightbox(i)}
+            className="relative overflow-hidden rounded-xl aspect-video bg-gray-100 cursor-pointer group"
+          >
+            <img src={src} alt={`Venue photo ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+          </button>
+        ))}
+      </div>
+
+      {lightbox !== null && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+          <button className="absolute top-4 right-4 text-white/70 hover:text-white cursor-pointer z-10" onClick={() => setLightbox(null)}>
+            <X size={28} />
+          </button>
+          <button className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
+            onClick={(e) => { e.stopPropagation(); setLightbox((lightbox - 1 + photos.length) % photos.length); }}>
+            <ChevronLeft size={24} />
+          </button>
+          <div className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
+            <img src={photos[lightbox]} alt={`Venue photo ${lightbox + 1}`} className="w-full max-h-[85vh] object-contain rounded-xl" />
+            <p className="text-white/50 text-center text-xs mt-3">{lightbox + 1} / {photos.length}</p>
+          </div>
+          <button className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
+            onClick={(e) => { e.stopPropagation(); setLightbox((lightbox + 1) % photos.length); }}>
+            <ChevronRight size={24} />
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function Venue() {
   const { slug } = useParams();
@@ -154,6 +219,14 @@ export default function Venue() {
             />
           </div>
         </div>
+
+        {/* Photo Gallery */}
+        {venue.photos?.length > 0 && (
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">Venue Photos</h2>
+            <PhotoGrid photos={venue.photos} />
+          </div>
+        )}
 
         {/* Facilities */}
         <div>

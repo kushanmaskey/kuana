@@ -4,15 +4,6 @@ import { X, ChevronLeft, ChevronRight, Clock, MapPin, Image, ZoomIn, Video } fro
 const BASE = 'https://kuana.org/assets/img';
 
 const MEDIA_2025 = [
-  { id: 'v1', title: 'Venue — Hilton Garden Inn Dallas Lewisville', url: `${BASE}/venue-gallery/a.avif` },
-  { id: 'v2', title: 'Venue Gallery', url: `${BASE}/venue-gallery/b.avif` },
-  { id: 'v3', title: 'Venue Gallery', url: `${BASE}/venue-gallery/c.avif` },
-  { id: 'v4', title: 'Venue Gallery', url: `${BASE}/venue-gallery/d.avif` },
-  { id: 'v5', title: 'Venue Gallery', url: `${BASE}/venue-gallery/e.avif` },
-  { id: 'v6', title: 'Venue Gallery', url: `${BASE}/venue-gallery/f.avif` },
-  { id: 'v7', title: 'Venue Gallery', url: `${BASE}/venue-gallery/g.avif` },
-  { id: 'v8', title: 'Venue Gallery', url: `${BASE}/venue-gallery/h.avif` },
-  { id: 's3', title: 'Keynote Address', url: `${BASE}/speakers/keynote.jpg` },
   { id: 's13', title: 'Hawaiian Waters — The Colony', url: `${BASE}/speakers/hawaiian-waters-the-colony.jpg` },
   { id: 's14', title: 'Online Call — Pre-event', url: `${BASE}/Images/online_call.jpg` },
   { id: 'g1',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0009.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0009.jpg' },
