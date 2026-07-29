@@ -231,8 +231,8 @@ export default function Venue() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Venue not found.</p>
-          <button onClick={() => navigate('/')} className="text-[#0e1b4d] font-semibold hover:underline cursor-pointer">
-            Back to KUANA
+          <button onClick={() => navigate('/#events')} className="text-[#0e1b4d] font-semibold hover:underline cursor-pointer">
+            Back to Events
           </button>
         </div>
       </div>
@@ -245,10 +245,10 @@ export default function Venue() {
       <div className="bg-gradient-to-br from-[#0e1b4d] to-[#060c22] text-white py-14">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/#events')}
             className="flex items-center gap-2 text-white/60 hover:text-[#ffc31d] text-sm mb-6 transition-colors cursor-pointer"
           >
-            <ArrowLeft size={16} /> Back to KUANA
+            <ArrowLeft size={16} /> Back to Events
           </button>
           <p className="text-[#ffc31d] text-sm font-semibold uppercase tracking-widest mb-2">{venue.event}</p>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">{venue.name}</h1>
