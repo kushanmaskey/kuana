@@ -222,6 +222,13 @@ export default function Venue() {
   const navigate = useNavigate();
   const venue = VENUES[slug];
 
+  const backToEvents = () => {
+    navigate('/');
+    setTimeout(() => {
+      document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -231,7 +238,7 @@ export default function Venue() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <p className="text-gray-500 mb-4">Venue not found.</p>
-          <button onClick={() => navigate('/#events')} className="text-[#0e1b4d] font-semibold hover:underline cursor-pointer">
+          <button onClick={() => backToEvents()} className="text-[#0e1b4d] font-semibold hover:underline cursor-pointer">
             Back to Events
           </button>
         </div>
@@ -245,7 +252,7 @@ export default function Venue() {
       <div className="bg-gradient-to-br from-[#0e1b4d] to-[#060c22] text-white py-14">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
-            onClick={() => navigate('/#events')}
+            onClick={() => backToEvents()}
             className="flex items-center gap-2 text-white/60 hover:text-[#ffc31d] text-sm mb-6 transition-colors cursor-pointer"
           >
             <ArrowLeft size={16} /> Back to Events
