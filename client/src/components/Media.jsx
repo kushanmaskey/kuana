@@ -4,7 +4,6 @@ import { X, ChevronLeft, ChevronRight, Clock, MapPin, Image, ZoomIn, Video } fro
 const BASE = 'https://kuana.org/assets/img';
 
 const MEDIA_2025 = [
-  { id: 's13', title: 'Hawaiian Waters — The Colony', url: `${BASE}/speakers/hawaiian-waters-the-colony.jpg` },
   { id: 's14', title: 'Online Call — Pre-event', url: `${BASE}/Images/online_call.jpg` },
   { id: 'g1',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0009.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0009.jpg' },
   { id: 'g2',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0025.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0025.jpg' },
