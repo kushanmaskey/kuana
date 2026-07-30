@@ -36,9 +36,9 @@ The KUANA website serves as the central hub for Kathmandu University alumni livi
 | Backend | Node.js + Express (port 4000) |
 | Database | PostgreSQL via Neon.tech |
 | Hosting (Frontend) | GoDaddy Economy cPanel |
-| Hosting (Backend) | Not yet deployed (pending org card) |
+| Hosting (Backend) | Render.com (free tier) |
 | Auth | JWT + bcrypt |
-| Email | Nodemailer (info@kuana.org) |
+| Email | Resend API (contact form notifications) |
 | Icons | Lucide React |
 
 ---
@@ -48,8 +48,8 @@ The KUANA website serves as the central hub for Kathmandu University alumni livi
 | Environment | Frontend URL | Database | Backend |
 |-------------|-------------|----------|---------|
 | Dev | http://localhost:5174 | Neon dev branch | http://localhost:4000 |
-| Staging | https://staging.kuana.org | Neon staging branch | Not deployed |
-| Production | https://kuana.org | Neon production branch | Not deployed |
+| Staging | http://staging.kuana.org | Neon dev branch | https://kuana.onrender.com |
+| Production | https://kuana.org | Neon dev branch | https://kuana.onrender.com |
 
 ---
 
@@ -90,7 +90,17 @@ SSH public keys are authorized in GoDaddy cPanel → SSH Access → Manage Keys.
 
 ### Render
 - **Account:** info@kuana.org (Info Kuana)
-- **Status:** Account exists, backend not yet deployed (requires card for Web Services)
+- **Service:** `kuana` — Node.js web service (free tier)
+- **URL:** https://kuana.onrender.com
+- **Auto-deploy:** Enabled — pushes to `main` trigger a redeploy automatically
+- **Environment variables set:** `NODE_ENV`, `DATABASE_URL`, `JWT_SECRET`, `MAIL_TO`, `MAIL_USER`, `MAIL_PASS`, `RESEND_API_KEY`, `SETUP_KEY`, `CLIENT_URL`
+- **Note:** Free tier spins down after 15 min inactivity — first request may take up to 50 seconds
+
+### Resend
+- **Account:** info@kuana.org
+- **Purpose:** Transactional email for contact form notifications
+- **Free tier:** 3,000 emails/month, 100/day
+- **From address:** `onboarding@resend.dev` (temporary — pending `kuana.org` domain verification)
 
 ---
 
@@ -123,10 +133,11 @@ JWT_SECRET=your_secret
 PORT=4000
 CLIENT_URL=http://localhost:5174
 SETUP_KEY=kuana_setup_2024
-MAIL_USER=info@kuana.org
-MAIL_PASS=your_mail_password
+RESEND_API_KEY=re_...
 MAIL_TO=info@kuana.org
 ```
+
+The frontend reads API URL from environment files — no changes needed for local dev (Vite proxy handles `/api` → `localhost:4000` automatically).
 
 ### Run Locally
 
@@ -281,8 +292,10 @@ kuana/
 
 ## Notes
 
-- `.env`, `.env.staging`, `.env.production` are gitignored — never commit these
-- GoDaddy Economy hosting does not support Node.js — backend requires separate hosting
+- `server/.env` is gitignored — never commit it
+- `client/.env.staging` and `client/.env.production` are committed — they only contain the public Render API URL (`VITE_API_URL`)
+- GoDaddy Economy hosting does not support Node.js — backend runs on Render
 - Frontend deploys use SSH/SCP via GitHub Actions — no FTP is used
 - SSH keys are stored as GitHub Actions secrets (`SSH_PRIVATE_KEY`, `PROD_SSH_PRIVATE_KEY`, `SSH_USERNAME`)
+- Render auto-deploys on every push to `main` — no manual action needed for the backend
 - After GoDaddy subscription expires, plan to move domain to Cloudflare (~$10/year)

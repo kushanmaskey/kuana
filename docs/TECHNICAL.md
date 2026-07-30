@@ -46,7 +46,7 @@
 │   ├── server.js       (entry point, middleware setup)   │
 │   ├── middleware/auth.js  (JWT verification)            │
 │   ├── db/index.js     (PostgreSQL connection pool)      │
-│   ├── utils/mailer.js (nodemailer — contact emails)     │
+│   ├── utils/mailer.js (Resend API — contact emails)      │
 │   └── routes/                                           │
 │       ├── auth.js     /api/auth                         │
 │       ├── events.js   /api/events                       │
@@ -55,11 +55,11 @@
 │       ├── donations.js /api/donations                   │
 │       └── media.js    /api/media                        │
 └────────────────────────┬───────────────┬────────────────┘
-                         │ pg            │ nodemailer
+                         │ pg            │ Resend SDK
                          ▼               ▼
 ┌───────────────────┐  ┌─────────────────────────────────┐
-│    PostgreSQL      │  │   Gmail SMTP (Google Workspace) │
-│  Tables: admins,  │  │   info@kuana.org → MAIL_TO      │
+│    PostgreSQL      │  │   Resend API (HTTP)             │
+│  Tables: admins,  │  │   → MAIL_TO (info@kuana.org)    │
 │  events, alumni,  │  │   Triggered on contact submit   │
 │  contact_messages,│  └─────────────────────────────────┘
 │  donations, media │
@@ -124,7 +124,7 @@ Browser                  Express Middleware              Route Handler
 ### 2c. Public Contact Form Flow
 
 ```
-Browser           Express /api/contact      PostgreSQL       Gmail SMTP
+Browser           Express /api/contact      PostgreSQL       Resend API
   │                     │                       │                │
   │── POST /contact ───►│                       │                │
   │   { name, email,    │  Rate limit (5/hr/IP) │                │
@@ -145,7 +145,7 @@ Browser           Express /api/contact      PostgreSQL       Gmail SMTP
   │                     │                        │  email, msg   │
 ```
 
-> **Note:** Email sending is non-blocking — a Gmail SMTP failure does not fail the API response. Errors are logged to the server console. Email requires `MAIL_USER`, `MAIL_PASS` (Gmail App Password), and `MAIL_TO` set in `.env`.
+> **Note:** Email sending is non-blocking — a Resend API failure does not fail the API response. Errors are logged to the server console. Requires `RESEND_API_KEY` and `MAIL_TO` set in `.env`. Uses Resend HTTP API instead of SMTP — works on Render free tier (which blocks outbound SMTP).
 
 ### 2d. Alumni Registration Flow
 
@@ -178,15 +178,49 @@ Browser              Express /api/alumni/register       PostgreSQL
 | `PORT` | optional | Server port (default: 4000 locally — port 5000 is blocked by macOS AirPlay Receiver) |
 | `CLIENT_URL` | optional | Allowed CORS origin in production |
 | `DISABLE_SETUP` | optional | Set to `true` to block `/api/auth/setup` in production |
-| `MAIL_USER` | optional | Gmail / Google Workspace address used to send contact form emails |
-| `MAIL_PASS` | optional | Gmail App Password (not the account password — requires 2FA enabled) |
+| `RESEND_API_KEY` | optional | Resend API key for sending contact form emails (starts with `re_`) |
 | `MAIL_TO` | optional | Destination address for contact form notifications (e.g. `info@kuana.org`) |
 
-> **Gmail App Password setup:** Go to myaccount.google.com → Security → 2-Step Verification (enable) → App Passwords → create one for "Mail". The 16-character code is `MAIL_PASS`.
+> **Why Resend instead of Gmail SMTP:** Render's free tier blocks outbound SMTP connections (ports 465/587). Resend uses an HTTP API so it works on any host. Sign up at resend.com → API Keys → Create API Key.
 
-### 3b. Deployment — GitHub Actions (SSH/SCP)
+### 3b. Client Environment Files
 
-The client is a static Vite build deployed to GoDaddy shared hosting via SCP over SSH. The server (Node.js API) runs separately on its own host. There are two environments: **Staging** and **Production**. Both are triggered **manually only** via `workflow_dispatch` in GitHub Actions — never on push.
+The frontend uses Vite's mode system to load the correct API URL per environment. These files are committed (they only contain the public Render URL, no secrets).
+
+| File | Mode | Used when |
+|---|---|---|
+| *(none)* | development | `npm run dev` locally — Vite proxy handles `/api` → `localhost:4000` |
+| `client/.env.staging` | staging | Staging GitHub Actions build (`--mode staging`) |
+| `client/.env.production` | production | Production GitHub Actions build (default) |
+
+Both `.env.staging` and `.env.production` set:
+```
+VITE_API_URL=https://kuana.onrender.com
+```
+
+### 3c. Backend — Render.com
+
+The Node.js API runs on Render free tier at `https://kuana.onrender.com`. It auto-deploys on every push to `main`.
+
+**Environment variables required on Render:**
+
+| Variable | Description |
+|---|---|
+| `NODE_ENV` | `production` — enables production CORS list |
+| `DATABASE_URL` | Neon PostgreSQL connection string |
+| `JWT_SECRET` | Strong random string (min 32 chars) |
+| `RESEND_API_KEY` | Resend API key for contact emails |
+| `MAIL_TO` | Destination for contact form emails |
+| `SETUP_KEY` | One-time admin setup key |
+| `CLIENT_URL` | Optional extra allowed CORS origin |
+
+> **Note:** `PORT` is set automatically by Render — do not add it manually.
+
+> **Free tier limitation:** Spins down after 15 min of inactivity. First request after spin-down may take up to 50 seconds.
+
+### 3d. Deployment — GitHub Actions (SSH/SCP)
+
+The client is a static Vite build deployed to GoDaddy shared hosting via SCP over SSH. The server (Node.js API) runs on Render and deploys automatically — no GitHub Actions needed for the backend. There are two environments: **Staging** and **Production**. Both are triggered **manually only** via `workflow_dispatch` in GitHub Actions — never on push.
 
 #### Environments
 
@@ -223,7 +257,7 @@ jobs:
         run: npm ci
         working-directory: client
       - name: Build
-        run: npm run build
+        run: npm run build -- --mode staging
         working-directory: client
       - name: Setup SSH
         run: |
@@ -294,13 +328,13 @@ jobs:
 
 No server-side files are deployed via this workflow. The Node.js API is managed separately.
 
-### 3c. `client/vite.config.js`
+### 3e. `client/vite.config.js`
 
 Vite dev server proxies `/api/*` to `http://localhost:4000` in development so the frontend and backend run on different ports without CORS issues.
 
 > **Port note:** Changed from 5000 to 4000 because macOS AirPlay Receiver occupies port 5000 on modern Macs. If you need a different port, update both `PORT` in `server/.env` and the proxy target in `vite.config.js`.
 
-### 3d. `server/db/index.js`
+### 3f. `server/db/index.js`
 
 ```js
 const pool = new Pool({
@@ -461,7 +495,7 @@ function requireAuth(req, res, next) {
 
 ## 5. API Reference
 
-Base URL: `https://kuana.org/api` (production) · `http://localhost:4000/api` (dev)
+Base URL: `https://kuana.onrender.com/api` (staging & production) · `http://localhost:4000/api` (dev)
 
 ---
 
@@ -1093,19 +1127,19 @@ And that the backend is running on port 4000. If you changed `PORT` in `.env`, u
 
 **Symptom:** Form submits successfully (200 response) but no email arrives.
 
-**Check server logs** for the error line:
+**Check Render logs** (Render dashboard → kuana → Logs) for:
 ```
-Email send failed: Invalid login: 535-5.7.8 Username and Password not accepted
+Email send failed: ...
 ```
 
 **Common causes and fixes:**
 
 | Cause | Fix |
 |---|---|
-| `MAIL_USER` / `MAIL_PASS` not set in `.env` | Add the values and restart server |
-| Using account password instead of App Password | Generate an App Password at myaccount.google.com/apppasswords |
-| 2FA not enabled on Google account | Enable 2-Step Verification first, then generate App Password |
-| Server not restarted after `.env` change | Restart `node server.js` |
+| `RESEND_API_KEY` not set on Render | Add it in Render → Environment |
+| `MAIL_TO` not set on Render | Add `info@kuana.org` in Render → Environment |
+| Render SMTP blocked (old Gmail setup) | Resend uses HTTP API — not affected by SMTP blocks |
+| `kuana.org` domain not verified on Resend | Emails send from `onboarding@resend.dev` until domain verified |
 
 **Test email directly (without the web form):**
 ```bash
