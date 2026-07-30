@@ -8,6 +8,9 @@ require('dotenv').config();
 const app = express();
 const isProd = process.env.NODE_ENV === 'production';
 
+// Trust Render's proxy so rate-limiter reads the real client IP
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
