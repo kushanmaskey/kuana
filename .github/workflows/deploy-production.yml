@@ -22,6 +22,8 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: client
+        env:
+          VITE_API_URL: https://kuana.onrender.com
 
       - name: Setup SSH
         run: |
