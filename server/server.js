@@ -16,7 +16,7 @@ app.use(helmet({
 
 // CORS — lock to your domain in production
 const allowedOrigins = isProd
-  ? [process.env.CLIENT_URL, 'https://kuana.org', 'https://www.kuana.org', 'https://staging.kuana.org'].filter(Boolean)
+  ? [process.env.CLIENT_URL, 'https://kuana.org', 'https://www.kuana.org', 'https://staging.kuana.org', 'http://staging.kuana.org'].filter(Boolean)
   : ['http://localhost:5174', 'http://localhost:5173'];
 
 app.use(cors({
