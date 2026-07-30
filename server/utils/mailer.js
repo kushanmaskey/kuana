@@ -10,7 +10,7 @@ async function sendContactEmail({ name, email, subject, message }) {
   const safeMessage = escapeHtml(message);
 
   await resend.emails.send({
-    from: 'KUANA Website <info@kuana.org>',
+    from: 'KUANA Website <onboarding@resend.dev>',
     to: process.env.MAIL_TO,
     replyTo: email,
     subject: subject ? `[KUANA Contact] ${safeSubject}` : `[KUANA Contact] Message from ${safeName}`,
