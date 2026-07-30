@@ -63,11 +63,14 @@ The KUANA website serves as the central hub for Kathmandu University alumni livi
 - **Server hostname:** p3plzcpnl475181.prod.phx3.secureserver.net
 - **Storage:** 25 GB (currently using ~0.2 GB)
 
-**FTP Accounts:**
-| Username | Directory | Purpose |
-|----------|-----------|---------|
-| deploy@kuana.org | /public_html/staging.kuana.org | GitHub Actions staging deploy |
-| deploy-prod@kuana.org | /public_html | GitHub Actions production deploy |
+**SSH Access:**
+| Secret | Purpose |
+|--------|---------|
+| `SSH_PRIVATE_KEY` | Ed25519 private key for staging deploys |
+| `PROD_SSH_PRIVATE_KEY` | Ed25519 private key for production deploys |
+| `SSH_USERNAME` | GoDaddy cPanel username (e.g. `enynjq3aag57`) |
+
+SSH public keys are authorized in GoDaddy cPanel → SSH Access → Manage Keys.
 
 ### Neon (PostgreSQL)
 - **Website:** https://neon.tech
@@ -178,12 +181,12 @@ Deployed via GitHub Actions — manual trigger only.
 1. Make changes locally and push to GitHub
 2. Go to GitHub repo → **Actions** → **Deploy to Staging**
 3. Click **Run workflow** → **Run workflow**
-4. Wait ~2 minutes for build and FTP upload to complete
+4. Wait ~2 minutes for build and SCP upload to complete
 5. Visit https://staging.kuana.org to verify
 
 **GitHub Secrets required:**
-- `FTP_USERNAME` → deploy@kuana.org
-- `FTP_PASSWORD` → (set in GoDaddy FTP Manager)
+- `SSH_PRIVATE_KEY` → Ed25519 private key (authorized in GoDaddy cPanel SSH Access)
+- `SSH_USERNAME` → GoDaddy cPanel username (e.g. `enynjq3aag57`)
 
 ### Production (kuana.org)
 
@@ -192,28 +195,22 @@ Same process as staging but uses **Deploy to Production** workflow.
 > ⚠️ Do not deploy to production without stakeholder approval on staging.
 
 **GitHub Secrets required:**
-- `FTP_PROD_USERNAME` → deploy-prod@kuana.org
-- `FTP_PROD_PASSWORD` → (set in GoDaddy FTP Manager)
+- `PROD_SSH_PRIVATE_KEY` → Ed25519 private key (authorized in GoDaddy cPanel SSH Access)
+- `SSH_USERNAME` → same GoDaddy cPanel username as staging
 
 ### Images
 
-Gallery images are committed to git and deployed automatically via FTP with the rest of the build.
+Gallery images are committed to git. Vite copies everything in `client/public/` into `client/dist/` at build time, and the GitHub Actions workflow uploads `client/dist/` to the server via SCP automatically.
 
 **Before committing new images**, compress them to web size (max 1920px wide, ~80% quality) using macOS `sips`:
 ```bash
-# Resize all JPGs in a folder in-place
 for f in client/public/assets/img/gallery/2025/*.jpg; do
   sips --resampleWidth 1920 --setProperty formatOptions 82 "$f"
 done
 ```
-Full-resolution camera files (10–12 MB each) will time out during FTP upload. Target size: 500 KB–1.5 MB per image.
+Target size: 500 KB–1.5 MB per image.
 
-**If images show 404 after a deploy** (FTP state file issue), upload manually via GoDaddy File Manager:
-1. Create a zip of just the images: `cd client/dist/assets && zip -r ~/Desktop/gallery-images.zip img/gallery/`
-2. Upload the zip to `public_html/staging.kuana.org/assets/` in File Manager
-3. Right-click → Extract
-
-Image directories:
+Image directories on server:
 - Profile photos: `public_html/staging.kuana.org/assets/img/profile/`
 - Gallery 2023: `public_html/staging.kuana.org/assets/img/gallery/2023/` + `thumbs/`
 - Gallery 2025: `public_html/staging.kuana.org/assets/img/gallery/2025/` + `thumbs/`
@@ -286,6 +283,6 @@ kuana/
 
 - `.env`, `.env.staging`, `.env.production` are gitignored — never commit these
 - GoDaddy Economy hosting does not support Node.js — backend requires separate hosting
-- Backend deployment is blocked pending KUANA obtaining an organization debit/credit card
-- When KUANA gets a card, Render.com (account: info@kuana.org) is the preferred backend host
+- Frontend deploys use SSH/SCP via GitHub Actions — no FTP is used
+- SSH keys are stored as GitHub Actions secrets (`SSH_PRIVATE_KEY`, `PROD_SSH_PRIVATE_KEY`, `SSH_USERNAME`)
 - After GoDaddy subscription expires, plan to move domain to Cloudflare (~$10/year)
