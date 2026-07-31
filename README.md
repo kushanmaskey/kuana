@@ -102,6 +102,13 @@ SSH public keys are authorized in GoDaddy cPanel → SSH Access → Manage Keys.
 - **Free tier:** 3,000 emails/month, 100/day
 - **From address:** `onboarding@resend.dev` (temporary — pending `kuana.org` domain verification)
 
+### Zeffy
+- **Account:** info@kuana.org
+- **Purpose:** Donation processing for KUANA (100% free for nonprofits)
+- **Donation form:** https://zeffy.com/en-US/donation-form/donate-to-change-lives-19745
+- **How it works:** Donors are redirected to Zeffy — no payment data stored on KUANA servers
+- **PayPal Giving Fund:** Pending — to be added once PayPal nonprofit account is approved
+
 ---
 
 ## Local Development
@@ -240,7 +247,7 @@ Image directories on server:
 | Events | 2023, 2025, 2027 reunion details with year tabs |
 | Speakers | Speaker profiles with photos and social links, filtered by year |
 | Media | Photo and video gallery filtered by year, with lazy-loading thumbnails |
-| Donate | Donation section |
+| Donate | Donation section — links to Zeffy and PayPal Giving Fund (external, no payment data stored) |
 | Contact | Contact form + social media links |
 
 ### Floating Elements
