@@ -4,6 +4,11 @@ import Admin from './pages/Admin';
 import Privacy from './pages/Privacy';
 import Venue from './pages/Venue';
 
+// Prevent browser from restoring scroll position on hard refresh
+if ('scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual';
+}
+
 export default function App() {
   return (
     <BrowserRouter>
