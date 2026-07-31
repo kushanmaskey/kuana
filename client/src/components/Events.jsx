@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, ExternalLink } from 'lucide-react';
 import { getEvents } from '../api';
 
@@ -174,6 +174,7 @@ const YEARS = ['2027', '2025', '2023'];
 export default function Events() {
   const [events, setEvents] = useState(SAMPLE_EVENTS);
   const location = useLocation();
+  const navigate = useNavigate();
   const scrollToEvent = location.state?.scrollToEvent;
 
   const getInitialYear = () => {
@@ -189,6 +190,8 @@ export default function Events() {
   useEffect(() => {
     if (scrollToEvent) {
       document.getElementById(`event-${scrollToEvent}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Clear state so refresh doesn't re-trigger the scroll
+      navigate('/', { replace: true, state: {} });
     }
   }, []);
 
