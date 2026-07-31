@@ -15,8 +15,8 @@ const PROFILES = {
 };
 
 const BOARD = [
-  { year: 'Reunion 2023', location: 'Trophy Club, TX',  m1: 'Kushan Maskey', m2: 'Dipendra Bantawa', m3: 'Rajan Rijal', m4: '',    m5: ''  },
-  { year: 'Reunion 2025', location: 'Lewisville, TX',   m1: 'Kushan Maskey', m2: 'Dipendra Bantawa', m3: 'Rajan Rijal', m4: 'Keshab Simkhada', m5: 'Binam Acharya' },
+  { year: 'Reunion 2023', location: 'Dallas, TX',  m1: 'Kushan Maskey', m2: 'Dipendra Bantawa', m3: 'Rajan Rijal', m4: '',    m5: ''  },
+  { year: 'Reunion 2025', location: 'Dallas, TX',  m1: 'Kushan Maskey', m2: 'Dipendra Bantawa', m3: 'Rajan Rijal', m4: 'Keshab Simkhada', m5: 'Binam Acharya' },
   { year: 'Reunion 2027', location: 'Boston, MA',       m1: 'Bijay Dhungana', m2: 'Nirmal Karki', m3: 'Saurav Man Singh Basnet', m4: 'Projjwol Dhakal', m5: '' },
 ];
 
