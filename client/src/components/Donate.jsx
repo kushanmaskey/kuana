@@ -2,7 +2,7 @@ import { Heart, CheckCircle, ExternalLink } from 'lucide-react';
 
 // TODO: Replace these with your actual donation page URLs once accounts are created
 const PAYPAL_URL = 'https://www.paypal.com/donate/?hosted_button_id=XXXXXXXXX';
-const ZEFFY_URL  = 'https://www.zeffy.com/donation-form/XXXXXXXXX';
+const ZEFFY_URL  = 'https://zeffy.com/en-US/donation-form/donate-to-change-lives-19745';
 
 function PayPalIcon() {
   return (
