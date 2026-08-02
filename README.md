@@ -104,10 +104,10 @@ SSH public keys are authorized in GoDaddy cPanel → SSH Access → Manage Keys.
 
 ### Zeffy
 - **Account:** info@kuana.org
-- **Purpose:** Donation processing for KUANA (100% free for nonprofits)
+- **Purpose:** Donation processing for KUANA (100% free for nonprofits — 0% platform fees)
 - **Donation form:** https://zeffy.com/en-US/donation-form/donate-to-change-lives-19745
-- **How it works:** Donors are redirected to Zeffy — no payment data stored on KUANA servers
-- **PayPal Giving Fund:** Pending — to be added once PayPal nonprofit account is approved
+- **Accessible from:** US and Canada
+- **How it works:** Donors are redirected to Zeffy's secure platform — KUANA does not collect or store any payment information
 
 ---
 
@@ -192,29 +192,52 @@ Migrations are stored in `server/db/migrations/`. Each file runs once and is tra
 
 ## Deployment
 
+The frontend (React) is deployed to GoDaddy shared hosting as a static Vite build via GitHub Actions. The backend (Node.js API) deploys automatically to Render on every push to `main` — no manual action needed.
+
+Both frontend deployment workflows are **manual-trigger only** (`workflow_dispatch`) — they never run automatically on push.
+
+### How it works
+
+Each deploy workflow runs on GitHub's servers (Ubuntu VM) and does 5 things:
+1. Checks out the repo code
+2. Installs Node.js 20 and npm dependencies (`npm ci`)
+3. Builds the React app into static files (`client/dist/`) via Vite
+4. Sets up an SSH key from a GitHub Secret
+5. Uploads `client/dist/` to the GoDaddy server via SCP (secure copy)
+
+Total time: **~2 minutes**.
+
 ### Staging (staging.kuana.org)
 
-Deployed via GitHub Actions — manual trigger only.
-
-1. Make changes locally and push to GitHub
+1. Push changes to `main` on GitHub
 2. Go to GitHub repo → **Actions** → **Deploy to Staging**
 3. Click **Run workflow** → **Run workflow**
-4. Wait ~2 minutes for build and SCP upload to complete
+4. Wait ~2 minutes for build and upload to complete
 5. Visit https://staging.kuana.org to verify
 
+**Workflow file:** `.github/workflows/deploy-staging.yml`  
+**Build command:** `npm run build -- --mode staging` (loads `client/.env.staging`)  
+**Deploy target:** `public_html/staging.kuana.org/` on GoDaddy server
+
 **GitHub Secrets required:**
-- `SSH_PRIVATE_KEY` → Ed25519 private key (authorized in GoDaddy cPanel SSH Access)
+- `SSH_PRIVATE_KEY` → Ed25519 private key (authorized in GoDaddy cPanel → SSH Access)
 - `SSH_USERNAME` → GoDaddy cPanel username (e.g. `enynjq3aag57`)
 
 ### Production (kuana.org)
 
-Same process as staging but uses **Deploy to Production** workflow.
+Same process as staging, using the **Deploy to Production** workflow.
 
-> ⚠️ Do not deploy to production without stakeholder approval on staging.
+> ⚠️ Always verify on staging first. Do not deploy to production without stakeholder approval.
+
+**Workflow file:** `.github/workflows/deploy-production.yml`  
+**Build command:** `npm run build` (default — loads `client/.env.production`)  
+**Deploy target:** `public_html/` (root — serves kuana.org)
 
 **GitHub Secrets required:**
-- `PROD_SSH_PRIVATE_KEY` → Ed25519 private key (authorized in GoDaddy cPanel SSH Access)
+- `PROD_SSH_PRIVATE_KEY` → Ed25519 private key (authorized in GoDaddy cPanel → SSH Access)
 - `SSH_USERNAME` → same GoDaddy cPanel username as staging
+
+> For full technical details on the deployment pipeline — including SSH key setup, troubleshooting, and step-by-step YAML explanations — see [docs/TECHNICAL.md](docs/TECHNICAL.md#3d-deployment--github-actions-sshscp).
 
 ### Images
 
@@ -247,7 +270,7 @@ Image directories on server:
 | Events | 2023, 2025, 2027 reunion details with year tabs |
 | Speakers | Speaker profiles with photos and social links, filtered by year |
 | Media | Photo and video gallery filtered by year, with lazy-loading thumbnails |
-| Donate | Donation section — links to Zeffy and PayPal Giving Fund (external, no payment data stored) |
+| Donate | Donation section — links to Zeffy (external, no payment data stored on KUANA servers) |
 | Contact | Contact form + social media links |
 
 ### Floating Elements

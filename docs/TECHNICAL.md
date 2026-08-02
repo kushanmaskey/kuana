@@ -222,6 +222,30 @@ The Node.js API runs on Render free tier at `https://kuana.onrender.com`. It aut
 
 The client is a static Vite build deployed to GoDaddy shared hosting via SCP over SSH. The server (Node.js API) runs on Render and deploys automatically — no GitHub Actions needed for the backend. There are two environments: **Staging** and **Production**. Both are triggered **manually only** via `workflow_dispatch` in GitHub Actions — never on push.
 
+#### Overview
+
+```
+Developer pushes to GitHub
+        │
+        │  (no automatic deploy)
+        │
+        ▼
+GitHub Actions (manual trigger)
+        │
+        ├── Step 1: Checkout code from GitHub
+        ├── Step 2: Install Node.js 20 + npm cache
+        ├── Step 3: npm ci  (install exact deps from lock file)
+        ├── Step 4: npm run build  (Vite compiles React → static files in client/dist/)
+        ├── Step 5: Setup SSH key from GitHub Secret
+        └── Step 6: SCP upload client/dist/ → GoDaddy server
+                        │
+                        ▼
+              GoDaddy cPanel hosting
+              p3plzcpnl475181.prod.phx3.secureserver.net
+                ├── Staging → public_html/staging.kuana.org/
+                └── Production → public_html/
+```
+
 #### Environments
 
 | Environment | URL | Target path on server | Trigger |
@@ -231,40 +255,73 @@ The client is a static Vite build deployed to GoDaddy shared hosting via SCP ove
 
 #### GitHub Actions Secrets Required
 
+These are stored in GitHub → Repository → Settings → Secrets and variables → Actions.
+
 | Secret | Used by | Description |
 |---|---|---|
-| `SSH_PRIVATE_KEY` | Staging workflow | Ed25519 private key for staging deploys |
-| `PROD_SSH_PRIVATE_KEY` | Production workflow | Ed25519 private key for production deploys |
-| `SSH_USERNAME` | Both | GoDaddy SSH username (e.g. `enynjq3aag57`) |
+| `SSH_PRIVATE_KEY` | Staging workflow | Ed25519 private key authorized for staging deploys |
+| `PROD_SSH_PRIVATE_KEY` | Production workflow | Ed25519 private key authorized for production deploys |
+| `SSH_USERNAME` | Both | GoDaddy cPanel SSH username (e.g. `enynjq3aag57`) |
 
-#### Staging Workflow (`.github/workflows/deploy-staging.yml`)
+Using two separate SSH keys (instead of one shared key) means staging deploys cannot accidentally overwrite production even if the staging secret is compromised.
+
+---
+
+#### Staging Workflow — `.github/workflows/deploy-staging.yml`
+
+**File location:** `.github/workflows/deploy-staging.yml`  
+**Trigger:** Manual only (`workflow_dispatch`) — go to GitHub → Actions → Deploy to Staging → Run workflow  
+**Build mode:** `--mode staging` — Vite loads `client/.env.staging` which sets `VITE_API_URL=https://kuana.onrender.com`  
+**Deploy target:** `public_html/staging.kuana.org/`
 
 ```yaml
 name: Deploy to Staging
+
 on:
-  workflow_dispatch:
+  workflow_dispatch:       # Manual trigger only — no automatic deploys
+```
+
+```yaml
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ubuntu-latest   # GitHub spins up a fresh Ubuntu VM for every run
+```
+
+**Step-by-step breakdown:**
+
+| Step | What it does |
+|---|---|
+| `actions/checkout@v4` | Downloads the full repo code onto the GitHub runner VM |
+| `actions/setup-node@v4` | Installs Node.js 20. `cache: 'npm'` caches `node_modules` keyed by `client/package-lock.json` — subsequent runs skip re-downloading unchanged packages |
+| `npm ci` | Installs exact dependency versions from `package-lock.json` (stricter than `npm install` — fails if lock file is out of sync) |
+| `npm run build -- --mode staging` | Vite compiles all React JSX, CSS, and assets into optimized static files in `client/dist/`. The `--mode staging` flag tells Vite to load `client/.env.staging` so the API URL points to the Render backend |
+| `Setup SSH` | Creates `~/.ssh/id_ed25519` from the `SSH_PRIVATE_KEY` GitHub Secret. `chmod 600` is required — SSH refuses keys that are world-readable. `ssh-keyscan` adds the GoDaddy server's host fingerprint to `known_hosts` so SCP doesn't prompt for confirmation |
+| `Deploy via SCP` | Copies every file in `client/dist/` recursively to the GoDaddy server. The trailing `/` on `client/dist/.` means "copy contents, not the folder itself" |
+
+```yaml
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: client/package-lock.json
+          cache-dependency-path: client/package-lock.json   # cache key
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci              # deterministic install from lock file
         working-directory: client
+
       - name: Build
-        run: npm run build -- --mode staging
+        run: npm run build -- --mode staging   # loads client/.env.staging
         working-directory: client
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519                        # required by SSH
           ssh-keyscan -H p3plzcpnl475181.prod.phx3.secureserver.net >> ~/.ssh/known_hosts
+
       - name: Deploy via SCP
         run: |
           scp -r -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
@@ -272,34 +329,34 @@ jobs:
             ${{ secrets.SSH_USERNAME }}@p3plzcpnl475181.prod.phx3.secureserver.net:public_html/staging.kuana.org/
 ```
 
-#### Production Workflow (`.github/workflows/deploy-production.yml`)
+---
+
+#### Production Workflow — `.github/workflows/deploy-production.yml`
+
+**File location:** `.github/workflows/deploy-production.yml`  
+**Trigger:** Manual only (`workflow_dispatch`) — go to GitHub → Actions → Deploy to Production → Run workflow  
+**Build mode:** default (no `--mode` flag) — Vite loads `client/.env.production` which sets `VITE_API_URL=https://kuana.onrender.com`  
+**Deploy target:** `public_html/` (root — serves `kuana.org`)
+
+The production workflow is identical to staging except for two differences:
+
+| | Staging | Production |
+|---|---|---|
+| SSH key secret | `SSH_PRIVATE_KEY` | `PROD_SSH_PRIVATE_KEY` |
+| Build command | `npm run build -- --mode staging` | `npm run build` |
+| Deploy destination | `public_html/staging.kuana.org/` | `public_html/` |
 
 ```yaml
-name: Deploy to Production
-on:
-  workflow_dispatch:
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: client/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-        working-directory: client
       - name: Build
-        run: npm run build
-        working-directory: client
+        run: npm run build       # default mode — loads client/.env.production
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519   # production key
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H p3plzcpnl475181.prod.phx3.secureserver.net >> ~/.ssh/known_hosts
+
       - name: Deploy via SCP
         run: |
           scp -r -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no \
@@ -307,26 +364,76 @@ jobs:
             ${{ secrets.SSH_USERNAME }}@p3plzcpnl475181.prod.phx3.secureserver.net:public_html/
 ```
 
+> ⚠️ **Always verify on staging first.** Do not deploy to production without stakeholder sign-off on staging.
+
+---
+
+#### What Gets Deployed
+
+`client/dist/` is the Vite build output. It contains everything the browser needs:
+
+| Contents | Source |
+|---|---|
+| React JS bundles (minified) | Compiled from `client/src/` |
+| CSS (Tailwind, purged and minified) | Compiled from component styles |
+| `index.html` | Vite entry point |
+| Images, fonts, icons | Copied from `client/public/` automatically by Vite |
+
+No server-side files are deployed via this workflow. The Node.js API (`server/`) is managed separately on Render.
+
+---
+
 #### SSH Key Setup (one-time)
 
-1. Generate an Ed25519 key pair locally:
+If the SSH keys need to be regenerated (e.g. after a security incident or key expiry):
+
+1. Generate two Ed25519 key pairs locally:
    ```bash
    ssh-keygen -t ed25519 -C "kuana-staging-deploy" -f ~/.ssh/kuana_staging
    ssh-keygen -t ed25519 -C "kuana-prod-deploy" -f ~/.ssh/kuana_prod
    ```
-2. Add each **public key** (`*.pub`) to GoDaddy cPanel → SSH Access → Manage Keys → Import Key → Authorize.
-3. Add each **private key** to GitHub → Settings → Secrets and Variables → Actions:
-   - `SSH_PRIVATE_KEY` → contents of `kuana_staging` private key
-   - `PROD_SSH_PRIVATE_KEY` → contents of `kuana_prod` private key
-4. `SSH_USERNAME` → your GoDaddy cPanel username (e.g. `enynjq3aag57`)
 
-#### What Gets Deployed
+2. Add each **public key** (`*.pub`) to GoDaddy:  
+   GoDaddy → Hosting → cPanel → SSH Access → Manage SSH Keys → Import Key → Authorize
 
-`client/dist/` is the Vite production build output. It includes:
-- All React JS/CSS bundles
-- Everything in `client/public/` (images, fonts, assets) — copied automatically by Vite at build time
+3. Add each **private key** to GitHub:  
+   GitHub → Repository → Settings → Secrets and variables → Actions → New repository secret:
+   - `SSH_PRIVATE_KEY` → contents of `~/.ssh/kuana_staging`
+   - `PROD_SSH_PRIVATE_KEY` → contents of `~/.ssh/kuana_prod`
+   - `SSH_USERNAME` → GoDaddy cPanel username (e.g. `enynjq3aag57`)
 
-No server-side files are deployed via this workflow. The Node.js API is managed separately.
+4. Test by running the Deploy to Staging workflow from GitHub Actions.
+
+---
+
+#### How to Run a Deploy
+
+1. Push your changes to `main` on GitHub
+2. Go to **GitHub → Actions** tab
+3. Select **Deploy to Staging** (or Deploy to Production)
+4. Click **Run workflow** → **Run workflow**
+5. Wait ~2 minutes for the build and upload to complete
+6. Visit the URL to verify: `https://staging.kuana.org` or `https://kuana.org`
+
+The workflow takes roughly:
+- ~20s — checkout + Node setup (cached)
+- ~30s — `npm ci` (cached after first run)
+- ~30s — Vite build
+- ~30s — SCP upload
+- **~2 minutes total**
+
+---
+
+#### Troubleshooting Deployments
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Workflow fails at "Setup SSH" | `SSH_PRIVATE_KEY` or `PROD_SSH_PRIVATE_KEY` secret missing or malformed | Re-add the secret in GitHub Settings — must include full key including `-----BEGIN...` and `-----END...` lines |
+| Workflow fails at "Deploy via SCP" with permission denied | SSH public key not authorized on GoDaddy | Re-authorize the public key in GoDaddy cPanel → SSH Access → Manage Keys |
+| Workflow fails at "Deploy via SCP" with "No such file" | `public_html/staging.kuana.org/` directory doesn't exist on server | Create it via GoDaddy cPanel → File Manager |
+| Site shows old version after deploy | Browser cache | Hard refresh (`Cmd+Shift+R`) or open in incognito |
+| Site shows old version but cache cleared | SCP uploaded to wrong path | Check deploy logs in GitHub Actions for the exact SCP destination path |
+| Build fails with "Cannot find module" | `npm ci` not run or `node_modules` out of sync | Run `npm ci` locally in `client/` to reproduce |
 
 ### 3e. `client/vite.config.js`
 

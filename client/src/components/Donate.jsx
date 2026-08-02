@@ -23,7 +23,7 @@ const PLATFORMS = [
     key: 'zeffy',
     name: 'Zeffy',
     icon: ZeffyIcon,
-    tagline: '100% free for nonprofits — accessible from the US and Canada',
+    tagline: '100% free for nonprofits — accessible from the US and Canada. Alumni from Mexico, please contact us directly.',
     description: 'Zeffy charges zero platform fees — every dollar you give goes directly to KUANA with no deductions.',
     badge: '0% platform fees',
     badgeColor: 'bg-green-100 text-green-700',
