@@ -1,16 +1,6 @@
 import { Heart, CheckCircle, ExternalLink } from 'lucide-react';
 
-// TODO: Replace these with your actual donation page URLs once accounts are created
-const PAYPAL_URL = 'https://www.paypal.com/donate/?hosted_button_id=XXXXXXXXX';
 const ZEFFY_URL  = 'https://zeffy.com/en-US/donation-form/donate-to-change-lives-19745';
-
-function PayPalIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
-      <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z" />
-    </svg>
-  );
-}
 
 function ZeffyIcon() {
   return (
@@ -30,21 +20,10 @@ const WHY_DONATE = [
 
 const PLATFORMS = [
   {
-    key: 'paypal',
-    name: 'PayPal Giving Fund',
-    icon: PayPalIcon,
-    tagline: 'Donate securely via PayPal',
-    description: 'Use your PayPal account, credit, or debit card. PayPal Giving Fund passes 100% of your donation to KUANA.',
-    badge: 'No transaction fees',
-    badgeColor: 'bg-blue-100 text-blue-700',
-    btnClass: 'bg-[#003087] hover:bg-[#001f5e] text-white',
-    url: PAYPAL_URL,
-  },
-  {
     key: 'zeffy',
     name: 'Zeffy',
     icon: ZeffyIcon,
-    tagline: '100% free for nonprofits',
+    tagline: '100% free for nonprofits — accessible from the US and Canada',
     description: 'Zeffy charges zero platform fees — every dollar you give goes directly to KUANA with no deductions.',
     badge: '0% platform fees',
     badgeColor: 'bg-green-100 text-green-700',
@@ -94,7 +73,7 @@ export default function Donate() {
 
           {/* Donation platform cards */}
           <div className="space-y-5">
-            <h3 className="text-xl font-bold text-gray-900">Choose a Platform</h3>
+            <h3 className="text-xl font-bold text-gray-900">Donate via Zeffy</h3>
             {PLATFORMS.map(({ key, name, icon: Icon, tagline, description, badge, badgeColor, btnClass, url }) => (
               <div key={key} className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm flex flex-col gap-4">
                 <div className="flex items-start justify-between gap-4">
