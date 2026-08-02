@@ -76,9 +76,15 @@ router.post('/register', registerLimiter, async (req, res) => {
   if (!EMAIL_REGEX.test(email)) {
     return res.status(400).json({ error: 'Invalid email address' });
   }
+  if (email.length > 200) return res.status(400).json({ error: 'Email too long' });
   if (first_name.length > 100 || last_name.length > 100) {
     return res.status(400).json({ error: 'Name too long' });
   }
+  if (phone && (phone.length > 30 || !/^[\d\s\-().+]+$/.test(phone))) {
+    return res.status(400).json({ error: 'Invalid phone number' });
+  }
+  if (city && city.length > 100) return res.status(400).json({ error: 'City too long' });
+  if (state_province && state_province.length > 100) return res.status(400).json({ error: 'State/Province too long' });
   if (graduation_year && (isNaN(graduation_year) || graduation_year < 1991 || graduation_year > new Date().getFullYear() + 1)) {
     return res.status(400).json({ error: 'Invalid graduation year' });
   }

@@ -34,24 +34,39 @@ export default function Register() {
 
   const validate = () => {
     const e = {};
-    if (!form.first_name.trim()) e.first_name = 'First name is required.';
-    else if (!ALPHA_REGEX.test(form.first_name)) e.first_name = 'First name must contain letters only.';
+    const firstName = form.first_name.trim();
+    const lastName  = form.last_name.trim();
+    const email     = form.email.trim();
+    const phone     = form.phone.trim();
+    const city      = form.city.trim();
+    const state     = form.state_province.trim();
 
-    if (!form.last_name.trim()) e.last_name = 'Last name is required.';
-    else if (!ALPHA_REGEX.test(form.last_name)) e.last_name = 'Last name must contain letters only.';
+    if (!firstName) e.first_name = 'First name is required.';
+    else if (!ALPHA_REGEX.test(firstName)) e.first_name = 'First name must contain letters only.';
+    else if (firstName.length > 100) e.first_name = 'First name must be 100 characters or fewer.';
 
-    if (form.phone && !PHONE_REGEX.test(form.phone)) e.phone = 'Phone must contain numbers only.';
+    if (!lastName) e.last_name = 'Last name is required.';
+    else if (!ALPHA_REGEX.test(lastName)) e.last_name = 'Last name must contain letters only.';
+    else if (lastName.length > 100) e.last_name = 'Last name must be 100 characters or fewer.';
 
-    if (!form.email.trim()) e.email = 'Email is required.';
-    else if (!EMAIL_REGEX.test(form.email)) e.email = 'Enter a valid email address.';
+    if (phone && !PHONE_REGEX.test(phone)) e.phone = 'Phone must contain numbers only.';
+    else if (phone.length > 30) e.phone = 'Phone number is too long.';
 
-    if (!form.city.trim()) e.city = 'City is required.';
-    else if (!ALPHANUM_REGEX.test(form.city)) e.city = 'City contains invalid characters.';
+    if (!email) e.email = 'Email is required.';
+    else if (!EMAIL_REGEX.test(email)) e.email = 'Enter a valid email address.';
+    else if (email.length > 200) e.email = 'Email address is too long.';
 
-    if (!form.state_province.trim()) e.state_province = 'State / Province is required.';
-    else if (!ALPHANUM_REGEX.test(form.state_province)) e.state_province = 'State contains invalid characters.';
+    if (!city) e.city = 'City is required.';
+    else if (!ALPHANUM_REGEX.test(city)) e.city = 'City contains invalid characters.';
+    else if (city.length > 100) e.city = 'City must be 100 characters or fewer.';
+
+    if (!state) e.state_province = 'State / Province is required.';
+    else if (!ALPHANUM_REGEX.test(state)) e.state_province = 'State contains invalid characters.';
+    else if (state.length > 100) e.state_province = 'State must be 100 characters or fewer.';
 
     if (!form.reunion_interest) e.reunion_interest = 'Please select an option.';
+
+    if (form.comment.length > 500) e.comment = 'Comment must be 500 characters or fewer.';
 
     return e;
   };
@@ -136,6 +151,7 @@ export default function Register() {
                   value={form.first_name}
                   onChange={set('first_name')}
                   placeholder="Kushan"
+                  maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
                 />
                 <FieldError msg={errors.first_name} />
@@ -149,6 +165,7 @@ export default function Register() {
                   value={form.last_name}
                   onChange={set('last_name')}
                   placeholder="Maskey"
+                  maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
                 />
                 <FieldError msg={errors.last_name} />
@@ -163,6 +180,7 @@ export default function Register() {
                 value={form.phone}
                 onChange={set('phone')}
                 placeholder="+1 (555) 000-0000"
+                maxLength={30}
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
               />
               <FieldError msg={errors.phone} />
@@ -178,6 +196,7 @@ export default function Register() {
                 value={form.email}
                 onChange={set('email')}
                 placeholder="you@example.com"
+                maxLength={200}
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
               />
               <FieldError msg={errors.email} />
@@ -194,6 +213,7 @@ export default function Register() {
                   value={form.city}
                   onChange={set('city')}
                   placeholder="Dallas"
+                  maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
                 />
                 <FieldError msg={errors.city} />
@@ -207,6 +227,7 @@ export default function Register() {
                   value={form.state_province}
                   onChange={set('state_province')}
                   placeholder="TX"
+                  maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
                 />
                 <FieldError msg={errors.state_province} />
@@ -238,14 +259,21 @@ export default function Register() {
 
             {/* Comment */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Comments / Message</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-sm font-semibold text-gray-700">Comments / Message</label>
+                <span className={`text-xs ${form.comment.length > 450 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {form.comment.length}/500
+                </span>
+              </div>
               <textarea
                 rows={4}
                 value={form.comment}
                 onChange={set('comment')}
                 placeholder="Tell us anything else you'd like to share..."
+                maxLength={500}
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors resize-none"
               />
+              <FieldError msg={errors.comment} />
             </div>
 
             {status === 'error' && (
