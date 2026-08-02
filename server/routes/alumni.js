@@ -102,6 +102,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     );
     res.status(201).json({ success: true, alumni: rows[0] });
   } catch (err) {
+    console.error('Alumni register error:', err.message);
     if (err.code === '23505') return res.status(409).json({ error: 'Email already registered' });
     res.status(500).json({ error: 'Server error' });
   }

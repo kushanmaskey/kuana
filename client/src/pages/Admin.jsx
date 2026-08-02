@@ -181,9 +181,28 @@ function EventsTab() {
   );
 }
 
+function parseReunionInterest(bio) {
+  if (!bio) return null;
+  const match = bio.match(/Interested in KUANA Reunion 2027: (\w+)/);
+  return match ? match[1] : null;
+}
+
+function parseComment(bio) {
+  if (!bio) return null;
+  const match = bio.match(/Comment: (.+)/s);
+  return match ? match[1].trim() : null;
+}
+
+const REUNION_BADGE = {
+  Yes:   'bg-green-100 text-green-700',
+  No:    'bg-gray-100 text-gray-500',
+  Maybe: 'bg-yellow-100 text-yellow-700',
+};
+
 function AlumniTab() {
   const [alumni, setAlumni] = useState([]);
   const [search, setSearch] = useState('');
+  const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
     getAlumni({ search }).then((r) => setAlumni(r.data)).catch(() => {});
@@ -207,21 +226,48 @@ function AlumniTab() {
             <tr className="border-b border-gray-100">
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Name</th>
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Email</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Grad Year</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Phone</th>
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Location</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Reunion 2027</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Registered</th>
             </tr>
           </thead>
           <tbody>
-            {alumni.map((a) => (
-              <tr key={a.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="py-3 px-2 font-medium text-gray-900">{a.first_name} {a.last_name}</td>
-                <td className="py-3 px-2 text-gray-500">{a.email}</td>
-                <td className="py-3 px-2 text-gray-500">{a.graduation_year ?? '—'}</td>
-                <td className="py-3 px-2 text-gray-500">{a.city ? `${a.city}, ${a.state_province ?? ''}` : '—'}</td>
-              </tr>
-            ))}
+            {alumni.map((a) => {
+              const interest = parseReunionInterest(a.bio);
+              const comment  = parseComment(a.bio);
+              return (
+                <>
+                  <tr
+                    key={a.id}
+                    className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setExpanded(expanded === a.id ? null : a.id)}
+                  >
+                    <td className="py-3 px-2 font-medium text-gray-900">{a.first_name} {a.last_name}</td>
+                    <td className="py-3 px-2 text-gray-500">{a.email}</td>
+                    <td className="py-3 px-2 text-gray-500">{a.phone ?? '—'}</td>
+                    <td className="py-3 px-2 text-gray-500">{a.city ? `${a.city}, ${a.state_province ?? ''}` : '—'}</td>
+                    <td className="py-3 px-2">
+                      {interest ? (
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${REUNION_BADGE[interest] ?? 'bg-gray-100 text-gray-500'}`}>
+                          {interest}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="py-3 px-2 text-gray-400 text-xs">{new Date(a.created_at).toLocaleDateString()}</td>
+                  </tr>
+                  {expanded === a.id && comment && (
+                    <tr key={`${a.id}-comment`} className="bg-gray-50 border-b border-gray-100">
+                      <td colSpan={6} className="px-4 py-3 text-sm text-gray-600 italic">
+                        <span className="font-semibold text-gray-500 not-italic">Comment: </span>{comment}
+                      </td>
+                    </tr>
+                  )}
+                </>
+              );
+            })}
             {alumni.length === 0 && (
-              <tr><td colSpan={4} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
+              <tr><td colSpan={6} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
             )}
           </tbody>
         </table>

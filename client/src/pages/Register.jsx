@@ -7,6 +7,29 @@ const ALPHA_REGEX    = /^[A-Za-z\s'-]+$/;
 const EMAIL_REGEX    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALPHANUM_REGEX = /^[A-Za-z0-9\s,.-]+$/;
 
+const US_STATES = [
+  ['AL', 'Alabama'], ['AK', 'Alaska'], ['AZ', 'Arizona'], ['AR', 'Arkansas'],
+  ['CA', 'California'], ['CO', 'Colorado'], ['CT', 'Connecticut'], ['DE', 'Delaware'],
+  ['FL', 'Florida'], ['GA', 'Georgia'], ['HI', 'Hawaii'], ['ID', 'Idaho'],
+  ['IL', 'Illinois'], ['IN', 'Indiana'], ['IA', 'Iowa'], ['KS', 'Kansas'],
+  ['KY', 'Kentucky'], ['LA', 'Louisiana'], ['ME', 'Maine'], ['MD', 'Maryland'],
+  ['MA', 'Massachusetts'], ['MI', 'Michigan'], ['MN', 'Minnesota'], ['MS', 'Mississippi'],
+  ['MO', 'Missouri'], ['MT', 'Montana'], ['NE', 'Nebraska'], ['NV', 'Nevada'],
+  ['NH', 'New Hampshire'], ['NJ', 'New Jersey'], ['NM', 'New Mexico'], ['NY', 'New York'],
+  ['NC', 'North Carolina'], ['ND', 'North Dakota'], ['OH', 'Ohio'], ['OK', 'Oklahoma'],
+  ['OR', 'Oregon'], ['PA', 'Pennsylvania'], ['RI', 'Rhode Island'], ['SC', 'South Carolina'],
+  ['SD', 'South Dakota'], ['TN', 'Tennessee'], ['TX', 'Texas'], ['UT', 'Utah'],
+  ['VT', 'Vermont'], ['VA', 'Virginia'], ['WA', 'Washington'], ['WV', 'West Virginia'],
+  ['WI', 'Wisconsin'], ['WY', 'Wyoming'], ['DC', 'District of Columbia'],
+];
+
+const CA_PROVINCES = [
+  ['AB', 'Alberta'], ['BC', 'British Columbia'], ['MB', 'Manitoba'],
+  ['NB', 'New Brunswick'], ['NL', 'Newfoundland and Labrador'], ['NT', 'Northwest Territories'],
+  ['NS', 'Nova Scotia'], ['NU', 'Nunavut'], ['ON', 'Ontario'],
+  ['PE', 'Prince Edward Island'], ['QC', 'Quebec'], ['SK', 'Saskatchewan'], ['YT', 'Yukon'],
+];
+
 const INITIAL = {
   first_name: '',
   last_name: '',
@@ -23,50 +46,74 @@ function FieldError({ msg }) {
   return <p className="text-red-500 text-xs mt-1">{msg}</p>;
 }
 
+function validateField(name, value) {
+  const trimmed = typeof value === 'string' ? value.trim() : value;
+  switch (name) {
+    case 'first_name':
+      if (!trimmed) return 'First name is required.';
+      if (!ALPHA_REGEX.test(trimmed)) return 'First name must contain letters only.';
+      if (trimmed.length > 100) return 'First name must be 100 characters or fewer.';
+      return '';
+    case 'last_name':
+      if (!trimmed) return 'Last name is required.';
+      if (!ALPHA_REGEX.test(trimmed)) return 'Last name must contain letters only.';
+      if (trimmed.length > 100) return 'Last name must be 100 characters or fewer.';
+      return '';
+    case 'phone': {
+      const digits = trimmed.replace(/\D/g, '');
+      if (trimmed && digits.length !== 10) return 'Phone must be exactly 10 digits.';
+      return '';
+    }
+    case 'email':
+      if (!trimmed) return 'Email is required.';
+      if (!EMAIL_REGEX.test(trimmed)) return 'Enter a valid email address.';
+      if (trimmed.length > 200) return 'Email address is too long.';
+      return '';
+    case 'city':
+      if (!trimmed) return 'City is required.';
+      if (!ALPHANUM_REGEX.test(trimmed)) return 'City contains invalid characters.';
+      if (trimmed.length > 100) return 'City must be 100 characters or fewer.';
+      return '';
+    case 'state_province':
+      if (!value) return 'Please select a state or province.';
+      return '';
+    case 'reunion_interest':
+      if (!value) return 'Please select an option.';
+      return '';
+    case 'comment':
+      if (value.length > 500) return 'Comment must be 500 characters or fewer.';
+      return '';
+    default:
+      return '';
+  }
+}
+
 export default function Register() {
   const [form, setForm] = useState(INITIAL);
   const [errors, setErrors] = useState({});
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const set = (field) => (e) => {
+    const val = e.target.value;
+    setForm((f) => ({ ...f, [field]: val }));
+    if (errors[field] !== undefined) {
+      const err = validateField(field, val);
+      setErrors((prev) => ({ ...prev, [field]: err }));
+    }
+  };
+
+  const blur = (field) => () => {
+    const err = validateField(field, form[field]);
+    setErrors((prev) => ({ ...prev, [field]: err }));
+  };
 
   const validate = () => {
     const e = {};
-    const firstName = form.first_name.trim();
-    const lastName  = form.last_name.trim();
-    const email     = form.email.trim();
-    const phone     = form.phone.trim();
-    const city      = form.city.trim();
-    const state     = form.state_province.trim();
-
-    if (!firstName) e.first_name = 'First name is required.';
-    else if (!ALPHA_REGEX.test(firstName)) e.first_name = 'First name must contain letters only.';
-    else if (firstName.length > 100) e.first_name = 'First name must be 100 characters or fewer.';
-
-    if (!lastName) e.last_name = 'Last name is required.';
-    else if (!ALPHA_REGEX.test(lastName)) e.last_name = 'Last name must contain letters only.';
-    else if (lastName.length > 100) e.last_name = 'Last name must be 100 characters or fewer.';
-
-    const digitsOnly = phone.replace(/\D/g, '');
-    if (phone && digitsOnly.length !== 10) e.phone = 'Phone must be exactly 10 digits.';
-
-    if (!email) e.email = 'Email is required.';
-    else if (!EMAIL_REGEX.test(email)) e.email = 'Enter a valid email address.';
-    else if (email.length > 200) e.email = 'Email address is too long.';
-
-    if (!city) e.city = 'City is required.';
-    else if (!ALPHANUM_REGEX.test(city)) e.city = 'City contains invalid characters.';
-    else if (city.length > 100) e.city = 'City must be 100 characters or fewer.';
-
-    if (!state) e.state_province = 'State / Province is required.';
-    else if (!ALPHANUM_REGEX.test(state)) e.state_province = 'State contains invalid characters.';
-    else if (state.length > 100) e.state_province = 'State must be 100 characters or fewer.';
-
-    if (!form.reunion_interest) e.reunion_interest = 'Please select an option.';
-
-    if (form.comment.length > 500) e.comment = 'Comment must be 500 characters or fewer.';
-
+    Object.keys(INITIAL).forEach((key) => {
+      const err = validateField(key, form[key]);
+      if (err) e[key] = err;
+    });
     return e;
   };
 
@@ -153,6 +200,7 @@ export default function Register() {
                   type="text"
                   value={form.first_name}
                   onChange={set('first_name')}
+                  onBlur={blur('first_name')}
                   placeholder="Kushan"
                   maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
@@ -167,6 +215,7 @@ export default function Register() {
                   type="text"
                   value={form.last_name}
                   onChange={set('last_name')}
+                  onBlur={blur('last_name')}
                   placeholder="Maskey"
                   maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
@@ -182,6 +231,7 @@ export default function Register() {
                 type="tel"
                 value={form.phone}
                 onChange={set('phone')}
+                onBlur={blur('phone')}
                 placeholder="+1 (555) 000-0000"
                 maxLength={30}
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
@@ -198,6 +248,7 @@ export default function Register() {
                 type="email"
                 value={form.email}
                 onChange={set('email')}
+                onBlur={blur('email')}
                 placeholder="you@example.com"
                 maxLength={200}
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
@@ -215,6 +266,7 @@ export default function Register() {
                   type="text"
                   value={form.city}
                   onChange={set('city')}
+                  onBlur={blur('city')}
                   placeholder="Dallas"
                   maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
@@ -225,14 +277,24 @@ export default function Register() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   State / Province <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
+                <select
                   value={form.state_province}
                   onChange={set('state_province')}
-                  placeholder="TX"
-                  maxLength={100}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
-                />
+                  onBlur={blur('state_province')}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white"
+                >
+                  <option value="">Select state / province</option>
+                  <optgroup label="United States">
+                    {US_STATES.map(([abbr, name]) => (
+                      <option key={abbr} value={abbr}>{abbr} – {name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Canada">
+                    {CA_PROVINCES.map(([abbr, name]) => (
+                      <option key={abbr} value={abbr}>{abbr} – {name}</option>
+                    ))}
+                  </optgroup>
+                </select>
                 <FieldError msg={errors.state_province} />
               </div>
             </div>
@@ -272,6 +334,7 @@ export default function Register() {
                 rows={4}
                 value={form.comment}
                 onChange={set('comment')}
+                onBlur={blur('comment')}
                 placeholder="Tell us anything else you'd like to share..."
                 maxLength={500}
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors resize-none"
