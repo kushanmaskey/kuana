@@ -80,8 +80,8 @@ router.post('/register', registerLimiter, async (req, res) => {
   if (first_name.length > 100 || last_name.length > 100) {
     return res.status(400).json({ error: 'Name too long' });
   }
-  if (phone && (phone.length > 30 || !/^[\d\s\-().+]+$/.test(phone))) {
-    return res.status(400).json({ error: 'Invalid phone number' });
+  if (phone && !/^\d{10}$/.test(phone)) {
+    return res.status(400).json({ error: 'Phone must be exactly 10 digits' });
   }
   if (city && city.length > 100) return res.status(400).json({ error: 'City too long' });
   if (state_province && state_province.length > 100) return res.status(400).json({ error: 'State/Province too long' });

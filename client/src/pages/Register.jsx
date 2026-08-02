@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import { CheckCircle, ArrowLeft } from 'lucide-react';
 import { registerAlumni } from '../api';
 
-const ALPHA_REGEX = /^[A-Za-z\s'-]+$/;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^[\d\s\-().+]+$/;
+const ALPHA_REGEX    = /^[A-Za-z\s'-]+$/;
+const EMAIL_REGEX    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ALPHANUM_REGEX = /^[A-Za-z0-9\s,.-]+$/;
 
 const INITIAL = {
@@ -49,8 +48,8 @@ export default function Register() {
     else if (!ALPHA_REGEX.test(lastName)) e.last_name = 'Last name must contain letters only.';
     else if (lastName.length > 100) e.last_name = 'Last name must be 100 characters or fewer.';
 
-    if (phone && !PHONE_REGEX.test(phone)) e.phone = 'Phone must contain numbers only.';
-    else if (phone.length > 30) e.phone = 'Phone number is too long.';
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (phone && digitsOnly.length !== 10) e.phone = 'Phone must be exactly 10 digits.';
 
     if (!email) e.email = 'Email is required.';
     else if (!EMAIL_REGEX.test(email)) e.email = 'Enter a valid email address.';
@@ -86,7 +85,7 @@ export default function Register() {
       await registerAlumni({
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
-        phone: form.phone.trim() || undefined,
+        phone: form.phone.replace(/\D/g, '') || undefined,
         email: form.email.trim().toLowerCase(),
         city: form.city.trim(),
         state_province: form.state_province.trim(),
@@ -95,8 +94,12 @@ export default function Register() {
       setStatus('success');
     } catch (err) {
       const msg = err?.response?.data?.error;
+      console.error('Registration error:', err?.response?.status, msg);
       if (msg?.toLowerCase().includes('already')) {
         setErrors({ email: 'This email is already registered.' });
+      } else if (msg) {
+        setStatus('error');
+        setErrors({ _server: msg });
       } else {
         setStatus('error');
       }
@@ -277,7 +280,9 @@ export default function Register() {
             </div>
 
             {status === 'error' && (
-              <p className="text-red-500 text-sm">Something went wrong. Please try again.</p>
+              <p className="text-red-500 text-sm">
+                {errors._server || 'Something went wrong. Please try again.'}
+              </p>
             )}
 
             <button
