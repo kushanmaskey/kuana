@@ -29,9 +29,7 @@ function LoginForm({ onLogin }) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-[#dc143c] flex items-center justify-center text-white font-bold text-xl mx-auto mb-4">
-            KU
-          </div>
+          <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-16 mx-auto mb-4 object-contain" />
           <h1 className="text-2xl font-bold text-gray-900">KUANA Admin</h1>
           <p className="text-gray-400 text-sm mt-1">Sign in to manage your site</p>
         </div>
@@ -684,8 +682,7 @@ export default function Admin() {
       {/* Top bar */}
       <div className="bg-[#dc143c] text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#ffc31d] flex items-center justify-center text-[#dc143c] font-bold text-xs">KU</div>
-          <span className="font-bold text-sm">KUANA Admin</span>
+          <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-7 object-contain brightness-0 invert" />
         </div>
         <div className="flex items-center gap-4">
           <span className="text-white/70 text-sm">{admin.email}</span>
