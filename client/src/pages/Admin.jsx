@@ -377,6 +377,7 @@ function AlumniTab() {
   const [exportField, setExportField] = useState('name');
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
+  const [stateFilter, setStateFilter] = useState('');
   const chartRef = useRef(null);
 
   const EXPORT_TO_CHART = {
@@ -389,14 +390,14 @@ function AlumniTab() {
     city:       'city',
     state:      'state',
   };
-  const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
+  const chartView = stateFilter ? 'state' : (EXPORT_TO_CHART[exportField] ?? 'month');
 
   useEffect(() => {
-    getAlumni({ search }).then((r) => {
+    getAlumni({ search, state: stateFilter || undefined }).then((r) => {
       setAlumni(r.data);
       setSelected(new Set(r.data.map((a) => a.id)));
     }).catch(() => {});
-  }, [search]);
+  }, [search, stateFilter]);
 
   const allChecked = alumni.length > 0 && alumni.every((a) => selected.has(a.id));
 
@@ -475,6 +476,13 @@ function AlumniTab() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-52"
+          />
+          <input
+            type="text"
+            placeholder="State / Province..."
+            value={stateFilter}
+            onChange={(e) => setStateFilter(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-36"
           />
           <select
             value={exportField}

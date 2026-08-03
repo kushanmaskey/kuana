@@ -22,7 +22,7 @@ const MAX_SEARCH_LEN = 100;
 const PAGE_LIMIT = 50;
 
 router.get('/', requireAuth, async (req, res) => {
-  const { search, year, city, page = 1 } = req.query;
+  const { search, year, city, state, page = 1 } = req.query;
 
   if (search && search.length > MAX_SEARCH_LEN) {
     return res.status(400).json({ error: 'Search term too long' });
@@ -53,6 +53,12 @@ router.get('/', requireAuth, async (req, res) => {
     if (city.length > 100) return res.status(400).json({ error: 'City filter too long' });
     query += ` AND city ILIKE $${idx}`;
     params.push(`%${city}%`);
+    idx++;
+  }
+  if (state) {
+    if (state.length > 100) return res.status(400).json({ error: 'State filter too long' });
+    query += ` AND state_province ILIKE $${idx}`;
+    params.push(`%${state}%`);
     idx++;
   }
 
