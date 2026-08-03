@@ -202,7 +202,7 @@ const EXPORT_FIELDS = [
   { value: 'school',     label: 'School' },
   { value: 'department', label: 'Department' },
   { value: 'city',       label: 'City' },
-  { value: 'state',      label: 'State' },
+  { value: 'state',      label: 'State / Province' },
 ];
 
 function timestamp() {
