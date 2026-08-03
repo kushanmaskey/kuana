@@ -208,6 +208,47 @@ function timestamp() {
   return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
 }
 
+function tally(items, keyFn) {
+  const map = {};
+  for (const item of items) {
+    const key = keyFn(item) || 'Unknown';
+    map[key] = (map[key] || 0) + 1;
+  }
+  return Object.entries(map).sort((a, b) => b[1] - a[1]);
+}
+
+function BreakdownTable({ title, rows }) {
+  if (!rows.length) return null;
+  const max = rows[0][1];
+  return (
+    <div className="bg-gray-50 rounded-xl p-4">
+      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">{title}</h4>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-gray-200">
+            <th className="text-left pb-2 px-1 text-xs font-semibold text-gray-400">Name</th>
+            <th className="text-right pb-2 px-1 text-xs font-semibold text-gray-400 w-12">Count</th>
+            <th className="pb-2 px-1 w-28"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([label, count]) => (
+            <tr key={label} className="border-b border-gray-100 last:border-0">
+              <td className="py-1.5 px-1 text-gray-700 text-xs">{label}</td>
+              <td className="py-1.5 px-1 text-right font-bold text-gray-900 text-xs">{count}</td>
+              <td className="py-1.5 px-1">
+                <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                  <div className="h-full bg-[#dc143c] rounded-full transition-all" style={{ width: `${(count / max) * 100}%` }} />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function AlumniTab() {
   const [alumni, setAlumni] = useState([]);
   const [search, setSearch] = useState('');
@@ -365,6 +406,41 @@ function AlumniTab() {
           </tbody>
         </table>
       </div>
+
+      {alumni.length > 0 && (
+        <div className="mt-10">
+          <div className="flex items-center gap-3 mb-4">
+            <h3 className="text-base font-bold text-gray-800">Alumni Breakdown</h3>
+            <span className="text-xs text-gray-400 font-normal">({alumni.length} total)</span>
+          </div>
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <BreakdownTable
+              title="By Graduation Year"
+              rows={tally(alumni, (a) => a.graduation_year?.toString())}
+            />
+            <BreakdownTable
+              title="By State / Province"
+              rows={tally(alumni, (a) => a.state_province)}
+            />
+            <BreakdownTable
+              title="By City"
+              rows={tally(alumni, (a) => a.city)}
+            />
+            <BreakdownTable
+              title="By School"
+              rows={tally(alumni, (a) => parseBioField(a.bio, 'School'))}
+            />
+            <BreakdownTable
+              title="By Department"
+              rows={tally(alumni, (a) => parseBioField(a.bio, 'Department'))}
+            />
+            <BreakdownTable
+              title="By Reunion Interest"
+              rows={tally(alumni, (a) => parseBioField(a.bio, 'Interested in KUANA Reunion 2027'))}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
