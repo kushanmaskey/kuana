@@ -181,15 +181,9 @@ function EventsTab() {
   );
 }
 
-function parseReunionInterest(bio) {
+function parseBioField(bio, key) {
   if (!bio) return null;
-  const match = bio.match(/Interested in KUANA Reunion 2027: (\w+)/);
-  return match ? match[1] : null;
-}
-
-function parseComment(bio) {
-  if (!bio) return null;
-  const match = bio.match(/Comment: (.+)/s);
+  const match = bio.match(new RegExp(`${key}: ([^\n]+)`));
   return match ? match[1].trim() : null;
 }
 
@@ -203,8 +197,16 @@ const EXPORT_FIELDS = [
   { value: 'name',       label: 'Name' },
   { value: 'email',      label: 'Email' },
   { value: 'phone',      label: 'Phone' },
+  { value: 'grad_year',  label: 'Graduation Year' },
+  { value: 'school',     label: 'School' },
+  { value: 'department', label: 'Department' },
   { value: 'city_state', label: 'City / State' },
 ];
+
+function timestamp() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
+}
 
 function AlumniTab() {
   const [alumni, setAlumni] = useState([]);
@@ -219,14 +221,9 @@ function AlumniTab() {
   }, [search]);
 
   const allChecked = alumni.length > 0 && alumni.every((a) => selected.has(a.id));
-  const someChecked = alumni.some((a) => selected.has(a.id));
 
   const toggleAll = () => {
-    if (allChecked) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(alumni.map((a) => a.id)));
-    }
+    setSelected(allChecked ? new Set() : new Set(alumni.map((a) => a.id)));
     setExportError('');
   };
 
@@ -240,37 +237,35 @@ function AlumniTab() {
   };
 
   const handleExport = () => {
-    if (selected.size === 0) {
-      setExportError('Please select at least one alumni to export.');
-      return;
-    }
+    if (selected.size === 0) { setExportError('Please select at least one alumni to export.'); return; }
     setExportError('');
     const rows = alumni.filter((a) => selected.has(a.id));
 
-    let header, getValue;
-    if (exportField === 'name') {
-      header = 'Name';
-      getValue = (a) => `${a.first_name} ${a.last_name}`;
-    } else if (exportField === 'email') {
-      header = 'Name,Email';
-      getValue = (a) => `${a.first_name} ${a.last_name},${a.email ?? ''}`;
-    } else if (exportField === 'phone') {
-      header = 'Name,Phone';
-      getValue = (a) => `${a.first_name} ${a.last_name},${a.phone ?? ''}`;
-    } else {
-      header = 'Name,City,State';
-      getValue = (a) => `${a.first_name} ${a.last_name},${a.city ?? ''},${a.state_province ?? ''}`;
-    }
+    const school     = (a) => parseBioField(a.bio, 'School') ?? '—';
+    const department = (a) => parseBioField(a.bio, 'Department') ?? '—';
 
-    const csv = [header, ...rows.map(getValue)].join('\n');
+    const configs = {
+      name:       { header: 'Name',                      val: (a) => `${a.first_name} ${a.last_name}` },
+      email:      { header: 'Name,Email',                val: (a) => `${a.first_name} ${a.last_name},${a.email ?? ''}` },
+      phone:      { header: 'Name,Phone',                val: (a) => `${a.first_name} ${a.last_name},${a.phone ?? ''}` },
+      grad_year:  { header: 'Name,Graduation Year',      val: (a) => `${a.first_name} ${a.last_name},${a.graduation_year ?? ''}` },
+      school:     { header: 'Name,School',               val: (a) => `${a.first_name} ${a.last_name},${school(a)}` },
+      department: { header: 'Name,Department',           val: (a) => `${a.first_name} ${a.last_name},${department(a)}` },
+      city_state: { header: 'Name,City,State',           val: (a) => `${a.first_name} ${a.last_name},${a.city ?? ''},${a.state_province ?? ''}` },
+    };
+
+    const { header, val } = configs[exportField];
+    const csv = [header, ...rows.map(val)].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `kuana-alumni-${exportField}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `kuana-alumni-${exportField}-${timestamp()}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  const COLS = 10;
 
   return (
     <div>
@@ -282,7 +277,7 @@ function AlumniTab() {
             placeholder="Search by name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-56"
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-52"
           />
           <select
             value={exportField}
@@ -302,75 +297,61 @@ function AlumniTab() {
         </div>
       </div>
 
-      {exportError && (
-        <p className="text-red-500 text-sm mb-4">{exportError}</p>
-      )}
-
-      {someChecked && (
-        <p className="text-xs text-gray-500 mb-3">{selected.size} alumni selected</p>
-      )}
+      {exportError && <p className="text-red-500 text-sm mb-3">{exportError}</p>}
+      {selected.size > 0 && <p className="text-xs text-gray-500 mb-3">{selected.size} alumni selected</p>}
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
               <th className="py-3 px-2 w-8">
-                <input
-                  type="checkbox"
-                  checked={allChecked}
-                  onChange={toggleAll}
-                  className="accent-[#dc143c] cursor-pointer"
-                  title="Select all"
-                />
+                <input type="checkbox" checked={allChecked} onChange={toggleAll} className="accent-[#dc143c] cursor-pointer" />
               </th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Name</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Email</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Phone</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Location</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Reunion 2027</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Registered</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Name</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Email</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Phone</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Grad Year</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">School</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Department</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">City / State</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Reunion 2027</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Registered</th>
             </tr>
           </thead>
           <tbody>
             {alumni.map((a) => {
-              const interest = parseReunionInterest(a.bio);
-              const comment  = parseComment(a.bio);
+              const interest   = parseBioField(a.bio, 'Interested in KUANA Reunion 2027');
+              const school     = parseBioField(a.bio, 'School');
+              const department = parseBioField(a.bio, 'Department');
+              const comment    = parseBioField(a.bio, 'Comment');
               const isSelected = selected.has(a.id);
               return (
                 <>
-                  <tr
-                    key={a.id}
-                    className={`border-b border-gray-50 hover:bg-gray-50 ${isSelected ? 'bg-blue-50/40' : ''}`}
-                  >
+                  <tr key={a.id} className={`border-b border-gray-50 hover:bg-gray-50 ${isSelected ? 'bg-blue-50/40' : ''}`}>
                     <td className="py-3 px-2">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleOne(a.id)}
-                        className="accent-[#dc143c] cursor-pointer"
-                      />
+                      <input type="checkbox" checked={isSelected} onChange={() => toggleOne(a.id)} className="accent-[#dc143c] cursor-pointer" />
                     </td>
-                    <td
-                      className="py-3 px-2 font-medium text-gray-900 cursor-pointer"
-                      onClick={() => setExpanded(expanded === a.id ? null : a.id)}
-                    >
+                    <td className="py-3 px-2 font-medium text-gray-900 cursor-pointer whitespace-nowrap" onClick={() => setExpanded(expanded === a.id ? null : a.id)}>
                       {a.first_name} {a.last_name}
                     </td>
                     <td className="py-3 px-2 text-gray-500">{a.email}</td>
-                    <td className="py-3 px-2 text-gray-500">{a.phone ?? '—'}</td>
-                    <td className="py-3 px-2 text-gray-500">{a.city ? `${a.city}, ${a.state_province ?? ''}` : '—'}</td>
+                    <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{a.phone ?? '—'}</td>
+                    <td className="py-3 px-2 text-gray-500 text-center">{a.graduation_year ?? '—'}</td>
+                    <td className="py-3 px-2 text-gray-500">{school ?? '—'}</td>
+                    <td className="py-3 px-2 text-gray-500">{department ?? '—'}</td>
+                    <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{a.city ? `${a.city}, ${a.state_province ?? ''}` : '—'}</td>
                     <td className="py-3 px-2">
                       {interest ? (
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${REUNION_BADGE[interest] ?? 'bg-gray-100 text-gray-500'}`}>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${REUNION_BADGE[interest] ?? 'bg-gray-100 text-gray-500'}`}>
                           {interest}
                         </span>
                       ) : '—'}
                     </td>
-                    <td className="py-3 px-2 text-gray-400 text-xs">{new Date(a.created_at).toLocaleDateString()}</td>
+                    <td className="py-3 px-2 text-gray-400 text-xs whitespace-nowrap">{new Date(a.created_at).toLocaleString()}</td>
                   </tr>
                   {expanded === a.id && comment && (
                     <tr key={`${a.id}-comment`} className="bg-gray-50 border-b border-gray-100">
-                      <td colSpan={7} className="px-4 py-3 text-sm text-gray-600 italic">
+                      <td colSpan={COLS} className="px-4 py-3 text-sm text-gray-600 italic">
                         <span className="font-semibold text-gray-500 not-italic">Comment: </span>{comment}
                       </td>
                     </tr>
@@ -379,7 +360,7 @@ function AlumniTab() {
               );
             })}
             {alumni.length === 0 && (
-              <tr><td colSpan={7} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
+              <tr><td colSpan={COLS} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
             )}
           </tbody>
         </table>
