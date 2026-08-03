@@ -283,7 +283,7 @@ function getChartData(alumni, view) {
 }
 
 function ControlChart({ data }) {
-  if (data.length < 2) return <div className="text-center text-gray-400 text-xs py-2">Not enough data</div>;
+  if (data.length < 2) return <div className="text-center text-gray-400 text-xs py-4">Not enough data</div>;
 
   const values = data.map((d) => d.value);
   const n = values.length;
@@ -292,33 +292,77 @@ function ControlChart({ data }) {
   const ucl = mean + 3 * sigma;
   const lcl = Math.max(0, mean - 3 * sigma);
   const yMin = 0;
-  const yMax = Math.max(ucl * 1.15, mean + 1, 1);
+  const yMax = Math.max(ucl * 1.18, mean + 1, 1);
 
-  const W = 200, H = 80;
-  const pad = 6;
-  const chartW = W - pad * 2;
-  const chartH = H - pad * 2;
+  const W = 320, H = 180;
+  const padL = 26, padR = 36, padT = 12, padB = 38;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
 
-  const xPos = (i) => pad + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW);
-  const yPos = (v) => pad + chartH - ((Math.min(v, yMax) - yMin) / (yMax - yMin)) * chartH;
+  const xPos = (i) => padL + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW);
+  const yPos = (v) => padT + chartH - ((Math.min(Math.max(v, yMin), yMax) - yMin) / (yMax - yMin)) * chartH;
 
-  const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xPos(i)},${yPos(d.value)}`).join(' ');
+  const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xPos(i).toFixed(1)},${yPos(d.value).toFixed(1)}`).join(' ');
+
+  const yTicks = [0, Math.round(mean * 10) / 10, Math.round(ucl * 10) / 10];
+  if (lcl > 0) yTicks.push(Math.round(lcl * 10) / 10);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-      {/* UCL */}
-      <line x1={pad} y1={yPos(ucl)} x2={W - pad} y2={yPos(ucl)} stroke="#ef4444" strokeWidth={1} strokeDasharray="3,2" />
-      {/* Mean / CL */}
-      <line x1={pad} y1={yPos(mean)} x2={W - pad} y2={yPos(mean)} stroke="#6b7280" strokeWidth={0.8} />
-      {/* LCL */}
-      {lcl > 0 && <line x1={pad} y1={yPos(lcl)} x2={W - pad} y2={yPos(lcl)} stroke="#3b82f6" strokeWidth={1} strokeDasharray="3,2" />}
+      {/* Background */}
+      <rect x={padL} y={padT} width={chartW} height={chartH} fill="white" />
+
+      {/* Horizontal grid lines */}
+      {yTicks.map((t) => (
+        <line key={t} x1={padL} y1={yPos(t)} x2={padL + chartW} y2={yPos(t)} stroke="#f3f4f6" strokeWidth={1} />
+      ))}
+
+      {/* UCL line */}
+      <line x1={padL} y1={yPos(ucl)} x2={padL + chartW} y2={yPos(ucl)} stroke="#ef4444" strokeWidth={1} strokeDasharray="4,3" />
+      <text x={padL + chartW + 3} y={yPos(ucl) + 3} fontSize={7} fill="#ef4444" fontWeight="bold">UCL</text>
+      <text x={padL + chartW + 3} y={yPos(ucl) + 10} fontSize={6} fill="#ef4444">{ucl.toFixed(1)}</text>
+
+      {/* CL (mean) line */}
+      <line x1={padL} y1={yPos(mean)} x2={padL + chartW} y2={yPos(mean)} stroke="#6b7280" strokeWidth={1} />
+      <text x={padL + chartW + 3} y={yPos(mean) + 3} fontSize={7} fill="#6b7280" fontWeight="bold">CL</text>
+      <text x={padL + chartW + 3} y={yPos(mean) + 10} fontSize={6} fill="#6b7280">{mean.toFixed(1)}</text>
+
+      {/* LCL line */}
+      {lcl > 0 && (
+        <>
+          <line x1={padL} y1={yPos(lcl)} x2={padL + chartW} y2={yPos(lcl)} stroke="#3b82f6" strokeWidth={1} strokeDasharray="4,3" />
+          <text x={padL + chartW + 3} y={yPos(lcl) + 3} fontSize={7} fill="#3b82f6" fontWeight="bold">LCL</text>
+          <text x={padL + chartW + 3} y={yPos(lcl) + 10} fontSize={6} fill="#3b82f6">{lcl.toFixed(1)}</text>
+        </>
+      )}
+
       {/* Data line */}
       <path d={linePath} fill="none" stroke="#dc143c" strokeWidth={1.5} strokeLinejoin="round" />
+
       {/* Data points */}
       {data.map((d, i) => {
-        const outOfControl = d.value > ucl || (lcl > 0 && d.value < lcl);
+        const out = d.value > ucl || (lcl > 0 && d.value < lcl);
         return (
-          <circle key={i} cx={xPos(i)} cy={yPos(d.value)} r={2} fill={outOfControl ? '#ef4444' : '#dc143c'} />
+          <circle key={i} cx={xPos(i)} cy={yPos(d.value)} r={2.5}
+            fill={out ? '#ef4444' : '#dc143c'} stroke="white" strokeWidth={0.8} />
+        );
+      })}
+
+      {/* Axes */}
+      <line x1={padL} y1={padT} x2={padL} y2={padT + chartH} stroke="#d1d5db" strokeWidth={1} />
+      <line x1={padL} y1={padT + chartH} x2={padL + chartW} y2={padT + chartH} stroke="#d1d5db" strokeWidth={1} />
+
+      {/* Y axis ticks */}
+      {yTicks.map((t) => (
+        <text key={t} x={padL - 3} y={yPos(t) + 3} textAnchor="end" fontSize={7} fill="#9ca3af">{t}</text>
+      ))}
+
+      {/* X axis labels — every other label to avoid crowding */}
+      {data.map((d, i) => {
+        if (n > 8 && i % 2 !== 0) return null;
+        const short = d.label.length > 5 ? d.label.slice(0, 4) + '…' : d.label;
+        return (
+          <text key={i} x={xPos(i)} y={padT + chartH + 10} textAnchor="middle" fontSize={7} fill="#6b7280">{short}</text>
         );
       })}
     </svg>
