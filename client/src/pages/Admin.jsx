@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { toPng } from 'html-to-image';
 import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead } from '../api';
 
 function LoginForm({ onLogin }) {
@@ -282,7 +283,7 @@ function getChartData(alumni, view) {
   return rows.map(([label, value]) => ({ label: label || 'Unknown', value }));
 }
 
-function BarChart({ data, svgRef }) {
+function BarChart({ data }) {
   if (!data.length) return <div className="text-center text-gray-400 text-xs py-6">No data</div>;
 
   const maxVal = Math.max(...data.map((d) => d.value), 1);
@@ -298,7 +299,7 @@ function BarChart({ data, svgRef }) {
   const barW = Math.min(slotW * 0.65, 26);
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="w-full">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
       {yTicks.map((tick) => {
         const y = padT + chartH - (tick / yMax) * chartH;
         return (
@@ -411,32 +412,17 @@ function AlumniTab() {
     XLSX.writeFile(wb, `kuana-alumni-${exportField}-${timestamp()}.xlsx`);
   };
 
-  const downloadChartImage = () => {
-    const svg = chartRef.current;
-    if (!svg) return;
-    const [, , vbW, vbH] = svg.getAttribute('viewBox').split(' ').map(Number);
-    const scale = 2;
-    const canvas = document.createElement('canvas');
-    canvas.width = vbW * scale;
-    canvas.height = vbH * scale;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#f9fafb';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const clone = svg.cloneNode(true);
-    clone.setAttribute('width', vbW * scale);
-    clone.setAttribute('height', vbH * scale);
-    const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
+  const downloadChartImage = async () => {
+    if (!chartRef.current) return;
+    try {
+      const dataUrl = await toPng(chartRef.current, { pixelRatio: 2, backgroundColor: '#f9fafb' });
       const link = document.createElement('a');
       link.download = `kuana-chart-${chartView}-${timestamp()}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataUrl;
       link.click();
-    };
-    img.src = url;
+    } catch {
+      alert('Could not download chart image. Please try again.');
+    }
   };
 
   const COLS = 10;
@@ -541,7 +527,7 @@ function AlumniTab() {
       </div>
 
       {alumni.length > 0 && (
-        <div className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2">
+        <div ref={chartRef} className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
               {CHART_VIEWS.find((v) => v.value === chartView)?.label}
@@ -553,7 +539,7 @@ function AlumniTab() {
               <Download size={12} /> Save Image
             </button>
           </div>
-          <BarChart data={getChartData(alumni, chartView)} svgRef={chartRef} />
+          <BarChart data={getChartData(alumni, chartView)} />
         </div>
       )}
     </div>
