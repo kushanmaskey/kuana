@@ -332,21 +332,8 @@ export default function Register() {
               <FieldError msg={errors.email} />
             </div>
 
-            {/* School + Graduation Year */}
+            {/* Graduation Year + Schools */}
             <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">School</label>
-                <select
-                  value={form.school}
-                  onChange={(e) => setForm((f) => ({ ...f, school: e.target.value, department: '' }))}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white"
-                >
-                  <option value="">Select school</option>
-                  {KU_SCHOOLS_DEPARTMENTS.map(({ school }) => (
-                    <option key={school} value={school}>{school}</option>
-                  ))}
-                </select>
-              </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Graduation Year</label>
                 <select
@@ -360,11 +347,24 @@ export default function Register() {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Schools</label>
+                <select
+                  value={form.school}
+                  onChange={(e) => setForm((f) => ({ ...f, school: e.target.value, department: '' }))}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white"
+                >
+                  <option value="">Select school</option>
+                  {KU_SCHOOLS_DEPARTMENTS.map(({ school }) => (
+                    <option key={school} value={school}>{school}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Department */}
+            {/* Departments */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Department</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Departments</label>
               <select
                 value={form.department}
                 onChange={set('department')}
