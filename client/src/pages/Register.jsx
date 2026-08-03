@@ -236,8 +236,8 @@ export default function Register() {
       {/* Header */}
       <div className="bg-[#0e1b4d] py-12 px-4">
         <div className="max-w-2xl mx-auto">
-          <Link to="/" className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm mb-6 transition-colors">
-            <ArrowLeft size={16} /> Back to KUANA
+          <Link to="/#contact" className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm mb-6 transition-colors">
+            <ArrowLeft size={16} /> Back to Contact Us
           </Link>
           <p className="text-[#ffc31d] text-sm font-semibold uppercase tracking-widest mb-2">Alumni Directory</p>
           <h1 className="text-3xl md:text-4xl font-bold text-white">Register as Alumni</h1>
@@ -257,10 +257,10 @@ export default function Register() {
               Welcome to the KUANA alumni directory. We'll be in touch with updates about upcoming events.
             </p>
             <Link
-              to="/"
+              to="/#contact"
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#0e1b4d] text-white rounded-xl font-semibold text-sm hover:bg-[#060c22] transition-colors"
             >
-              <ArrowLeft size={16} /> Back to KUANA
+              <ArrowLeft size={16} /> Back to Contact Us
             </Link>
           </div>
         ) : (
