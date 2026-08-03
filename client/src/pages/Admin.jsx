@@ -561,7 +561,7 @@ function AlumniTab() {
       </div>
 
       {alumni.length > 0 && (
-        <div ref={chartRef} className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2 w-1/4">
+        <div ref={chartRef} className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2 w-1/2">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
               {CHART_VIEWS.find((v) => v.value === chartView)?.label}
