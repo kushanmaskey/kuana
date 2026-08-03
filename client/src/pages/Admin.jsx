@@ -284,12 +284,12 @@ function getChartData(alumni, view) {
 }
 
 function ControlChart({ data }) {
-  if (data.length < 2) return <div className="text-center text-gray-400 text-xs py-4">Not enough data</div>;
+  if (!data.length) return <div className="text-center text-gray-400 text-xs py-4">No data</div>;
 
   const values = data.map((d) => d.value);
   const n = values.length;
   const mean = values.reduce((a, b) => a + b, 0) / n;
-  const sigma = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / n);
+  const sigma = n > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / n) : mean * 0.3;
   const ucl = mean + 3 * sigma;
   const lcl = Math.max(0, mean - 3 * sigma);
   const yMin = 0;
@@ -390,7 +390,7 @@ function AlumniTab() {
     city:       'city',
     state:      'state',
   };
-  const chartView = stateFilter ? 'state' : (EXPORT_TO_CHART[exportField] ?? 'month');
+  const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
 
   useEffect(() => {
     getAlumni({ search, state: stateFilter || undefined }).then((r) => {
