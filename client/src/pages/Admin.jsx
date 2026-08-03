@@ -201,7 +201,8 @@ const EXPORT_FIELDS = [
   { value: 'grad_year',  label: 'Graduation Year' },
   { value: 'school',     label: 'School' },
   { value: 'department', label: 'Department' },
-  { value: 'city_state', label: 'City / State' },
+  { value: 'city',       label: 'City' },
+  { value: 'state',      label: 'State' },
 ];
 
 function timestamp() {
@@ -385,7 +386,8 @@ function AlumniTab() {
     grad_year:  'grad_year',
     school:     'school',
     department: 'department',
-    city_state: 'state',
+    city:       'city',
+    state:      'state',
   };
   const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
 
@@ -427,7 +429,8 @@ function AlumniTab() {
       grad_year:  { headers: ['Name', 'Graduation Year'], row: (a) => [`${a.first_name} ${a.last_name}`, a.graduation_year ?? ''] },
       school:     { headers: ['Name', 'School'],          row: (a) => [`${a.first_name} ${a.last_name}`, getSchool(a)] },
       department: { headers: ['Name', 'Department'],      row: (a) => [`${a.first_name} ${a.last_name}`, getDept(a)] },
-      city_state: { headers: ['Name', 'City', 'State'],  row: (a) => [`${a.first_name} ${a.last_name}`, a.city ?? '', a.state_province ?? ''] },
+      city:       { headers: ['Name', 'City'],            row: (a) => [`${a.first_name} ${a.last_name}`, a.city ?? ''] },
+      state:      { headers: ['Name', 'State'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.state_province ?? ''] },
     };
 
     const { headers, row } = colDefs[exportField];
