@@ -515,32 +515,6 @@ function AlumniTab() {
             <BarChart data={getChartData(alumni, chartView)} />
           </div>
 
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <BreakdownTable
-              title="By Graduation Year"
-              rows={tally(alumni, (a) => a.graduation_year?.toString())}
-            />
-            <BreakdownTable
-              title="By State / Province"
-              rows={tally(alumni, (a) => a.state_province)}
-            />
-            <BreakdownTable
-              title="By City"
-              rows={tally(alumni, (a) => a.city)}
-            />
-            <BreakdownTable
-              title="By School"
-              rows={tally(alumni, (a) => parseBioField(a.bio, 'School'))}
-            />
-            <BreakdownTable
-              title="By Department"
-              rows={tally(alumni, (a) => parseBioField(a.bio, 'Department'))}
-            />
-            <BreakdownTable
-              title="By Reunion Interest"
-              rows={tally(alumni, (a) => parseBioField(a.bio, 'Interested in KUANA Reunion 2027'))}
-            />
-          </div>
         </div>
       )}
     </div>
