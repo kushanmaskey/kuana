@@ -332,8 +332,8 @@ export default function Register() {
               <FieldError msg={errors.email} />
             </div>
 
-            {/* Graduation Year + Schools */}
-            <div className="grid sm:grid-cols-2 gap-4">
+            {/* Graduation Year + Schools + Departments */}
+            <div className="grid sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Graduation Year</label>
                 <select
@@ -360,25 +360,24 @@ export default function Register() {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Departments</label>
+                <select
+                  value={form.department}
+                  onChange={set('department')}
+                  disabled={!form.school}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="">{form.school ? 'Select department' : 'Select a school first'}</option>
+                  {KU_SCHOOLS_DEPARTMENTS
+                    .find(({ school }) => school === form.school)
+                    ?.departments.map((dept) => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                </select>
+              </div>
             </div>
 
-            {/* Departments */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Departments</label>
-              <select
-                value={form.department}
-                onChange={set('department')}
-                disabled={!form.school}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="">{form.school ? 'Select department' : 'Select a school first'}</option>
-                {KU_SCHOOLS_DEPARTMENTS
-                  .find(({ school }) => school === form.school)
-                  ?.departments.map((dept) => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-              </select>
-            </div>
 
             {/* City + State */}
             <div className="grid sm:grid-cols-2 gap-4">
