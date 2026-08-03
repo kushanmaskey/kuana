@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead } from '../api';
@@ -282,7 +282,7 @@ function getChartData(alumni, view) {
   return rows.map(([label, value]) => ({ label: label || 'Unknown', value }));
 }
 
-function BarChart({ data }) {
+function BarChart({ data, svgRef }) {
   if (!data.length) return <div className="text-center text-gray-400 text-xs py-6">No data</div>;
 
   const maxVal = Math.max(...data.map((d) => d.value), 1);
@@ -298,7 +298,7 @@ function BarChart({ data }) {
   const barW = Math.min(slotW * 0.65, 26);
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+    <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="w-full">
       {yTicks.map((tick) => {
         const y = padT + chartH - (tick / yMax) * chartH;
         return (
@@ -341,6 +341,7 @@ function AlumniTab() {
   const [exportField, setExportField] = useState('name');
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
+  const chartRef = useRef(null);
 
   const EXPORT_TO_CHART = {
     name:       'month',
@@ -354,7 +355,10 @@ function AlumniTab() {
   const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
 
   useEffect(() => {
-    getAlumni({ search }).then((r) => setAlumni(r.data)).catch(() => {});
+    getAlumni({ search }).then((r) => {
+      setAlumni(r.data);
+      setSelected(new Set(r.data.map((a) => a.id)));
+    }).catch(() => {});
   }, [search]);
 
   const allChecked = alumni.length > 0 && alumni.every((a) => selected.has(a.id));
@@ -405,6 +409,34 @@ function AlumniTab() {
     XLSX.utils.book_append_sheet(wb, chartSheet, chartViewLabel.slice(0, 31));
 
     XLSX.writeFile(wb, `kuana-alumni-${exportField}-${timestamp()}.xlsx`);
+  };
+
+  const downloadChartImage = () => {
+    const svg = chartRef.current;
+    if (!svg) return;
+    const [, , vbW, vbH] = svg.getAttribute('viewBox').split(' ').map(Number);
+    const scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = vbW * scale;
+    canvas.height = vbH * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f9fafb';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('width', vbW * scale);
+    clone.setAttribute('height', vbH * scale);
+    const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      const link = document.createElement('a');
+      link.download = `kuana-chart-${chartView}-${timestamp()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    };
+    img.src = url;
   };
 
   const COLS = 10;
@@ -510,10 +542,18 @@ function AlumniTab() {
 
       {alumni.length > 0 && (
         <div className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">
-            {CHART_VIEWS.find((v) => v.value === chartView)?.label}
-          </p>
-          <BarChart data={getChartData(alumni, chartView)} />
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+              {CHART_VIEWS.find((v) => v.value === chartView)?.label}
+            </p>
+            <button
+              onClick={downloadChartImage}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#dc143c] transition-colors cursor-pointer"
+            >
+              <Download size={12} /> Save Image
+            </button>
+          </div>
+          <BarChart data={getChartData(alumni, chartView)} svgRef={chartRef} />
         </div>
       )}
     </div>
