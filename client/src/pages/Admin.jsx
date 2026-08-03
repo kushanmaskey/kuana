@@ -181,64 +181,205 @@ function EventsTab() {
   );
 }
 
+function parseReunionInterest(bio) {
+  if (!bio) return null;
+  const match = bio.match(/Interested in KUANA Reunion 2027: (\w+)/);
+  return match ? match[1] : null;
+}
+
+function parseComment(bio) {
+  if (!bio) return null;
+  const match = bio.match(/Comment: (.+)/s);
+  return match ? match[1].trim() : null;
+}
+
+const REUNION_BADGE = {
+  Yes:   'bg-green-100 text-green-700',
+  No:    'bg-gray-100 text-gray-500',
+  Maybe: 'bg-yellow-100 text-yellow-700',
+};
+
+const EXPORT_FIELDS = [
+  { value: 'name',       label: 'Name' },
+  { value: 'email',      label: 'Email' },
+  { value: 'phone',      label: 'Phone' },
+  { value: 'city_state', label: 'City / State' },
+];
+
 function AlumniTab() {
   const [alumni, setAlumni] = useState([]);
   const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState(new Set());
+  const [exportField, setExportField] = useState('name');
+  const [exportError, setExportError] = useState('');
+  const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
     getAlumni({ search }).then((r) => setAlumni(r.data)).catch(() => {});
   }, [search]);
 
+  const allChecked = alumni.length > 0 && alumni.every((a) => selected.has(a.id));
+  const someChecked = alumni.some((a) => selected.has(a.id));
+
+  const toggleAll = () => {
+    if (allChecked) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(alumni.map((a) => a.id)));
+    }
+    setExportError('');
+  };
+
+  const toggleOne = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+    setExportError('');
+  };
+
+  const handleExport = () => {
+    if (selected.size === 0) {
+      setExportError('Please select at least one alumni to export.');
+      return;
+    }
+    setExportError('');
+    const rows = alumni.filter((a) => selected.has(a.id));
+
+    let header, getValue;
+    if (exportField === 'name') {
+      header = 'Name';
+      getValue = (a) => `${a.first_name} ${a.last_name}`;
+    } else if (exportField === 'email') {
+      header = 'Name,Email';
+      getValue = (a) => `${a.first_name} ${a.last_name},${a.email ?? ''}`;
+    } else if (exportField === 'phone') {
+      header = 'Name,Phone';
+      getValue = (a) => `${a.first_name} ${a.last_name},${a.phone ?? ''}`;
+    } else {
+      header = 'Name,City,State';
+      getValue = (a) => `${a.first_name} ${a.last_name},${a.city ?? ''},${a.state_province ?? ''}`;
+    }
+
+    const csv = [header, ...rows.map(getValue)].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kuana-alumni-${exportField}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
+      <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
         <h2 className="text-xl font-bold text-gray-900">Alumni Directory</h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <input
             type="text"
             placeholder="Search by name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-60"
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-56"
           />
+          <select
+            value={exportField}
+            onChange={(e) => setExportField(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] bg-white"
+          >
+            {EXPORT_FIELDS.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
           <button
-            onClick={() => {
-              const csv = 'Email\n' + alumni.map((a) => a.email).join('\n');
-              const blob = new Blob([csv], { type: 'text/csv' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `kuana-alumni-emails-${new Date().toISOString().slice(0,10)}.csv`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
+            onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
           >
-            <Download size={15} /> Export Emails
+            <Download size={15} /> Export
           </button>
         </div>
       </div>
+
+      {exportError && (
+        <p className="text-red-500 text-sm mb-4">{exportError}</p>
+      )}
+
+      {someChecked && (
+        <p className="text-xs text-gray-500 mb-3">{selected.size} alumni selected</p>
+      )}
+
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
+              <th className="py-3 px-2 w-8">
+                <input
+                  type="checkbox"
+                  checked={allChecked}
+                  onChange={toggleAll}
+                  className="accent-[#dc143c] cursor-pointer"
+                  title="Select all"
+                />
+              </th>
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Name</th>
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Email</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Grad Year</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Phone</th>
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Location</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Reunion 2027</th>
+              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Registered</th>
             </tr>
           </thead>
           <tbody>
-            {alumni.map((a) => (
-              <tr key={a.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="py-3 px-2 font-medium text-gray-900">{a.first_name} {a.last_name}</td>
-                <td className="py-3 px-2 text-gray-500">{a.email}</td>
-                <td className="py-3 px-2 text-gray-500">{a.graduation_year ?? '—'}</td>
-                <td className="py-3 px-2 text-gray-500">{a.city ? `${a.city}, ${a.state_province ?? ''}` : '—'}</td>
-              </tr>
-            ))}
+            {alumni.map((a) => {
+              const interest = parseReunionInterest(a.bio);
+              const comment  = parseComment(a.bio);
+              const isSelected = selected.has(a.id);
+              return (
+                <>
+                  <tr
+                    key={a.id}
+                    className={`border-b border-gray-50 hover:bg-gray-50 ${isSelected ? 'bg-blue-50/40' : ''}`}
+                  >
+                    <td className="py-3 px-2">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleOne(a.id)}
+                        className="accent-[#dc143c] cursor-pointer"
+                      />
+                    </td>
+                    <td
+                      className="py-3 px-2 font-medium text-gray-900 cursor-pointer"
+                      onClick={() => setExpanded(expanded === a.id ? null : a.id)}
+                    >
+                      {a.first_name} {a.last_name}
+                    </td>
+                    <td className="py-3 px-2 text-gray-500">{a.email}</td>
+                    <td className="py-3 px-2 text-gray-500">{a.phone ?? '—'}</td>
+                    <td className="py-3 px-2 text-gray-500">{a.city ? `${a.city}, ${a.state_province ?? ''}` : '—'}</td>
+                    <td className="py-3 px-2">
+                      {interest ? (
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${REUNION_BADGE[interest] ?? 'bg-gray-100 text-gray-500'}`}>
+                          {interest}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="py-3 px-2 text-gray-400 text-xs">{new Date(a.created_at).toLocaleDateString()}</td>
+                  </tr>
+                  {expanded === a.id && comment && (
+                    <tr key={`${a.id}-comment`} className="bg-gray-50 border-b border-gray-100">
+                      <td colSpan={7} className="px-4 py-3 text-sm text-gray-600 italic">
+                        <span className="font-semibold text-gray-500 not-italic">Comment: </span>{comment}
+                      </td>
+                    </tr>
+                  )}
+                </>
+              );
+            })}
             {alumni.length === 0 && (
-              <tr><td colSpan={4} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
+              <tr><td colSpan={7} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
             )}
           </tbody>
         </table>
