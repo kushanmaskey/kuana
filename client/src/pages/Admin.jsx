@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download } from 'lucide-react';
 import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead } from '../api';
 
 function LoginForm({ onLogin }) {
@@ -191,15 +191,32 @@ function AlumniTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <h2 className="text-xl font-bold text-gray-900">Alumni Directory</h2>
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-60"
-        />
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-60"
+          />
+          <button
+            onClick={() => {
+              const csv = 'Email\n' + alumni.map((a) => a.email).join('\n');
+              const blob = new Blob([csv], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `kuana-alumni-emails-${new Date().toISOString().slice(0,10)}.csv`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
+          >
+            <Download size={15} /> Export Emails
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

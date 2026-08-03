@@ -1,7 +1,12 @@
 const { Resend } = require('resend');
 const { escapeHtml } = require('./validate');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend = null;
+function getResend() {
+  if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not set');
+  if (!resend) resend = new Resend(process.env.RESEND_API_KEY);
+  return resend;
+}
 
 async function sendContactEmail({ name, email, subject, message }) {
   const safeName    = escapeHtml(name);
@@ -9,7 +14,7 @@ async function sendContactEmail({ name, email, subject, message }) {
   const safeSubject = escapeHtml(subject || '');
   const safeMessage = escapeHtml(message);
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: 'KUANA Website <onboarding@resend.dev>',
     to: process.env.MAIL_TO,
     replyTo: email,
