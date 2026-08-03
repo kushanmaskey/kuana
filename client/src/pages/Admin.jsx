@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { toPng } from 'html-to-image';
+import { Link } from 'react-router-dom';
 import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead } from '../api';
 
 function LoginForm({ onLogin }) {
@@ -682,9 +683,11 @@ export default function Admin() {
       {/* Top bar */}
       <div className="bg-[#dc143c] text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="bg-white rounded-lg px-2 py-1">
-            <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-7 w-auto object-contain" />
-          </div>
+          <Link to="/">
+            <div className="bg-white rounded-lg px-2 py-1">
+              <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-7 w-auto object-contain" />
+            </div>
+          </Link>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-white/70 text-sm">{admin.email}</span>
