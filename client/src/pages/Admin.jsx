@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead } from '../api';
 
 function LoginForm({ onLogin }) {
@@ -367,28 +368,33 @@ function AlumniTab() {
     setExportError('');
     const rows = alumni.filter((a) => selected.has(a.id));
 
-    const school     = (a) => parseBioField(a.bio, 'School') ?? '—';
-    const department = (a) => parseBioField(a.bio, 'Department') ?? '—';
+    const getSchool     = (a) => parseBioField(a.bio, 'School') ?? '';
+    const getDept       = (a) => parseBioField(a.bio, 'Department') ?? '';
 
-    const configs = {
-      name:       { header: 'Name',                      val: (a) => `${a.first_name} ${a.last_name}` },
-      email:      { header: 'Name,Email',                val: (a) => `${a.first_name} ${a.last_name},${a.email ?? ''}` },
-      phone:      { header: 'Name,Phone',                val: (a) => `${a.first_name} ${a.last_name},${a.phone ?? ''}` },
-      grad_year:  { header: 'Name,Graduation Year',      val: (a) => `${a.first_name} ${a.last_name},${a.graduation_year ?? ''}` },
-      school:     { header: 'Name,School',               val: (a) => `${a.first_name} ${a.last_name},${school(a)}` },
-      department: { header: 'Name,Department',           val: (a) => `${a.first_name} ${a.last_name},${department(a)}` },
-      city_state: { header: 'Name,City,State',           val: (a) => `${a.first_name} ${a.last_name},${a.city ?? ''},${a.state_province ?? ''}` },
+    const colDefs = {
+      name:       { headers: ['Name'],                    row: (a) => [`${a.first_name} ${a.last_name}`] },
+      email:      { headers: ['Name', 'Email'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.email ?? ''] },
+      phone:      { headers: ['Name', 'Phone'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.phone ?? ''] },
+      grad_year:  { headers: ['Name', 'Graduation Year'], row: (a) => [`${a.first_name} ${a.last_name}`, a.graduation_year ?? ''] },
+      school:     { headers: ['Name', 'School'],          row: (a) => [`${a.first_name} ${a.last_name}`, getSchool(a)] },
+      department: { headers: ['Name', 'Department'],      row: (a) => [`${a.first_name} ${a.last_name}`, getDept(a)] },
+      city_state: { headers: ['Name', 'City', 'State'],  row: (a) => [`${a.first_name} ${a.last_name}`, a.city ?? '', a.state_province ?? ''] },
     };
 
-    const { header, val } = configs[exportField];
-    const csv = [header, ...rows.map(val)].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `kuana-alumni-${exportField}-${timestamp()}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    const { headers, row } = colDefs[exportField];
+    const alumniSheet = XLSX.utils.aoa_to_sheet([headers, ...rows.map(row)]);
+
+    const chartData = getChartData(alumni, chartView);
+    const chartViewLabel = CHART_VIEWS.find((v) => v.value === chartView)?.label ?? chartView;
+    const chartSheet = XLSX.utils.aoa_to_sheet(
+      [['Label', 'Count'], ...chartData.map(({ label, value }) => [label, value])]
+    );
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, alumniSheet, 'Alumni');
+    XLSX.utils.book_append_sheet(wb, chartSheet, chartViewLabel.slice(0, 31));
+
+    XLSX.writeFile(wb, `kuana-alumni-${exportField}-${timestamp()}.xlsx`);
   };
 
   const COLS = 10;

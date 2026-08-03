@@ -18,7 +18,8 @@
     "react-intersection-observer": "^10.1.0",
     "react-router-dom": "^7.18.1",
     "react-scroll": "^1.9.3",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
