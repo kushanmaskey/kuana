@@ -30,7 +30,7 @@ router.get('/', requireAuth, async (req, res) => {
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * PAGE_LIMIT;
 
   let query = `SELECT id, first_name, last_name, email, phone, graduation_year, degree, department,
-               city, state_province, country, linkedin_url, created_at
+               city, state_province, country, linkedin_url, bio, created_at
                FROM alumni WHERE is_active = true`;
   const params = [];
   let idx = 1;
