@@ -30,11 +30,84 @@ const CA_PROVINCES = [
   ['PE', 'Prince Edward Island'], ['QC', 'Quebec'], ['SK', 'Saskatchewan'], ['YT', 'Yukon'],
 ];
 
+const KU_SCHOOLS_DEPARTMENTS = [
+  {
+    school: 'School of Arts',
+    departments: [
+      'Department of Arts and Design',
+      'Department of Development Studies',
+      'Department of Languages and Mass Communication',
+      'Department of Music',
+    ],
+  },
+  {
+    school: 'School of Education',
+    departments: [
+      'Continuing and Professional Education Centre',
+      'Department of Development Education',
+      'Department of Educational Leadership',
+      'Department of Inclusive Education, Early Childhood Development and Professional Studies',
+      'Department of Language Education',
+      'Department of STEAM Education',
+    ],
+  },
+  {
+    school: 'School of Engineering',
+    departments: [
+      'Department of Architecture',
+      'Department of Artificial Intelligence',
+      'Department of Chemical Science and Engineering',
+      'Department of Civil Engineering',
+      'Department of Computer Science and Engineering',
+      'Department of Electrical and Electronics Engineering',
+      'Department of Geomatics Engineering',
+      'Department of Health Informatics',
+      'Department of Mechanical Engineering',
+    ],
+  },
+  {
+    school: 'School of Law',
+    departments: ['Not Available'],
+  },
+  {
+    school: 'School of Management',
+    departments: [
+      'Department of Finance, Economics and Accounting',
+      'Department of Human Resource and General Management',
+      'Department of Management Informatics and Communication',
+      'Department of Management Science and Information',
+      'Department of Marketing and Entrepreneurship',
+      'Department of Public Policy and Management',
+    ],
+  },
+  {
+    school: 'School of Medical Sciences',
+    departments: ['Not Available'],
+  },
+  {
+    school: 'School of Science',
+    departments: [
+      'Department of Agriculture',
+      'Department of Biotechnology',
+      'Department of Environmental Science and Engineering',
+      'Department of Mathematics',
+      'Department of Pharmacy',
+      'Department of Physics',
+    ],
+  },
+];
+
+const CURRENT_YEAR = new Date().getFullYear();
+const GRAD_YEARS = Array.from({ length: CURRENT_YEAR - 1994 }, (_, i) => CURRENT_YEAR - i);
+
 const INITIAL = {
   first_name: '',
   last_name: '',
   phone: '',
   email: '',
+  school: '',
+  graduation_year: '',
+  department: '',
   city: '',
   state_province: '',
   reunion_interest: '',
@@ -125,6 +198,8 @@ export default function Register() {
     setLoading(true);
     try {
       const bio = [
+        form.school ? `School: ${form.school}` : '',
+        form.department ? `Department: ${form.department}` : '',
         `Interested in KUANA Reunion 2027: ${form.reunion_interest}`,
         form.comment.trim() ? `Comment: ${form.comment.trim()}` : '',
       ].filter(Boolean).join('\n');
@@ -134,6 +209,7 @@ export default function Register() {
         last_name: form.last_name.trim(),
         phone: form.phone.replace(/\D/g, '') || undefined,
         email: form.email.trim().toLowerCase(),
+        graduation_year: form.graduation_year ? parseInt(form.graduation_year) : undefined,
         city: form.city.trim(),
         state_province: form.state_province.trim(),
         bio,
@@ -254,6 +330,54 @@ export default function Register() {
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
               />
               <FieldError msg={errors.email} />
+            </div>
+
+            {/* School + Graduation Year */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">School</label>
+                <select
+                  value={form.school}
+                  onChange={(e) => setForm((f) => ({ ...f, school: e.target.value, department: '' }))}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white"
+                >
+                  <option value="">Select school</option>
+                  {KU_SCHOOLS_DEPARTMENTS.map(({ school }) => (
+                    <option key={school} value={school}>{school}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Graduation Year</label>
+                <select
+                  value={form.graduation_year}
+                  onChange={set('graduation_year')}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white"
+                >
+                  <option value="">Select year</option>
+                  {GRAD_YEARS.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Department */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Department</label>
+              <select
+                value={form.department}
+                onChange={set('department')}
+                disabled={!form.school}
+                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">{form.school ? 'Select department' : 'Select a school first'}</option>
+                {KU_SCHOOLS_DEPARTMENTS
+                  .find(({ school }) => school === form.school)
+                  ?.departments.map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+              </select>
             </div>
 
             {/* City + State */}
