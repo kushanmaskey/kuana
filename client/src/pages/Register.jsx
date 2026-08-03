@@ -98,7 +98,7 @@ const KU_SCHOOLS_DEPARTMENTS = [
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
-const GRAD_YEARS = Array.from({ length: CURRENT_YEAR - 1994 }, (_, i) => CURRENT_YEAR - i);
+const GRAD_YEARS = Array.from({ length: CURRENT_YEAR - 1994 }, (_, i) => 1995 + i);
 
 const INITIAL = {
   first_name: '',
