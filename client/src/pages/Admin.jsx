@@ -263,12 +263,12 @@ function AlumniBarChart({ alumni }) {
   const yMax = Math.ceil(maxVal / 5) * 5 || 5;
   const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * yMax));
 
-  const W = 580, H = 230;
-  const padL = 38, padR = 16, padT = 20, padB = 48;
+  const W = 580, H = 150;
+  const padL = 32, padR = 12, padT = 16, padB = 36;
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
   const slotW = chartW / 12;
-  const barW = slotW * 0.58;
+  const barW = slotW * 0.55;
 
   return (
     <div className="bg-gray-50 rounded-xl p-4">
