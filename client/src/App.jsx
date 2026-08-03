@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Admin from './pages/Admin';
 import Privacy from './pages/Privacy';
 import Venue from './pages/Venue';
+import Register from './pages/Register';
 
 
 export default function App() {
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/venue/:slug" element={<Venue />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   );

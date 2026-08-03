@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Mail, MapPin, MessageCircle, CheckCircle } from 'lucide-react';
 
 function FacebookIcon() {
@@ -132,13 +133,12 @@ export default function Contact() {
               <p className="text-white/70 text-sm mb-4">
                 Register in our alumni directory to stay connected with the KUANA community.
               </p>
-              <a
-                href="#"
-                onClick={(e) => { e.preventDefault(); document.getElementById('contact-form')?.focus(); }}
+              <Link
+                to="/register"
                 className="text-[#ffc31d] text-sm font-semibold hover:underline"
               >
                 Register as Alumni →
-              </a>
+              </Link>
             </div>
           </div>
 
