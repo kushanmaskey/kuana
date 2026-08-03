@@ -249,6 +249,77 @@ function BreakdownTable({ title, rows }) {
   );
 }
 
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function AlumniBarChart({ alumni }) {
+  const counts = Array(12).fill(0);
+  alumni.forEach((a) => {
+    const m = new Date(a.created_at).getMonth();
+    counts[m]++;
+  });
+  const data = MONTH_LABELS.map((label, i) => ({ label, value: counts[i] }));
+
+  const maxVal = Math.max(...counts, 1);
+  const yMax = Math.ceil(maxVal / 5) * 5 || 5;
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * yMax));
+
+  const W = 580, H = 230;
+  const padL = 38, padR = 16, padT = 20, padB = 48;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const slotW = chartW / 12;
+  const barW = slotW * 0.58;
+
+  return (
+    <div className="bg-gray-50 rounded-xl p-4">
+      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Registrations by Month</h4>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+        {yTicks.map((tick) => {
+          const y = padT + chartH - (tick / yMax) * chartH;
+          return (
+            <g key={tick}>
+              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke={tick === 0 ? '#d1d5db' : '#f3f4f6'} strokeWidth={1} />
+              <text x={padL - 5} y={y + 3.5} textAnchor="end" fontSize={9} fill="#9ca3af">{tick}</text>
+            </g>
+          );
+        })}
+
+        {data.map(({ label, value }, i) => {
+          const barH = Math.max((value / yMax) * chartH, 0);
+          const x = padL + i * slotW + (slotW - barW) / 2;
+          const y = padT + chartH - barH;
+          return (
+            <g key={label}>
+              {value > 0 && (
+                <>
+                  <rect x={x} y={y} width={barW} height={barH} fill="#dc143c" rx={3} />
+                  <text x={x + barW / 2} y={y - 4} textAnchor="middle" fontSize={9} fill="#dc143c" fontWeight="bold">{value}</text>
+                </>
+              )}
+              <text x={x + barW / 2} y={padT + chartH + 14} textAnchor="middle" fontSize={9} fill="#6b7280">{label}</text>
+            </g>
+          );
+        })}
+
+        <line x1={padL} y1={padT} x2={padL} y2={padT + chartH} stroke="#d1d5db" strokeWidth={1} />
+        <line x1={padL} y1={padT + chartH} x2={W - padR} y2={padT + chartH} stroke="#d1d5db" strokeWidth={1} />
+
+        <text x={padL + chartW / 2} y={H - 4} textAnchor="middle" fontSize={10} fill="#9ca3af">Month</text>
+        <text
+          x={11}
+          y={padT + chartH / 2}
+          textAnchor="middle"
+          fontSize={10}
+          fill="#9ca3af"
+          transform={`rotate(-90, 11, ${padT + chartH / 2})`}
+        >
+          Count
+        </text>
+      </svg>
+    </div>
+  );
+}
+
 function AlumniTab() {
   const [alumni, setAlumni] = useState([]);
   const [search, setSearch] = useState('');
@@ -412,6 +483,9 @@ function AlumniTab() {
           <div className="flex items-center gap-3 mb-4">
             <h3 className="text-base font-bold text-gray-800">Alumni Breakdown</h3>
             <span className="text-xs text-gray-400 font-normal">({alumni.length} total)</span>
+          </div>
+          <div className="mb-4">
+            <AlumniBarChart alumni={alumni} />
           </div>
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
             <BreakdownTable
