@@ -341,7 +341,17 @@ function AlumniTab() {
   const [exportField, setExportField] = useState('name');
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
-  const [chartView, setChartView] = useState('month');
+
+  const EXPORT_TO_CHART = {
+    name:       'month',
+    email:      'month',
+    phone:      'month',
+    grad_year:  'grad_year',
+    school:     'school',
+    department: 'department',
+    city_state: 'state',
+  };
+  const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
 
   useEffect(() => {
     getAlumni({ search }).then((r) => setAlumni(r.data)).catch(() => {});
@@ -499,28 +509,11 @@ function AlumniTab() {
       </div>
 
       {alumni.length > 0 && (
-        <div className="mt-10">
-          <div className="flex items-center gap-3 mb-4 flex-wrap">
-            <h3 className="text-base font-bold text-gray-800">Alumni Breakdown</h3>
-            <span className="text-xs text-gray-400">({alumni.length} total)</span>
-            <select
-              value={chartView}
-              onChange={(e) => setChartView(e.target.value)}
-              className="ml-auto border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#dc143c] bg-white"
-            >
-              {CHART_VIEWS.map(({ value, label }) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="bg-gray-50 rounded-xl px-4 pt-3 pb-2 mb-4">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">
-              {CHART_VIEWS.find((v) => v.value === chartView)?.label}
-            </p>
-            <BarChart data={getChartData(alumni, chartView)} />
-          </div>
-
+        <div className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">
+            {CHART_VIEWS.find((v) => v.value === chartView)?.label}
+          </p>
+          <BarChart data={getChartData(alumni, chartView)} />
         </div>
       )}
     </div>
