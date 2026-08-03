@@ -305,7 +305,7 @@ function ControlChart({ data }) {
   const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xPos(i)},${yPos(d.value)}`).join(' ');
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width={40} height={40}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
       {/* UCL */}
       <line x1={pad} y1={yPos(ucl)} x2={W - pad} y2={yPos(ucl)} stroke="#ef4444" strokeWidth={1} strokeDasharray="3,2" />
       {/* Mean / CL */}
@@ -517,7 +517,7 @@ function AlumniTab() {
       </div>
 
       {alumni.length > 0 && (
-        <div ref={chartRef} className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2">
+        <div ref={chartRef} className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2 w-1/4">
           <div className="flex items-center justify-between mb-1">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
               {CHART_VIEWS.find((v) => v.value === chartView)?.label}
