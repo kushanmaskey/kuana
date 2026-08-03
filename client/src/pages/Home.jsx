@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import About from '../components/About';
@@ -10,6 +12,17 @@ import Footer from '../components/Footer';
 import FloatDonate from '../components/FloatDonate';
 
 export default function Home() {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (state?.scrollTo) {
+      const el = document.getElementById(state.scrollTo);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      navigate('/', { replace: true, state: {} });
+    }
+  }, []);
+
   return (
     <>
       <Navbar />
