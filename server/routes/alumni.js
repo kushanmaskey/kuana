@@ -30,7 +30,7 @@ router.get('/', requireAuth, async (req, res) => {
   const offset = (Math.max(1, parseInt(page) || 1) - 1) * PAGE_LIMIT;
 
   let query = `SELECT id, first_name, last_name, email, phone, graduation_year, degree, department,
-               city, state_province, country, linkedin_url, created_at
+               city, state_province, country, linkedin_url, bio, created_at
                FROM alumni WHERE is_active = true`;
   const params = [];
   let idx = 1;
@@ -102,6 +102,7 @@ router.post('/register', registerLimiter, async (req, res) => {
     );
     res.status(201).json({ success: true, alumni: rows[0] });
   } catch (err) {
+    console.error('Alumni register error:', err.message);
     if (err.code === '23505') return res.status(409).json({ error: 'Email already registered' });
     res.status(500).json({ error: 'Server error' });
   }
