@@ -682,7 +682,9 @@ export default function Admin() {
       {/* Top bar */}
       <div className="bg-[#dc143c] text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-7 object-contain brightness-0 invert" />
+          <div className="bg-white rounded-lg px-2 py-1">
+            <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-7 w-auto object-contain" />
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-white/70 text-sm">{admin.email}</span>
