@@ -282,54 +282,45 @@ function getChartData(alumni, view) {
   return rows.map(([label, value]) => ({ label: label || 'Unknown', value }));
 }
 
-function BarChart({ data }) {
-  if (!data.length) return <div className="text-center text-gray-400 text-xs py-6">No data</div>;
+function ControlChart({ data }) {
+  if (data.length < 2) return <div className="text-center text-gray-400 text-xs py-2">Not enough data</div>;
 
-  const maxVal = Math.max(...data.map((d) => d.value), 1);
-  const yMax = Math.ceil(maxVal / 5) * 5 || 5;
-  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * yMax));
+  const values = data.map((d) => d.value);
+  const n = values.length;
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  const sigma = Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / n);
+  const ucl = mean + 3 * sigma;
+  const lcl = Math.max(0, mean - 3 * sigma);
+  const yMin = 0;
+  const yMax = Math.max(ucl * 1.15, mean + 1, 1);
 
-  const n = data.length;
-  const W = 560, H = 140;
-  const padL = 28, padR = 10, padT = 14, padB = 34;
-  const chartW = W - padL - padR;
-  const chartH = H - padT - padB;
-  const slotW = chartW / n;
-  const barW = Math.min(slotW * 0.65, 26);
+  const W = 200, H = 80;
+  const pad = 6;
+  const chartW = W - pad * 2;
+  const chartH = H - pad * 2;
+
+  const xPos = (i) => pad + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW);
+  const yPos = (v) => pad + chartH - ((Math.min(v, yMax) - yMin) / (yMax - yMin)) * chartH;
+
+  const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xPos(i)},${yPos(d.value)}`).join(' ');
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-      {yTicks.map((tick) => {
-        const y = padT + chartH - (tick / yMax) * chartH;
+    <svg viewBox={`0 0 ${W} ${H}`} width={40} height={40}>
+      {/* UCL */}
+      <line x1={pad} y1={yPos(ucl)} x2={W - pad} y2={yPos(ucl)} stroke="#ef4444" strokeWidth={1} strokeDasharray="3,2" />
+      {/* Mean / CL */}
+      <line x1={pad} y1={yPos(mean)} x2={W - pad} y2={yPos(mean)} stroke="#6b7280" strokeWidth={0.8} />
+      {/* LCL */}
+      {lcl > 0 && <line x1={pad} y1={yPos(lcl)} x2={W - pad} y2={yPos(lcl)} stroke="#3b82f6" strokeWidth={1} strokeDasharray="3,2" />}
+      {/* Data line */}
+      <path d={linePath} fill="none" stroke="#dc143c" strokeWidth={1.5} strokeLinejoin="round" />
+      {/* Data points */}
+      {data.map((d, i) => {
+        const outOfControl = d.value > ucl || (lcl > 0 && d.value < lcl);
         return (
-          <g key={tick}>
-            <line x1={padL} y1={y} x2={W - padR} y2={y} stroke={tick === 0 ? '#d1d5db' : '#f3f4f6'} strokeWidth={1} />
-            <text x={padL - 4} y={y + 3} textAnchor="end" fontSize={7.5} fill="#9ca3af">{tick}</text>
-          </g>
+          <circle key={i} cx={xPos(i)} cy={yPos(d.value)} r={2} fill={outOfControl ? '#ef4444' : '#dc143c'} />
         );
       })}
-
-      {data.map(({ label, value }, i) => {
-        const barH = Math.max((value / yMax) * chartH, 0);
-        const x = padL + i * slotW + (slotW - barW) / 2;
-        const y = padT + chartH - barH;
-        const shortLabel = label.length > 7 ? label.slice(0, 6) + '…' : label;
-        return (
-          <g key={label + i}>
-            {value > 0 && (
-              <>
-                <rect x={x} y={y} width={barW} height={barH} fill="#dc143c" rx={2} />
-                <text x={x + barW / 2} y={y - 3} textAnchor="middle" fontSize={7.5} fill="#dc143c" fontWeight="bold">{value}</text>
-              </>
-            )}
-            <text x={x + barW / 2} y={padT + chartH + 11} textAnchor="middle" fontSize={7.5} fill="#6b7280">{shortLabel}</text>
-          </g>
-        );
-      })}
-
-      <line x1={padL} y1={padT} x2={padL} y2={padT + chartH} stroke="#d1d5db" strokeWidth={1} />
-      <line x1={padL} y1={padT + chartH} x2={W - padR} y2={padT + chartH} stroke="#d1d5db" strokeWidth={1} />
-      <text x={10} y={padT + chartH / 2} textAnchor="middle" fontSize={8} fill="#9ca3af" transform={`rotate(-90, 10, ${padT + chartH / 2})`}>Count</text>
     </svg>
   );
 }
@@ -538,7 +529,7 @@ function AlumniTab() {
               <Download size={12} /> Save Image
             </button>
           </div>
-          <BarChart data={getChartData(alumni, chartView)} />
+          <ControlChart data={getChartData(alumni, chartView)} />
         </div>
       )}
     </div>
