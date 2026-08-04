@@ -285,6 +285,8 @@ function getChartData(alumni, view) {
 }
 
 function ControlChart({ data }) {
+  const [tooltip, setTooltip] = useState(null);
+
   if (!data.length) return <div className="text-center text-gray-400 text-xs py-4">No data</div>;
 
   const values = data.map((d) => d.value);
@@ -309,8 +311,10 @@ function ControlChart({ data }) {
   const yTicks = [0, Math.round(mean * 10) / 10, Math.round(ucl * 10) / 10];
   if (lcl > 0) yTicks.push(Math.round(lcl * 10) / 10);
 
+  const TIP_W = 64, TIP_H = 22;
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" onMouseLeave={() => setTooltip(null)}>
       {/* Background */}
       <rect x={padL} y={padT} width={chartW} height={chartH} fill="white" />
 
@@ -341,12 +345,19 @@ function ControlChart({ data }) {
       {/* Data line */}
       <path d={linePath} fill="none" stroke="#dc143c" strokeWidth={1.5} strokeLinejoin="round" />
 
-      {/* Data points */}
+      {/* Data points with hover target */}
       {data.map((d, i) => {
         const out = d.value > ucl || (lcl > 0 && d.value < lcl);
+        const cx = xPos(i), cy = yPos(d.value);
         return (
-          <circle key={i} cx={xPos(i)} cy={yPos(d.value)} r={2.5}
-            fill={out ? '#ef4444' : '#dc143c'} stroke="white" strokeWidth={0.8} />
+          <g key={i}
+            onMouseEnter={() => setTooltip({ cx, cy, label: d.label, value: d.value })}
+            onMouseLeave={() => setTooltip(null)}
+          >
+            <circle cx={cx} cy={cy} r={6} fill="transparent" />
+            <circle cx={cx} cy={cy} r={2.5}
+              fill={out ? '#ef4444' : '#dc143c'} stroke="white" strokeWidth={0.8} />
+          </g>
         );
       })}
 
@@ -367,6 +378,23 @@ function ControlChart({ data }) {
           <text key={i} x={xPos(i)} y={padT + chartH + 10} textAnchor="middle" fontSize={7} fill="#6b7280">{short}</text>
         );
       })}
+
+      {/* Tooltip */}
+      {tooltip && (() => {
+        const tx = Math.min(Math.max(tooltip.cx - TIP_W / 2, padL), W - TIP_W - 2);
+        const ty = tooltip.cy - TIP_H - 6 < padT ? tooltip.cy + 8 : tooltip.cy - TIP_H - 6;
+        return (
+          <g pointerEvents="none">
+            <rect x={tx} y={ty} width={TIP_W} height={TIP_H} rx={3} fill="#1f2937" opacity={0.9} />
+            <text x={tx + TIP_W / 2} y={ty + 9} textAnchor="middle" fontSize={7} fill="white" fontWeight="bold">
+              {tooltip.label}
+            </text>
+            <text x={tx + TIP_W / 2} y={ty + 17} textAnchor="middle" fontSize={7} fill="#fca5a5">
+              {tooltip.value}
+            </text>
+          </g>
+        );
+      })()}
     </svg>
   );
 }
