@@ -690,26 +690,20 @@ function MessagesTab() {
           <div
             key={m.id}
             onClick={() => openMessage(m)}
-            className={`rounded-xl border px-4 py-3 cursor-pointer transition-colors hover:border-[#dc143c]/30 hover:bg-[#dc143c]/5 ${
+            className={`rounded-xl border px-4 py-3 cursor-pointer transition-colors hover:border-[#dc143c]/30 hover:bg-[#dc143c]/5 flex items-center gap-3 ${
               m.is_read ? 'border-gray-100 bg-white' : 'border-[#dc143c]/20 bg-[#dc143c]/5'
             }`}
           >
-            <div className="flex items-center gap-2 mb-0.5">
-              {!m.is_read && <div className="w-2 h-2 rounded-full bg-[#dc143c] flex-shrink-0" />}
-              <span className={`text-sm text-gray-900 ${m.is_read ? 'font-medium' : 'font-bold'}`}>
-                {m.name}
-              </span>
-              <span className="text-gray-400 text-xs">&bull; {m.email}</span>
-              <span className="ml-auto text-gray-400 text-xs whitespace-nowrap">
-                {new Date(m.created_at).toLocaleDateString()}
-              </span>
-            </div>
-            {m.subject && (
-              <p className={`text-xs mb-0.5 ${m.is_read ? 'text-gray-500' : 'text-gray-700 font-semibold'}`}>
-                {m.subject}
-              </p>
-            )}
-            <p className="text-gray-400 text-xs truncate">{m.message}</p>
+            {!m.is_read && <div className="w-2 h-2 rounded-full bg-[#dc143c] flex-shrink-0" />}
+            <span className={`text-sm text-gray-900 flex-shrink-0 w-36 truncate ${m.is_read ? 'font-medium' : 'font-bold'}`}>
+              {m.name}
+            </span>
+            <span className={`text-sm flex-1 truncate ${m.is_read ? 'text-gray-400' : 'text-gray-700 font-semibold'}`}>
+              {m.subject ?? '(no subject)'}
+            </span>
+            <span className="text-gray-400 text-xs whitespace-nowrap flex-shrink-0">
+              {new Date(m.created_at).toLocaleDateString()}
+            </span>
           </div>
         ))}
         {messages.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No messages yet.</div>}
