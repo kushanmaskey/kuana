@@ -203,6 +203,7 @@ const EXPORT_FIELDS = [
   { value: 'department', label: 'Department' },
   { value: 'city',       label: 'City' },
   { value: 'state',      label: 'State / Province' },
+  { value: 'interest',   label: 'Interested' },
 ];
 
 function timestamp() {
@@ -388,6 +389,7 @@ function AlumniTab() {
     department: 'department',
     city:       'city',
     state:      'state',
+    interest:   'interest',
   };
   const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
 
@@ -431,6 +433,7 @@ function AlumniTab() {
       department: { headers: ['Name', 'Department'],      row: (a) => [`${a.first_name} ${a.last_name}`, getDept(a)] },
       city:       { headers: ['Name', 'City'],            row: (a) => [`${a.first_name} ${a.last_name}`, a.city ?? ''] },
       state:      { headers: ['Name', 'State'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.state_province ?? ''] },
+      interest:   { headers: ['Name', 'Interested'],      row: (a) => [`${a.first_name} ${a.last_name}`, parseBioField(a.bio, 'Interested in KUANA Reunion 2027') ?? ''] },
     };
 
     const { headers, row } = colDefs[exportField];
