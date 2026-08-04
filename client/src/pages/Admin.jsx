@@ -3,7 +3,7 @@ import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOf
 import * as XLSX from 'xlsx';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead } from '../api';
+import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead, markMessageUnread } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -583,47 +583,145 @@ function AlumniTab() {
   );
 }
 
+function MessageModal({ message, onClose, onToggleRead }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div
+        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 z-10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 mb-5">
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              {!message.is_read && <div className="w-2 h-2 rounded-full bg-[#dc143c] flex-shrink-0" />}
+              <h3 className={`text-lg text-gray-900 ${message.is_read ? 'font-semibold' : 'font-bold'}`}>
+                {message.name}
+              </h3>
+            </div>
+            <a href={`mailto:${message.email}`} className="text-sm text-[#dc143c] hover:underline">
+              {message.email}
+            </a>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer flex-shrink-0 mt-1">
+            ✕
+          </button>
+        </div>
+
+        {/* Subject */}
+        {message.subject && (
+          <div className="mb-3">
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Subject</span>
+            <p className="text-gray-800 text-sm mt-0.5 font-medium">{message.subject}</p>
+          </div>
+        )}
+
+        {/* Message body */}
+        <div className="mb-5">
+          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Message</span>
+          <p className="text-gray-700 text-sm mt-1 leading-relaxed whitespace-pre-wrap">{message.message}</p>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <span className="text-gray-400 text-xs">{new Date(message.created_at).toLocaleString()}</span>
+          <button
+            onClick={() => onToggleRead(message)}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+              message.is_read
+                ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-[#dc143c]/10 text-[#dc143c] hover:bg-[#dc143c]/20'
+            }`}
+          >
+            <Eye size={13} />
+            {message.is_read ? 'Mark as Unread' : 'Mark as Read'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MessagesTab() {
   const [messages, setMessages] = useState([]);
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     getMessages().then((r) => setMessages(r.data)).catch(() => {});
   }, []);
 
-  const handleRead = async (id) => {
+  const openMessage = async (m) => {
+    setSelected(m);
+    if (!m.is_read) {
+      try {
+        await markMessageRead(m.id);
+        setMessages((prev) => prev.map((x) => x.id === m.id ? { ...x, is_read: true } : x));
+        setSelected((prev) => prev ? { ...prev, is_read: true } : prev);
+      } catch {}
+    }
+  };
+
+  const handleToggleRead = async (m) => {
     try {
-      await markMessageRead(id);
-      setMessages(messages.map((m) => m.id === id ? { ...m, is_read: true } : m));
+      if (m.is_read) {
+        await markMessageUnread(m.id);
+        setMessages((prev) => prev.map((x) => x.id === m.id ? { ...x, is_read: false } : x));
+        setSelected((prev) => prev ? { ...prev, is_read: false } : prev);
+      } else {
+        await markMessageRead(m.id);
+        setMessages((prev) => prev.map((x) => x.id === m.id ? { ...x, is_read: true } : x));
+        setSelected((prev) => prev ? { ...prev, is_read: true } : prev);
+      }
     } catch {}
   };
 
   return (
     <div>
       <h2 className="text-xl font-bold text-gray-900 mb-6">Contact Messages</h2>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {messages.map((m) => (
-          <div key={m.id} className={`rounded-xl border p-4 ${m.is_read ? 'border-gray-100 bg-white' : 'border-[#dc143c]/20 bg-[#dc143c]/5'}`}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  {!m.is_read && <div className="w-2 h-2 rounded-full bg-[#dc143c]" />}
-                  <span className="font-semibold text-gray-900 text-sm">{m.name}</span>
-                  <span className="text-gray-400 text-xs">&bull; {m.email}</span>
-                </div>
-                {m.subject && <div className="text-xs text-gray-500 mb-1 font-medium">{m.subject}</div>}
-                <p className="text-gray-600 text-sm">{m.message}</p>
-                <div className="text-gray-400 text-xs mt-2">{new Date(m.created_at).toLocaleString()}</div>
-              </div>
-              {!m.is_read && (
-                <button onClick={() => handleRead(m.id)} className="text-gray-400 hover:text-[#dc143c] text-xs flex items-center gap-1 cursor-pointer flex-shrink-0">
-                  <Eye size={14} /> Mark read
-                </button>
-              )}
+          <div
+            key={m.id}
+            onClick={() => openMessage(m)}
+            className={`rounded-xl border px-4 py-3 cursor-pointer transition-colors hover:border-[#dc143c]/30 hover:bg-[#dc143c]/5 ${
+              m.is_read ? 'border-gray-100 bg-white' : 'border-[#dc143c]/20 bg-[#dc143c]/5'
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-0.5">
+              {!m.is_read && <div className="w-2 h-2 rounded-full bg-[#dc143c] flex-shrink-0" />}
+              <span className={`text-sm text-gray-900 ${m.is_read ? 'font-medium' : 'font-bold'}`}>
+                {m.name}
+              </span>
+              <span className="text-gray-400 text-xs">&bull; {m.email}</span>
+              <span className="ml-auto text-gray-400 text-xs whitespace-nowrap">
+                {new Date(m.created_at).toLocaleDateString()}
+              </span>
             </div>
+            {m.subject && (
+              <p className={`text-xs mb-0.5 ${m.is_read ? 'text-gray-500' : 'text-gray-700 font-semibold'}`}>
+                {m.subject}
+              </p>
+            )}
+            <p className="text-gray-400 text-xs truncate">{m.message}</p>
           </div>
         ))}
         {messages.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No messages yet.</div>}
       </div>
+
+      {selected && (
+        <MessageModal
+          message={selected}
+          onClose={() => setSelected(null)}
+          onToggleRead={handleToggleRead}
+        />
+      )}
     </div>
   );
 }

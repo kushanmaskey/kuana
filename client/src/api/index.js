@@ -26,6 +26,7 @@ export const updateAlumni = (id, data) => api.put(`/alumni/${id}`, data);
 export const submitContact = (data) => api.post('/contact', data);
 export const getMessages = () => api.get('/contact');
 export const markMessageRead = (id) => api.patch(`/contact/${id}/read`);
+export const markMessageUnread = (id) => api.patch(`/contact/${id}/unread`);
 
 export const submitDonation = (data) => api.post('/donations', data);
 export const getDonations = () => api.get('/donations');
