@@ -72,4 +72,18 @@ router.patch('/:id/read', requireAuth, async (req, res) => {
   }
 });
 
+router.patch('/:id/unread', requireAuth, async (req, res) => {
+  if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid message ID' });
+  try {
+    const result = await pool.query(
+      'UPDATE contact_messages SET is_read = false WHERE id = $1 RETURNING id',
+      [req.params.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
