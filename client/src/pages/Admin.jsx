@@ -1,5 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { toPng } from 'html-to-image';
+import { Link } from 'react-router-dom';
 import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead } from '../api';
 
 function LoginForm({ onLogin }) {
@@ -27,9 +30,7 @@ function LoginForm({ onLogin }) {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-[#dc143c] flex items-center justify-center text-white font-bold text-xl mx-auto mb-4">
-            KU
-          </div>
+          <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-16 mx-auto mb-4 object-contain" />
           <h1 className="text-2xl font-bold text-gray-900">KUANA Admin</h1>
           <p className="text-gray-400 text-sm mt-1">Sign in to manage your site</p>
         </div>
@@ -200,12 +201,173 @@ const EXPORT_FIELDS = [
   { value: 'grad_year',  label: 'Graduation Year' },
   { value: 'school',     label: 'School' },
   { value: 'department', label: 'Department' },
-  { value: 'city_state', label: 'City / State' },
+  { value: 'city',       label: 'City' },
+  { value: 'state',      label: 'State / Province' },
 ];
 
 function timestamp() {
   const d = new Date();
   return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`;
+}
+
+function tally(items, keyFn) {
+  const map = {};
+  for (const item of items) {
+    const key = keyFn(item) || 'Unknown';
+    map[key] = (map[key] || 0) + 1;
+  }
+  return Object.entries(map).sort((a, b) => b[1] - a[1]);
+}
+
+function BreakdownTable({ title, rows }) {
+  if (!rows.length) return null;
+  const max = rows[0][1];
+  return (
+    <div className="bg-gray-50 rounded-xl p-4">
+      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">{title}</h4>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-gray-200">
+            <th className="text-left pb-2 px-1 text-xs font-semibold text-gray-400">Name</th>
+            <th className="text-right pb-2 px-1 text-xs font-semibold text-gray-400 w-12">Count</th>
+            <th className="pb-2 px-1 w-28"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(([label, count]) => (
+            <tr key={label} className="border-b border-gray-100 last:border-0">
+              <td className="py-1.5 px-1 text-gray-700 text-xs">{label}</td>
+              <td className="py-1.5 px-1 text-right font-bold text-gray-900 text-xs">{count}</td>
+              <td className="py-1.5 px-1">
+                <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                  <div className="h-full bg-[#dc143c] rounded-full transition-all" style={{ width: `${(count / max) * 100}%` }} />
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+const CHART_VIEWS = [
+  { value: 'month',      label: 'Registrations by Month' },
+  { value: 'grad_year',  label: 'By Graduation Year' },
+  { value: 'state',      label: 'By State / Province' },
+  { value: 'city',       label: 'By City' },
+  { value: 'school',     label: 'By School' },
+  { value: 'department', label: 'By Department' },
+  { value: 'interest',   label: 'By Reunion Interest' },
+];
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function getChartData(alumni, view) {
+  if (view === 'month') {
+    const counts = Array(12).fill(0);
+    alumni.forEach((a) => { counts[new Date(a.created_at).getMonth()]++; });
+    return MONTHS.map((label, i) => ({ label, value: counts[i] }));
+  }
+  const keyFns = {
+    grad_year:  (a) => a.graduation_year?.toString(),
+    state:      (a) => a.state_province,
+    city:       (a) => a.city,
+    school:     (a) => parseBioField(a.bio, 'School'),
+    department: (a) => parseBioField(a.bio, 'Department'),
+    interest:   (a) => parseBioField(a.bio, 'Interested in KUANA Reunion 2027'),
+  };
+  let rows = tally(alumni, keyFns[view]);
+  if (view === 'grad_year') rows = [...rows].sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+  else rows = rows.slice(0, 15);
+  return rows.map(([label, value]) => ({ label: label || 'Unknown', value }));
+}
+
+function ControlChart({ data }) {
+  if (!data.length) return <div className="text-center text-gray-400 text-xs py-4">No data</div>;
+
+  const values = data.map((d) => d.value);
+  const n = values.length;
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  const sigma = n > 1 ? Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / n) : mean * 0.3;
+  const ucl = mean + 3 * sigma;
+  const lcl = Math.max(0, mean - 3 * sigma);
+  const yMin = 0;
+  const yMax = Math.max(ucl * 1.18, mean + 1, 1);
+
+  const W = 320, H = 180;
+  const padL = 26, padR = 36, padT = 12, padB = 38;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const xPos = (i) => padL + (n === 1 ? chartW / 2 : (i / (n - 1)) * chartW);
+  const yPos = (v) => padT + chartH - ((Math.min(Math.max(v, yMin), yMax) - yMin) / (yMax - yMin)) * chartH;
+
+  const linePath = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${xPos(i).toFixed(1)},${yPos(d.value).toFixed(1)}`).join(' ');
+
+  const yTicks = [0, Math.round(mean * 10) / 10, Math.round(ucl * 10) / 10];
+  if (lcl > 0) yTicks.push(Math.round(lcl * 10) / 10);
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      {/* Background */}
+      <rect x={padL} y={padT} width={chartW} height={chartH} fill="white" />
+
+      {/* Horizontal grid lines */}
+      {yTicks.map((t) => (
+        <line key={t} x1={padL} y1={yPos(t)} x2={padL + chartW} y2={yPos(t)} stroke="#f3f4f6" strokeWidth={1} />
+      ))}
+
+      {/* UCL line */}
+      <line x1={padL} y1={yPos(ucl)} x2={padL + chartW} y2={yPos(ucl)} stroke="#ef4444" strokeWidth={1} strokeDasharray="4,3" />
+      <text x={padL + chartW + 3} y={yPos(ucl) + 3} fontSize={7} fill="#ef4444" fontWeight="bold">UCL</text>
+      <text x={padL + chartW + 3} y={yPos(ucl) + 10} fontSize={6} fill="#ef4444">{ucl.toFixed(1)}</text>
+
+      {/* CL (mean) line */}
+      <line x1={padL} y1={yPos(mean)} x2={padL + chartW} y2={yPos(mean)} stroke="#6b7280" strokeWidth={1} />
+      <text x={padL + chartW + 3} y={yPos(mean) + 3} fontSize={7} fill="#6b7280" fontWeight="bold">CL</text>
+      <text x={padL + chartW + 3} y={yPos(mean) + 10} fontSize={6} fill="#6b7280">{mean.toFixed(1)}</text>
+
+      {/* LCL line */}
+      {lcl > 0 && (
+        <>
+          <line x1={padL} y1={yPos(lcl)} x2={padL + chartW} y2={yPos(lcl)} stroke="#3b82f6" strokeWidth={1} strokeDasharray="4,3" />
+          <text x={padL + chartW + 3} y={yPos(lcl) + 3} fontSize={7} fill="#3b82f6" fontWeight="bold">LCL</text>
+          <text x={padL + chartW + 3} y={yPos(lcl) + 10} fontSize={6} fill="#3b82f6">{lcl.toFixed(1)}</text>
+        </>
+      )}
+
+      {/* Data line */}
+      <path d={linePath} fill="none" stroke="#dc143c" strokeWidth={1.5} strokeLinejoin="round" />
+
+      {/* Data points */}
+      {data.map((d, i) => {
+        const out = d.value > ucl || (lcl > 0 && d.value < lcl);
+        return (
+          <circle key={i} cx={xPos(i)} cy={yPos(d.value)} r={2.5}
+            fill={out ? '#ef4444' : '#dc143c'} stroke="white" strokeWidth={0.8} />
+        );
+      })}
+
+      {/* Axes */}
+      <line x1={padL} y1={padT} x2={padL} y2={padT + chartH} stroke="#d1d5db" strokeWidth={1} />
+      <line x1={padL} y1={padT + chartH} x2={padL + chartW} y2={padT + chartH} stroke="#d1d5db" strokeWidth={1} />
+
+      {/* Y axis ticks */}
+      {yTicks.map((t) => (
+        <text key={t} x={padL - 3} y={yPos(t) + 3} textAnchor="end" fontSize={7} fill="#9ca3af">{t}</text>
+      ))}
+
+      {/* X axis labels — every other label to avoid crowding */}
+      {data.map((d, i) => {
+        if (n > 8 && i % 2 !== 0) return null;
+        const short = d.label.length > 5 ? d.label.slice(0, 4) + '…' : d.label;
+        return (
+          <text key={i} x={xPos(i)} y={padT + chartH + 10} textAnchor="middle" fontSize={7} fill="#6b7280">{short}</text>
+        );
+      })}
+    </svg>
+  );
 }
 
 function AlumniTab() {
@@ -215,10 +377,27 @@ function AlumniTab() {
   const [exportField, setExportField] = useState('name');
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
+  const [stateFilter, setStateFilter] = useState('');
+  const chartRef = useRef(null);
+
+  const EXPORT_TO_CHART = {
+    name:       'month',
+    email:      'month',
+    phone:      'month',
+    grad_year:  'grad_year',
+    school:     'school',
+    department: 'department',
+    city:       'city',
+    state:      'state',
+  };
+  const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
 
   useEffect(() => {
-    getAlumni({ search }).then((r) => setAlumni(r.data)).catch(() => {});
-  }, [search]);
+    getAlumni({ search, state: stateFilter || undefined }).then((r) => {
+      setAlumni(r.data);
+      setSelected(new Set(r.data.map((a) => a.id)));
+    }).catch(() => {});
+  }, [search, stateFilter]);
 
   const allChecked = alumni.length > 0 && alumni.every((a) => selected.has(a.id));
 
@@ -241,28 +420,47 @@ function AlumniTab() {
     setExportError('');
     const rows = alumni.filter((a) => selected.has(a.id));
 
-    const school     = (a) => parseBioField(a.bio, 'School') ?? '—';
-    const department = (a) => parseBioField(a.bio, 'Department') ?? '—';
+    const getSchool     = (a) => parseBioField(a.bio, 'School') ?? '';
+    const getDept       = (a) => parseBioField(a.bio, 'Department') ?? '';
 
-    const configs = {
-      name:       { header: 'Name',                      val: (a) => `${a.first_name} ${a.last_name}` },
-      email:      { header: 'Name,Email',                val: (a) => `${a.first_name} ${a.last_name},${a.email ?? ''}` },
-      phone:      { header: 'Name,Phone',                val: (a) => `${a.first_name} ${a.last_name},${a.phone ?? ''}` },
-      grad_year:  { header: 'Name,Graduation Year',      val: (a) => `${a.first_name} ${a.last_name},${a.graduation_year ?? ''}` },
-      school:     { header: 'Name,School',               val: (a) => `${a.first_name} ${a.last_name},${school(a)}` },
-      department: { header: 'Name,Department',           val: (a) => `${a.first_name} ${a.last_name},${department(a)}` },
-      city_state: { header: 'Name,City,State',           val: (a) => `${a.first_name} ${a.last_name},${a.city ?? ''},${a.state_province ?? ''}` },
+    const colDefs = {
+      name:       { headers: ['Name'],                    row: (a) => [`${a.first_name} ${a.last_name}`] },
+      email:      { headers: ['Name', 'Email'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.email ?? ''] },
+      phone:      { headers: ['Name', 'Phone'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.phone ?? ''] },
+      grad_year:  { headers: ['Name', 'Graduation Year'], row: (a) => [`${a.first_name} ${a.last_name}`, a.graduation_year ?? ''] },
+      school:     { headers: ['Name', 'School'],          row: (a) => [`${a.first_name} ${a.last_name}`, getSchool(a)] },
+      department: { headers: ['Name', 'Department'],      row: (a) => [`${a.first_name} ${a.last_name}`, getDept(a)] },
+      city:       { headers: ['Name', 'City'],            row: (a) => [`${a.first_name} ${a.last_name}`, a.city ?? ''] },
+      state:      { headers: ['Name', 'State'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.state_province ?? ''] },
     };
 
-    const { header, val } = configs[exportField];
-    const csv = [header, ...rows.map(val)].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `kuana-alumni-${exportField}-${timestamp()}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    const { headers, row } = colDefs[exportField];
+    const alumniSheet = XLSX.utils.aoa_to_sheet([headers, ...rows.map(row)]);
+
+    const chartData = getChartData(alumni, chartView);
+    const chartViewLabel = CHART_VIEWS.find((v) => v.value === chartView)?.label ?? chartView;
+    const chartSheet = XLSX.utils.aoa_to_sheet(
+      [['Label', 'Count'], ...chartData.map(({ label, value }) => [label, value])]
+    );
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, alumniSheet, 'Alumni');
+    XLSX.utils.book_append_sheet(wb, chartSheet, chartViewLabel.slice(0, 31));
+
+    XLSX.writeFile(wb, `kuana-alumni-${exportField}-${timestamp()}.xlsx`);
+  };
+
+  const downloadChartImage = async () => {
+    if (!chartRef.current) return;
+    try {
+      const dataUrl = await toPng(chartRef.current, { pixelRatio: 2, backgroundColor: '#f9fafb' });
+      const link = document.createElement('a');
+      link.download = `kuana-chart-${chartView}-${timestamp()}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      alert('Could not download chart image. Please try again.');
+    }
   };
 
   const COLS = 10;
@@ -278,6 +476,13 @@ function AlumniTab() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-52"
+          />
+          <input
+            type="text"
+            placeholder="State / Province..."
+            value={stateFilter}
+            onChange={(e) => setStateFilter(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-36"
           />
           <select
             value={exportField}
@@ -365,6 +570,23 @@ function AlumniTab() {
           </tbody>
         </table>
       </div>
+
+      {alumni.length > 0 && (
+        <div ref={chartRef} className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2 w-1/2">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
+              {CHART_VIEWS.find((v) => v.value === chartView)?.label}
+            </p>
+            <button
+              onClick={downloadChartImage}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#dc143c] transition-colors cursor-pointer"
+            >
+              <Download size={12} /> Save Image
+            </button>
+          </div>
+          <ControlChart data={getChartData(alumni, chartView)} />
+        </div>
+      )}
     </div>
   );
 }
@@ -507,8 +729,11 @@ export default function Admin() {
       {/* Top bar */}
       <div className="bg-[#dc143c] text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#ffc31d] flex items-center justify-center text-[#dc143c] font-bold text-xs">KU</div>
-          <span className="font-bold text-sm">KUANA Admin</span>
+          <Link to="/">
+            <div className="bg-white rounded-lg px-2 py-1">
+              <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-7 w-auto object-contain" />
+            </div>
+          </Link>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-white/70 text-sm">{admin.email}</span>
