@@ -657,7 +657,10 @@ function MessagesTab() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    getMessages().then((r) => setMessages(r.data)).catch(() => {});
+    getMessages().then((r) => {
+      const sorted = [...r.data].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setMessages(sorted);
+    }).catch(() => {});
   }, []);
 
   const openMessage = async (m) => {
