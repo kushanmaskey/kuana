@@ -702,7 +702,7 @@ function MessagesTab() {
               {m.subject ?? '(no subject)'}
             </span>
             <span className="text-gray-400 text-xs whitespace-nowrap flex-shrink-0">
-              {new Date(m.created_at).toLocaleDateString()}
+              {new Date(m.created_at).toLocaleString()}
             </span>
           </div>
         ))}
