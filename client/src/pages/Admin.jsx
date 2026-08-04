@@ -655,13 +655,31 @@ function MessageModal({ message, onClose, onToggleRead }) {
 function MessagesTab() {
   const [messages, setMessages] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [sortField, setSortField] = useState('time');
+  const [sortDir, setSortDir] = useState('desc');
 
   useEffect(() => {
-    getMessages().then((r) => {
-      const sorted = [...r.data].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      setMessages(sorted);
-    }).catch(() => {});
+    getMessages().then((r) => setMessages(r.data)).catch(() => {});
   }, []);
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDir((d) => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const sorted = [...messages].sort((a, b) => {
+    let valA, valB;
+    if (sortField === 'name')    { valA = a.name.toLowerCase();          valB = b.name.toLowerCase(); }
+    if (sortField === 'subject') { valA = (a.subject ?? '').toLowerCase(); valB = (b.subject ?? '').toLowerCase(); }
+    if (sortField === 'time')    { valA = new Date(a.created_at);        valB = new Date(b.created_at); }
+    if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const openMessage = async (m) => {
     setSelected(m);
@@ -688,11 +706,33 @@ function MessagesTab() {
     } catch {}
   };
 
+  const SortHeader = ({ field, label, className = '' }) => (
+    <button
+      onClick={() => handleSort(field)}
+      className={`flex items-center gap-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hover:text-gray-600 cursor-pointer select-none ${className}`}
+    >
+      {label}
+      <span className="flex flex-col leading-none text-gray-300">
+        <span className={sortField === field && sortDir === 'asc' ? 'text-[#dc143c]' : ''}>▲</span>
+        <span className={sortField === field && sortDir === 'desc' ? 'text-[#dc143c]' : ''}>▼</span>
+      </span>
+    </button>
+  );
+
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Contact Messages</h2>
-      <div className="space-y-2">
-        {messages.map((m) => (
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Contact Messages</h2>
+
+      {/* Column headers */}
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-100 mb-1">
+        <div className="w-2 flex-shrink-0" />
+        <SortHeader field="name"    label="Name"    className="flex-shrink-0 w-36" />
+        <SortHeader field="subject" label="Subject" className="flex-1" />
+        <SortHeader field="time"    label="Time"    className="flex-shrink-0" />
+      </div>
+
+      <div className="space-y-1">
+        {sorted.map((m) => (
           <div
             key={m.id}
             onClick={() => openMessage(m)}
@@ -700,7 +740,9 @@ function MessagesTab() {
               m.is_read ? 'border-gray-100 bg-white' : 'border-[#dc143c]/20 bg-[#dc143c]/5'
             }`}
           >
-            {!m.is_read && <div className="w-2 h-2 rounded-full bg-[#dc143c] flex-shrink-0" />}
+            {!m.is_read
+              ? <div className="w-2 h-2 rounded-full bg-[#dc143c] flex-shrink-0" />
+              : <div className="w-2 flex-shrink-0" />}
             <span className={`text-sm text-gray-900 flex-shrink-0 w-36 truncate ${m.is_read ? 'font-medium' : 'font-bold'}`}>
               {m.name}
             </span>
@@ -712,7 +754,7 @@ function MessagesTab() {
             </span>
           </div>
         ))}
-        {messages.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No messages yet.</div>}
+        {sorted.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No messages yet.</div>}
       </div>
 
       {selected && (
