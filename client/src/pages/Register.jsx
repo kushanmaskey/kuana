@@ -280,7 +280,7 @@ export default function Register() {
                   value={form.first_name}
                   onChange={set('first_name')}
                   onBlur={blur('first_name')}
-                  placeholder="Kushan"
+                  placeholder="John"
                   maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
                 />
@@ -295,7 +295,7 @@ export default function Register() {
                   value={form.last_name}
                   onChange={set('last_name')}
                   onBlur={blur('last_name')}
-                  placeholder="Maskey"
+                  placeholder="Doe"
                   maxLength={100}
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
                 />
