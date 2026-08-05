@@ -41,7 +41,7 @@ function LoginForm({ onLogin }) {
             placeholder="Admin email"
             value={creds.email}
             onChange={(e) => setCreds({ ...creds, email: e.target.value })}
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#dc143c]"
+            className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d]"
           />
           <div className="relative">
             <input
@@ -50,7 +50,7 @@ function LoginForm({ onLogin }) {
               placeholder="Password"
               value={creds.password}
               onChange={(e) => setCreds({ ...creds, password: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#dc143c] pr-10"
+              className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] pr-10"
             />
             <button
               type="button"
@@ -64,7 +64,7 @@ function LoginForm({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#dc143c] text-white font-bold rounded-lg hover:bg-[#0e1b4d] transition-colors disabled:opacity-60 cursor-pointer"
+            className="w-full py-3 bg-[#0e1b4d] text-white font-bold rounded-lg hover:bg-[#060c22] transition-colors disabled:opacity-60 cursor-pointer"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
@@ -121,7 +121,7 @@ function EventsTab() {
         <h2 className="text-xl font-bold text-gray-900">Events</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#dc143c] text-white rounded-lg text-sm font-semibold hover:bg-[#0e1b4d] transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] transition-colors cursor-pointer"
         >
           <Plus size={16} /> Add Event
         </button>
@@ -131,18 +131,18 @@ function EventsTab() {
         <form onSubmit={handleCreate} className="bg-gray-50 rounded-xl p-6 mb-6 border border-gray-200">
           <div className="grid sm:grid-cols-2 gap-4 mb-4">
             <input required placeholder="Event title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c]" />
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
             <input required type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c]" />
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
             <input required placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c]" />
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
             <input placeholder="State/Province" value={form.state_province} onChange={(e) => setForm({ ...form, state_province: e.target.value })}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c]" />
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
             <input placeholder="Venue" value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] sm:col-span-2" />
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
           </div>
           <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] resize-none mb-4" />
+            rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] resize-none mb-4" />
           <div className="flex items-center gap-6 mb-4 text-sm">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} />
@@ -154,7 +154,7 @@ function EventsTab() {
             </label>
           </div>
           <div className="flex gap-3">
-            <button type="submit" className="px-5 py-2 bg-[#dc143c] text-white rounded-lg text-sm font-semibold hover:bg-[#0e1b4d] cursor-pointer">Save Event</button>
+            <button type="submit" className="px-5 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">Save Event</button>
             <button type="button" onClick={() => setShowForm(false)} className="px-5 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
           </div>
         </form>
@@ -166,7 +166,7 @@ function EventsTab() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold text-gray-900 text-sm">{ev.title}</span>
-                {ev.is_featured && <span className="bg-[#ffc31d]/20 text-[#dc143c] text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
+                {ev.is_featured && <span className="bg-[#ffc31d]/20 text-[#0e1b4d] text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
                 {!ev.is_published && <span className="bg-gray-100 text-gray-400 text-xs px-2 py-0.5 rounded-full">Draft</span>}
               </div>
               <div className="text-gray-400 text-xs">{ev.city}, {ev.state_province} &bull; {new Date(ev.event_date).toLocaleDateString()}</div>
@@ -241,7 +241,7 @@ function BreakdownTable({ title, rows }) {
               <td className="py-1.5 px-1 text-right font-bold text-gray-900 text-xs">{count}</td>
               <td className="py-1.5 px-1">
                 <div className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
-                  <div className="h-full bg-[#dc143c] rounded-full transition-all" style={{ width: `${(count / max) * 100}%` }} />
+                  <div className="h-full bg-[#0e1b4d] rounded-full transition-all" style={{ width: `${(count / max) * 100}%` }} />
                 </div>
               </td>
             </tr>
@@ -343,7 +343,7 @@ function ControlChart({ data }) {
       )}
 
       {/* Data line */}
-      <path d={linePath} fill="none" stroke="#dc143c" strokeWidth={1.5} strokeLinejoin="round" />
+      <path d={linePath} fill="none" stroke="#0e1b4d" strokeWidth={1.5} strokeLinejoin="round" />
 
       {/* Data points with hover target */}
       {data.map((d, i) => {
@@ -356,7 +356,7 @@ function ControlChart({ data }) {
           >
             <circle cx={cx} cy={cy} r={6} fill="transparent" />
             <circle cx={cx} cy={cy} r={2.5}
-              fill={out ? '#ef4444' : '#dc143c'} stroke="white" strokeWidth={0.8} />
+              fill={out ? '#ef4444' : '#0e1b4d'} stroke="white" strokeWidth={0.8} />
           </g>
         );
       })}
@@ -505,12 +505,12 @@ function AlumniTab() {
             placeholder="Search by name or email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] w-52"
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] w-52"
           />
           <select
             value={exportField}
             onChange={(e) => setExportField(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#dc143c] bg-white"
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] bg-white"
           >
             {EXPORT_FIELDS.map(({ value, label }) => (
               <option key={value} value={value}>{label}</option>
@@ -533,7 +533,7 @@ function AlumniTab() {
           <thead>
             <tr className="border-b border-gray-100">
               <th className="py-3 px-2 w-8">
-                <input type="checkbox" checked={allChecked} onChange={toggleAll} className="accent-[#dc143c] cursor-pointer" />
+                <input type="checkbox" checked={allChecked} onChange={toggleAll} className="accent-[#0e1b4d] cursor-pointer" />
               </th>
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Name</th>
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Email</th>
@@ -557,7 +557,7 @@ function AlumniTab() {
                 <>
                   <tr key={a.id} className={`border-b border-gray-50 hover:bg-gray-50 ${isSelected ? 'bg-blue-50/40' : ''}`}>
                     <td className="py-3 px-2">
-                      <input type="checkbox" checked={isSelected} onChange={() => toggleOne(a.id)} className="accent-[#dc143c] cursor-pointer" />
+                      <input type="checkbox" checked={isSelected} onChange={() => toggleOne(a.id)} className="accent-[#0e1b4d] cursor-pointer" />
                     </td>
                     <td className="py-3 px-2 font-medium text-gray-900 cursor-pointer whitespace-nowrap" onClick={() => setExpanded(expanded === a.id ? null : a.id)}>
                       {a.first_name} {a.last_name}
@@ -602,7 +602,7 @@ function AlumniTab() {
             </p>
             <button
               onClick={downloadChartImage}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#dc143c] transition-colors cursor-pointer"
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#0e1b4d] transition-colors cursor-pointer"
             >
               <Download size={12} /> Save Image
             </button>
@@ -632,12 +632,12 @@ function MessageModal({ message, onClose, onToggleRead }) {
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
             <div className="flex items-center gap-2 mb-0.5">
-              {!message.is_read && <div className="w-2 h-2 rounded-full bg-[#dc143c] flex-shrink-0" />}
+              {!message.is_read && <div className="w-2 h-2 rounded-full bg-[#0e1b4d] flex-shrink-0" />}
               <h3 className={`text-lg text-gray-900 ${message.is_read ? 'font-semibold' : 'font-bold'}`}>
                 {message.name}
               </h3>
             </div>
-            <a href={`mailto:${message.email}`} className="text-sm text-[#dc143c] hover:underline">
+            <a href={`mailto:${message.email}`} className="text-sm text-[#0e1b4d] hover:underline">
               {message.email}
             </a>
           </div>
@@ -668,7 +668,7 @@ function MessageModal({ message, onClose, onToggleRead }) {
             className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
               message.is_read
                 ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                : 'bg-[#dc143c]/10 text-[#dc143c] hover:bg-[#dc143c]/20'
+                : 'bg-[#0e1b4d]/10 text-[#0e1b4d] hover:bg-[#060c22]/20'
             }`}
           >
             <Eye size={13} />
@@ -741,8 +741,8 @@ function MessagesTab() {
     >
       {label}
       <span className="flex flex-col leading-none text-gray-300">
-        <span className={sortField === field && sortDir === 'asc' ? 'text-[#dc143c]' : ''}>▲</span>
-        <span className={sortField === field && sortDir === 'desc' ? 'text-[#dc143c]' : ''}>▼</span>
+        <span className={sortField === field && sortDir === 'asc' ? 'text-[#0e1b4d]' : ''}>▲</span>
+        <span className={sortField === field && sortDir === 'desc' ? 'text-[#0e1b4d]' : ''}>▼</span>
       </span>
     </button>
   );
@@ -764,12 +764,12 @@ function MessagesTab() {
           <div
             key={m.id}
             onClick={() => openMessage(m)}
-            className={`rounded-xl border px-4 py-3 cursor-pointer transition-colors hover:border-[#dc143c]/30 hover:bg-[#dc143c]/5 flex items-center gap-3 ${
-              m.is_read ? 'border-gray-100 bg-white' : 'border-[#dc143c]/20 bg-[#dc143c]/5'
+            className={`rounded-xl border px-4 py-3 cursor-pointer transition-colors hover:border-[#0e1b4d]/30 hover:bg-[#060c22]/5 flex items-center gap-3 ${
+              m.is_read ? 'border-gray-100 bg-white' : 'border-[#0e1b4d]/20 bg-[#0e1b4d]/5'
             }`}
           >
             {!m.is_read
-              ? <div className="w-2 h-2 rounded-full bg-[#dc143c] flex-shrink-0" />
+              ? <div className="w-2 h-2 rounded-full bg-[#0e1b4d] flex-shrink-0" />
               : <div className="w-2 flex-shrink-0" />}
             <span className={`text-sm text-gray-900 flex-shrink-0 w-36 truncate ${m.is_read ? 'font-medium' : 'font-bold'}`}>
               {m.name}
@@ -816,8 +816,8 @@ function DonationsTab() {
             { label: 'Avg Donation', value: `$${parseFloat(stats.average_amount || 0).toFixed(0)}` },
             { label: 'Unique Donors', value: stats.unique_donors },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-[#dc143c]/5 rounded-xl p-4 text-center">
-              <div className="text-xl font-bold text-[#dc143c]">{value}</div>
+            <div key={label} className="bg-[#0e1b4d]/5 rounded-xl p-4 text-center">
+              <div className="text-xl font-bold text-[#0e1b4d]">{value}</div>
               <div className="text-gray-500 text-xs mt-1">{label}</div>
             </div>
           ))}
@@ -840,7 +840,7 @@ function DonationsTab() {
                   <div className="font-medium text-gray-900">{d.donor_name}</div>
                   <div className="text-gray-400 text-xs">{d.donor_email}</div>
                 </td>
-                <td className="py-3 px-2 font-bold text-[#dc143c]">${parseFloat(d.amount).toLocaleString()}</td>
+                <td className="py-3 px-2 font-bold text-[#0e1b4d]">${parseFloat(d.amount).toLocaleString()}</td>
                 <td className="py-3 px-2 text-gray-500">{d.purpose ?? 'General Fund'}</td>
                 <td className="py-3 px-2 text-gray-400 text-xs">{new Date(d.donated_at).toLocaleDateString()}</td>
               </tr>
@@ -887,12 +887,10 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top bar */}
-      <div className="bg-[#dc143c] text-white px-6 py-3 flex items-center justify-between">
+      <div className="bg-[#0e1b4d] text-white px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link to="/">
-            <div className="bg-white rounded-lg px-2 py-1">
-              <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-7 w-auto object-contain" />
-            </div>
+            <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-9 w-auto object-contain" />
           </Link>
         </div>
         <div className="flex items-center gap-4">
@@ -911,7 +909,7 @@ export default function Admin() {
               key={id}
               onClick={() => setTab(id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                tab === id ? 'bg-[#dc143c] text-white' : 'text-gray-600 hover:bg-gray-50'
+                tab === id ? 'bg-[#0e1b4d] text-white' : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               <Icon size={15} /> {label}
