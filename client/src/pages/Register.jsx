@@ -329,8 +329,9 @@ export default function Register() {
                     <option value="CA">🇨🇦 +1 CA</option>
                   </select>
                   <input type="tel" value={form.phone} onChange={set('phone')} onBlur={blurPhone}
+                    onFocus={() => setForm((f) => ({ ...f, phone: f.phone.replace(/\D/g, '') }))}
                     placeholder="(123) 456 7890" maxLength={30}
-                    className="flex-1 border border-gray-200 rounded-r-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors" />
+                    className="flex-1 border border-gray-200 rounded-r-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors placeholder:text-gray-300" />
                 </div>
                 <FieldError msg={errors.phone} />
               </div>
