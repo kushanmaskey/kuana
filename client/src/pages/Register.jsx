@@ -102,14 +102,16 @@ const GRAD_YEARS = Array.from({ length: CURRENT_YEAR - 1994 }, (_, i) => 1995 + 
 
 const INITIAL = {
   first_name: '',
+  middle_initial: '',
   last_name: '',
+  country: 'US',
   phone: '',
   email: '',
+  city: '',
+  state_province: '',
   school: '',
   graduation_year: '',
   department: '',
-  city: '',
-  state_province: '',
   reunion_interest: '',
   comment: '',
 };
@@ -219,13 +221,14 @@ export default function Register() {
       ].filter(Boolean).join('\n');
 
       await registerAlumni({
-        first_name: form.first_name.trim(),
+        first_name: [form.first_name.trim(), form.middle_initial.trim()].filter(Boolean).join(' '),
         last_name: form.last_name.trim(),
         phone: form.phone.replace(/\D/g, '') || undefined,
         email: form.email.trim().toLowerCase(),
         graduation_year: form.graduation_year ? parseInt(form.graduation_year) : undefined,
         city: form.city.trim(),
         state_province: form.state_province.trim(),
+        country: form.country === 'CA' ? 'Canada' : 'USA',
         bio,
       });
       setStatus('success');
@@ -285,206 +288,160 @@ export default function Register() {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
-            {/* Name row */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  First Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.first_name}
-                  onChange={set('first_name')}
-                  onBlur={blur('first_name')}
-                  placeholder="John"
-                  maxLength={100}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
-                />
-                <FieldError msg={errors.first_name} />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Last Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.last_name}
-                  onChange={set('last_name')}
-                  onBlur={blur('last_name')}
-                  placeholder="Doe"
-                  maxLength={100}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
-                />
-                <FieldError msg={errors.last_name} />
-              </div>
-            </div>
+            {/* ── Section 1: Personal Information ── */}
+            <div className="px-8 pt-8 pb-6 space-y-5">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Personal Information</h2>
 
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={set('phone')}
-                onBlur={blurPhone}
-                placeholder="10-digit phone number"
-                maxLength={30}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
-              />
-              <FieldError msg={errors.phone} />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={set('email')}
-                onBlur={blur('email')}
-                placeholder="you@example.com"
-                maxLength={200}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
-              />
-              <FieldError msg={errors.email} />
-            </div>
-
-            {/* Graduation Year + Schools + Departments */}
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Graduation Year</label>
-                <select
-                  value={form.graduation_year}
-                  onChange={set('graduation_year')}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white"
-                >
-                  <option value="">Select year</option>
-                  {GRAD_YEARS.map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
+              {/* First / Middle / Last */}
+              <div className="grid grid-cols-6 gap-4">
+                <div className="col-span-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">First Name <span className="text-red-500">*</span></label>
+                  <input type="text" value={form.first_name} onChange={set('first_name')} onBlur={blur('first_name')}
+                    placeholder="John" maxLength={100}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors" />
+                  <FieldError msg={errors.first_name} />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">M.I.</label>
+                  <input type="text" value={form.middle_initial} onChange={set('middle_initial')}
+                    placeholder="A" maxLength={2}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors text-center" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
+                  <input type="text" value={form.last_name} onChange={set('last_name')} onBlur={blur('last_name')}
+                    placeholder="Doe" maxLength={100}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors" />
+                  <FieldError msg={errors.last_name} />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Schools</label>
-                <select
-                  value={form.school}
-                  onChange={(e) => setForm((f) => ({ ...f, school: e.target.value, department: '' }))}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white"
-                >
-                  <option value="">Select school</option>
-                  {KU_SCHOOLS_DEPARTMENTS.map(({ school }) => (
-                    <option key={school} value={school}>{school}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Departments</label>
-                <select
-                  value={form.department}
-                  onChange={set('department')}
-                  disabled={!form.school}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">{form.school ? 'Select department' : 'Select a school first'}</option>
-                  {KU_SCHOOLS_DEPARTMENTS
-                    .find(({ school }) => school === form.school)
-                    ?.departments.map((dept) => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                </select>
-              </div>
-            </div>
 
-
-            {/* City + State */}
-            <div className="grid sm:grid-cols-2 gap-4">
+              {/* Phone */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  City <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.city}
-                  onChange={set('city')}
-                  onBlur={blur('city')}
-                  placeholder="Dallas"
-                  maxLength={100}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
-                />
-                <FieldError msg={errors.city} />
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                <div className="flex">
+                  <select value={form.country}
+                    onChange={(e) => setForm((f) => ({ ...f, country: e.target.value, state_province: '' }))}
+                    className="border border-r-0 border-gray-200 rounded-l-lg px-3 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] bg-gray-50 text-gray-700 cursor-pointer">
+                    <option value="US">🇺🇸 +1 US</option>
+                    <option value="CA">🇨🇦 +1 CA</option>
+                  </select>
+                  <input type="tel" value={form.phone} onChange={set('phone')} onBlur={blurPhone}
+                    placeholder="(123) 456 7890" maxLength={30}
+                    className="flex-1 border border-gray-200 rounded-r-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors" />
+                </div>
+                <FieldError msg={errors.phone} />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  State / Province <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={form.state_province}
-                  onChange={set('state_province')}
-                  onBlur={blur('state_province')}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white"
-                >
-                  <option value="">Select state / province</option>
-                  <optgroup label="United States">
-                    {US_STATES.map(([abbr, name]) => (
-                      <option key={abbr} value={abbr}>{abbr} – {name}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Canada">
-                    {CA_PROVINCES.map(([abbr, name]) => (
-                      <option key={abbr} value={abbr}>{abbr} – {name}</option>
-                    ))}
-                  </optgroup>
-                </select>
-                <FieldError msg={errors.state_province} />
-              </div>
-            </div>
 
-            {/* Reunion interest */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Interested in joining the KUANA Reunion 2027? <span className="text-red-500">*</span>
-              </label>
-              <div className="flex flex-wrap gap-4">
-                {['Yes', 'No', 'Maybe'].map((opt) => (
-                  <label key={opt} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="reunion_interest"
-                      value={opt}
-                      checked={form.reunion_interest === opt}
-                      onChange={set('reunion_interest')}
-                      className="accent-[#0e1b4d] w-4 h-4"
-                    />
-                    <span className="text-sm text-gray-700">{opt}</span>
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                <input type="email" value={form.email} onChange={set('email')} onBlur={blur('email')}
+                  placeholder="you@example.com" maxLength={200}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors" />
+                <FieldError msg={errors.email} />
+              </div>
+
+              {/* City + State/Province */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">City <span className="text-red-500">*</span></label>
+                  <input type="text" value={form.city} onChange={set('city')} onBlur={blur('city')}
+                    placeholder="Dallas" maxLength={100}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors" />
+                  <FieldError msg={errors.city} />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    {form.country === 'CA' ? 'Province' : 'State'} <span className="text-red-500">*</span>
                   </label>
-                ))}
+                  <select value={form.state_province} onChange={set('state_province')} onBlur={blur('state_province')}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white">
+                    <option value="">Select {form.country === 'CA' ? 'province' : 'state'}</option>
+                    {(form.country === 'CA' ? CA_PROVINCES : US_STATES).map(([abbr, name]) => (
+                      <option key={abbr} value={abbr}>{abbr} – {name}</option>
+                    ))}
+                  </select>
+                  <FieldError msg={errors.state_province} />
+                </div>
               </div>
-              <FieldError msg={errors.reunion_interest} />
             </div>
 
-            {/* Comment */}
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-sm font-semibold text-gray-700">Comments / Message</label>
-                <span className={`text-xs ${form.comment.length > 450 ? 'text-red-500' : 'text-gray-400'}`}>
-                  {form.comment.length}/500
-                </span>
+            {/* ── Section 2: Academic Background ── */}
+            <div className="px-8 py-6 space-y-5 bg-gray-50 border-t border-gray-100">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 pb-2">Academic Background</h2>
+
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Graduation Year</label>
+                  <select value={form.graduation_year} onChange={set('graduation_year')}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white">
+                    <option value="">Select year</option>
+                    {GRAD_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">School</label>
+                  <select value={form.school}
+                    onChange={(e) => setForm((f) => ({ ...f, school: e.target.value, department: '' }))}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white">
+                    <option value="">Select school</option>
+                    {KU_SCHOOLS_DEPARTMENTS.map(({ school }) => (
+                      <option key={school} value={school}>{school}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Department</label>
+                  <select value={form.department} onChange={set('department')} disabled={!form.school}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors bg-white disabled:opacity-50 disabled:cursor-not-allowed">
+                    <option value="">{form.school ? 'Select department' : 'Select a school first'}</option>
+                    {KU_SCHOOLS_DEPARTMENTS.find(({ school }) => school === form.school)
+                      ?.departments.map((dept) => <option key={dept} value={dept}>{dept}</option>)}
+                  </select>
+                </div>
               </div>
-              <textarea
-                rows={4}
-                value={form.comment}
-                onChange={set('comment')}
-                onBlur={blur('comment')}
-                placeholder="Tell us anything else you'd like to share..."
-                maxLength={500}
-                className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors resize-none"
-              />
-              <FieldError msg={errors.comment} />
             </div>
+
+            {/* ── Section 3: Interests & Comments ── */}
+            <div className="px-8 py-6 space-y-5 border-t border-gray-100">
+              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Interests & Comments</h2>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Interested in joining the KUANA Reunion 2027? <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-wrap gap-4">
+                  {['Yes', 'No', 'Maybe'].map((opt) => (
+                    <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name="reunion_interest" value={opt}
+                        checked={form.reunion_interest === opt} onChange={set('reunion_interest')}
+                        className="accent-[#0e1b4d] w-4 h-4" />
+                      <span className="text-sm text-gray-700">{opt}</span>
+                    </label>
+                  ))}
+                </div>
+                <FieldError msg={errors.reunion_interest} />
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-sm font-semibold text-gray-700">Comments / Message</label>
+                  <span className={`text-xs ${form.comment.length > 450 ? 'text-red-500' : 'text-gray-400'}`}>
+                    {form.comment.length}/500
+                  </span>
+                </div>
+                <textarea rows={4} value={form.comment} onChange={set('comment')} onBlur={blur('comment')}
+                  placeholder="Tell us anything else you'd like to share..." maxLength={500}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors resize-none" />
+                <FieldError msg={errors.comment} />
+              </div>
+            </div>
+
+            {/* ── Submit ── */}
+            <div className="px-8 pb-8 space-y-4">
 
             {status === 'error' && (
               <p className="text-red-500 text-sm">
@@ -500,9 +457,10 @@ export default function Register() {
               {loading ? 'Submitting...' : 'Register as Alumni'}
             </button>
 
-            <p className="text-center text-gray-400 text-xs">
-              Fields marked <span className="text-red-500">*</span> are required.
-            </p>
+              <p className="text-center text-gray-400 text-xs">
+                Fields marked <span className="text-red-500">*</span> are required.
+              </p>
+            </div>
           </form>
         )}
       </div>
