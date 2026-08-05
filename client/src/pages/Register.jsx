@@ -291,8 +291,8 @@ export default function Register() {
           <form onSubmit={handleSubmit} noValidate className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
             {/* ── Section 1: Personal Information ── */}
-            <div className="px-8 pt-8 pb-6 space-y-5">
-              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Personal Information</h2>
+            <div className="px-8 pt-8 pb-6 space-y-5 bg-[#0e1b4d]/5">
+              <h2 className="text-xs font-bold text-[#0e1b4d] uppercase tracking-widest border-b border-[#0e1b4d]/20 pb-2">Personal Information</h2>
 
               {/* First / Middle / Last */}
               <div className="grid grid-cols-6 gap-4">
@@ -370,8 +370,8 @@ export default function Register() {
             </div>
 
             {/* ── Section 2: Academic Background ── */}
-            <div className="px-8 py-6 space-y-5 bg-gray-50 border-t border-gray-100">
-              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200 pb-2">Academic Background</h2>
+            <div className="px-8 py-6 space-y-5 bg-[#ffc31d]/10 border-t border-[#ffc31d]/30">
+              <h2 className="text-xs font-bold text-[#b8860b] uppercase tracking-widest border-b border-[#ffc31d]/40 pb-2">Academic Background</h2>
 
               <div className="grid sm:grid-cols-3 gap-4">
                 <div>
@@ -406,8 +406,8 @@ export default function Register() {
             </div>
 
             {/* ── Section 3: Interests & Comments ── */}
-            <div className="px-8 py-6 space-y-5 border-t border-gray-100">
-              <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">Interests & Comments</h2>
+            <div className="px-8 py-6 space-y-5 bg-[#dc143c]/5 border-t border-[#dc143c]/20">
+              <h2 className="text-xs font-bold text-[#dc143c] uppercase tracking-widest border-b border-[#dc143c]/20 pb-2">Interests & Comments</h2>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
