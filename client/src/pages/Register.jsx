@@ -184,6 +184,17 @@ export default function Register() {
     setErrors((prev) => ({ ...prev, [field]: err }));
   };
 
+  const blurPhone = () => {
+    const digits = form.phone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      const formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6)}`;
+      setForm((f) => ({ ...f, phone: formatted }));
+      setErrors((prev) => ({ ...prev, phone: '' }));
+    } else {
+      setErrors((prev) => ({ ...prev, phone: validateField('phone', form.phone) }));
+    }
+  };
+
   const validate = () => {
     const e = {};
     Object.keys(INITIAL).forEach((key) => {
@@ -317,8 +328,8 @@ export default function Register() {
                 type="tel"
                 value={form.phone}
                 onChange={set('phone')}
-                onBlur={blur('phone')}
-                placeholder="+1 (555) 000-0000"
+                onBlur={blurPhone}
+                placeholder="10-digit phone number"
                 maxLength={30}
                 className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#0e1b4d] transition-colors"
               />
