@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, Phone, Car, Wifi, Dumbbell, Utensils, Navigation, ExternalLink, Building2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Footer from '../components/Footer';
 
@@ -247,7 +247,14 @@ export default function Venue() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
+      {/* Logo-only header */}
+      <div className="bg-[#0e1b4d] px-6 h-20 flex items-center">
+        <Link to="/">
+          <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-14 w-14 object-contain" />
+        </Link>
+      </div>
+
+      {/* Hero */}
       <div className="bg-gradient-to-br from-[#0e1b4d] to-[#060c22] text-white py-14">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <button
