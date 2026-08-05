@@ -236,19 +236,19 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#0e1b4d] py-12 px-4">
+      {/* Header — logo only, no nav */}
+      <div className="bg-[#0e1b4d] px-6 h-20 flex items-center">
+        <Link to="/">
+          <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-14 w-14 object-contain" />
+        </Link>
+      </div>
+
+      {/* Hero */}
+      <div className="bg-[#0e1b4d] pb-12 px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <Link to="/">
-              <div className="bg-white rounded-lg px-2 py-1">
-                <img src="https://kuana.org/assets/img/KUANA.png" alt="KUANA Logo" className="h-14 w-auto object-contain" />
-              </div>
-            </Link>
-            <button onClick={goToContact} className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm transition-colors cursor-pointer">
-              <ArrowLeft size={16} /> Back to Contact Us
-            </button>
-          </div>
+          <button onClick={goToContact} className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm mb-6 transition-colors cursor-pointer">
+            <ArrowLeft size={16} /> Back to Contact Us
+          </button>
           <p className="text-[#ffc31d] text-sm font-semibold uppercase tracking-widest mb-2">Alumni Directory</p>
           <h1 className="text-3xl md:text-4xl font-bold text-white">Register as Alumni</h1>
           <p className="text-white/70 mt-3 text-sm max-w-lg">
