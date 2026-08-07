@@ -494,11 +494,10 @@ function AlumniTab() {
             onChange={(e) => setInterestFilter(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] bg-white"
           >
-            <option value="All">All Interest</option>
-            <option value="Yes">Interested</option>
+            <option value="All">All</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
             <option value="Maybe">Maybe</option>
-            <option value="No">Not Interested</option>
-            <option value="Unknown">Not Specified</option>
           </select>
           <button
             onClick={handleExport}
