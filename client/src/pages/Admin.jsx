@@ -399,27 +399,27 @@ function ControlChart({ data }) {
   );
 }
 
+const FIELD_DEFS = {
+  name:       { header: 'Name',            getValue: (a) => `${a.first_name} ${a.last_name}` },
+  email:      { header: 'Email',           getValue: (a) => a.email ?? '' },
+  phone:      { header: 'Phone',           getValue: (a) => a.phone ?? '' },
+  grad_year:  { header: 'Graduation Year', getValue: (a) => a.graduation_year ?? '' },
+  school:     { header: 'School',          getValue: (a) => parseBioField(a.bio, 'School') ?? '' },
+  department: { header: 'Department',      getValue: (a) => parseBioField(a.bio, 'Department') ?? '' },
+  city:       { header: 'City',            getValue: (a) => a.city ?? '' },
+  state:      { header: 'State',           getValue: (a) => a.state_province ?? '' },
+  interest:   { header: 'Interested',      getValue: (a) => parseBioField(a.bio, 'Interested in KUANA Reunion 2027') ?? '' },
+};
+
 function AlumniTab() {
   const [alumni, setAlumni] = useState([]);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(new Set());
-  const [exportField, setExportField] = useState('name');
+  const [exportFields, setExportFields] = useState(new Set(EXPORT_FIELDS.map((f) => f.value)));
+  const [chartView, setChartView] = useState('month');
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
   const chartRef = useRef(null);
-
-  const EXPORT_TO_CHART = {
-    name:       'month',
-    email:      'month',
-    phone:      'month',
-    grad_year:  'grad_year',
-    school:     'school',
-    department: 'department',
-    city:       'city',
-    state:      'state',
-    interest:   'interest',
-  };
-  const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
 
   useEffect(() => {
     getAlumni({ search }).then((r) => {
@@ -444,28 +444,23 @@ function AlumniTab() {
     setExportError('');
   };
 
+  const toggleExportField = (value) => {
+    setExportFields((prev) => {
+      const next = new Set(prev);
+      next.has(value) ? next.delete(value) : next.add(value);
+      return next;
+    });
+  };
+
   const handleExport = () => {
     if (selected.size === 0) { setExportError('Please select at least one alumni to export.'); return; }
+    if (exportFields.size === 0) { setExportError('Please select at least one field to export.'); return; }
     setExportError('');
     const rows = alumni.filter((a) => selected.has(a.id));
 
-    const getSchool     = (a) => parseBioField(a.bio, 'School') ?? '';
-    const getDept       = (a) => parseBioField(a.bio, 'Department') ?? '';
-
-    const colDefs = {
-      name:       { headers: ['Name'],                    row: (a) => [`${a.first_name} ${a.last_name}`] },
-      email:      { headers: ['Name', 'Email'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.email ?? ''] },
-      phone:      { headers: ['Name', 'Phone'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.phone ?? ''] },
-      grad_year:  { headers: ['Name', 'Graduation Year'], row: (a) => [`${a.first_name} ${a.last_name}`, a.graduation_year ?? ''] },
-      school:     { headers: ['Name', 'School'],          row: (a) => [`${a.first_name} ${a.last_name}`, getSchool(a)] },
-      department: { headers: ['Name', 'Department'],      row: (a) => [`${a.first_name} ${a.last_name}`, getDept(a)] },
-      city:       { headers: ['Name', 'City'],            row: (a) => [`${a.first_name} ${a.last_name}`, a.city ?? ''] },
-      state:      { headers: ['Name', 'State'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.state_province ?? ''] },
-      interest:   { headers: ['Name', 'Interested'],      row: (a) => [`${a.first_name} ${a.last_name}`, parseBioField(a.bio, 'Interested in KUANA Reunion 2027') ?? ''] },
-    };
-
-    const { headers, row } = colDefs[exportField];
-    const alumniSheet = XLSX.utils.aoa_to_sheet([headers, ...rows.map(row)]);
+    const activeDefs = EXPORT_FIELDS.filter((f) => exportFields.has(f.value)).map((f) => FIELD_DEFS[f.value]);
+    const headers = activeDefs.map((d) => d.header);
+    const alumniSheet = XLSX.utils.aoa_to_sheet([headers, ...rows.map((a) => activeDefs.map((d) => d.getValue(a)))]);
 
     const chartData = getChartData(alumni, chartView);
     const chartViewLabel = CHART_VIEWS.find((v) => v.value === chartView)?.label ?? chartView;
@@ -477,7 +472,7 @@ function AlumniTab() {
     XLSX.utils.book_append_sheet(wb, alumniSheet, 'Alumni');
     XLSX.utils.book_append_sheet(wb, chartSheet, chartViewLabel.slice(0, 31));
 
-    XLSX.writeFile(wb, `kuana-alumni-${exportField}-${timestamp()}.xlsx`);
+    XLSX.writeFile(wb, `kuana-alumni-${timestamp()}.xlsx`);
   };
 
   const downloadChartImage = async () => {
@@ -507,15 +502,6 @@ function AlumniTab() {
             onChange={(e) => setSearch(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] w-52"
           />
-          <select
-            value={exportField}
-            onChange={(e) => setExportField(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] bg-white"
-          >
-            {EXPORT_FIELDS.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
@@ -523,6 +509,22 @@ function AlumniTab() {
             <Download size={15} /> Export
           </button>
         </div>
+      </div>
+
+      {/* Export field checkboxes */}
+      <div className="flex items-center gap-x-5 gap-y-2 flex-wrap mb-4 bg-gray-50 rounded-xl px-4 py-3">
+        <span className="text-xs font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">Export fields:</span>
+        {EXPORT_FIELDS.map(({ value, label }) => (
+          <label key={value} className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={exportFields.has(value)}
+              onChange={() => toggleExportField(value)}
+              className="accent-[#0e1b4d] cursor-pointer"
+            />
+            {label}
+          </label>
+        ))}
       </div>
 
       {exportError && <p className="text-red-500 text-sm mb-3">{exportError}</p>}
@@ -596,10 +598,16 @@ function AlumniTab() {
 
       {alumni.length > 0 && (
         <div ref={chartRef} className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2 w-1/2">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-              {CHART_VIEWS.find((v) => v.value === chartView)?.label}
-            </p>
+          <div className="flex items-center justify-between mb-2">
+            <select
+              value={chartView}
+              onChange={(e) => setChartView(e.target.value)}
+              className="text-xs font-bold text-gray-500 uppercase tracking-wide bg-transparent border-none outline-none cursor-pointer"
+            >
+              {CHART_VIEWS.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
             <button
               onClick={downloadChartImage}
               className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#0e1b4d] transition-colors cursor-pointer"
