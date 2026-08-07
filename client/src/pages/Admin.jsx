@@ -401,6 +401,7 @@ function ControlChart({ data }) {
 function AlumniTab() {
   const [alumni, setAlumni] = useState([]);
   const [search, setSearch] = useState('');
+  const [interestFilter, setInterestFilter] = useState('All');
   const [selected, setSelected] = useState(new Set());
   const [visibleCols, setVisibleCols] = useState(new Set(COLUMNS.map((c) => c.value)));
   const [chartView, setChartView] = useState('month');
@@ -415,10 +416,17 @@ function AlumniTab() {
     }).catch(() => {});
   }, [search]);
 
-  const allChecked = alumni.length > 0 && alumni.every((a) => selected.has(a.id));
+  const filteredAlumni = interestFilter === 'All'
+    ? alumni
+    : alumni.filter((a) => {
+        const v = parseBioField(a.bio, 'Interested in KUANA Reunion 2027');
+        return interestFilter === 'Unknown' ? !v : v === interestFilter;
+      });
+
+  const allChecked = filteredAlumni.length > 0 && filteredAlumni.every((a) => selected.has(a.id));
 
   const toggleAll = () => {
-    setSelected(allChecked ? new Set() : new Set(alumni.map((a) => a.id)));
+    setSelected(allChecked ? new Set() : new Set(filteredAlumni.map((a) => a.id)));
     setExportError('');
   };
 
@@ -445,7 +453,7 @@ function AlumniTab() {
     if (selected.size === 0) { setExportError('Please select at least one alumni to export.'); return; }
     if (activeCols.length === 0) { setExportError('Please select at least one column to export.'); return; }
     setExportError('');
-    const rows = alumni.filter((a) => selected.has(a.id));
+    const rows = filteredAlumni.filter((a) => selected.has(a.id));
     const headers = ['Name', ...activeCols.map((c) => c.exportKey)];
     const sheet = XLSX.utils.aoa_to_sheet([
       headers,
@@ -481,6 +489,17 @@ function AlumniTab() {
             onChange={(e) => setSearch(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] w-52"
           />
+          <select
+            value={interestFilter}
+            onChange={(e) => setInterestFilter(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] bg-white"
+          >
+            <option value="All">All Interest</option>
+            <option value="Yes">Interested</option>
+            <option value="Maybe">Maybe</option>
+            <option value="No">Not Interested</option>
+            <option value="Unknown">Not Specified</option>
+          </select>
           <button
             onClick={handleExport}
             className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer whitespace-nowrap"
@@ -523,7 +542,7 @@ function AlumniTab() {
             </tr>
           </thead>
           <tbody>
-            {alumni.map((a) => {
+            {filteredAlumni.map((a) => {
               const interest = parseBioField(a.bio, 'Interested in KUANA Reunion 2027');
               const comment  = parseBioField(a.bio, 'Comment');
               const isSelected = selected.has(a.id);
@@ -564,7 +583,7 @@ function AlumniTab() {
                 </>
               );
             })}
-            {alumni.length === 0 && (
+            {filteredAlumni.length === 0 && (
               <tr><td colSpan={2 + activeCols.length} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
             )}
           </tbody>
