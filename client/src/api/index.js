@@ -34,5 +34,6 @@ export const getDonations = () => api.get('/donations');
 export const getDonationStats = () => api.get('/donations/stats');
 
 export const login = (data) => api.post('/auth/login', data);
+export const changePassword = (data) => api.patch('/auth/password', data);
 
 export default api;

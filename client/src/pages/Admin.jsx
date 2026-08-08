@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star } from 'lucide-react';
+import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star, KeyRound } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread } from '../api';
+import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -90,6 +90,7 @@ function EventsTab() {
   const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', event_date: '', city: '', state_province: '', venue: '', is_featured: false, is_published: true });
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     getEvents().then((r) => setEvents(r.data)).catch(() => {});
@@ -118,7 +119,7 @@ function EventsTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Events</h2>
+        <h2 className="text-xl font-bold text-gray-900">Events <PageBadge page={page} total={events.length} /></h2>
         <button
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-2 px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] transition-colors cursor-pointer"
@@ -160,24 +161,34 @@ function EventsTab() {
         </form>
       )}
 
-      <div className="space-y-3">
-        {events.map((ev) => (
-          <div key={ev.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-semibold text-gray-900 text-sm">{ev.title}</span>
-                {ev.is_featured && <span className="bg-[#ffc31d]/20 text-[#0e1b4d] text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
-                {!ev.is_published && <span className="bg-gray-100 text-gray-400 text-xs px-2 py-0.5 rounded-full">Draft</span>}
-              </div>
-              <div className="text-gray-400 text-xs">{ev.city}, {ev.state_province} &bull; {new Date(ev.event_date).toLocaleDateString()}</div>
+      {(() => {
+        const totalPages = Math.ceil(events.length / PAGE_SIZE);
+        const pageEvents = events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+        return (
+          <>
+            <div className="space-y-3">
+              {pageEvents.map((ev) => (
+                <div key={ev.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-gray-900 text-sm">{ev.title}</span>
+                      {ev.is_featured && <span className="bg-[#ffc31d]/20 text-[#0e1b4d] text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
+                      {!ev.is_published && <span className="bg-gray-100 text-gray-400 text-xs px-2 py-0.5 rounded-full">Draft</span>}
+                    </div>
+                    <div className="text-gray-400 text-xs">{ev.city}, {ev.state_province} &bull; {new Date(ev.event_date).toLocaleDateString()}</div>
+                  </div>
+                  <button onClick={() => handleDelete(ev.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer flex-shrink-0">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+              {events.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No events yet.</div>}
             </div>
-            <button onClick={() => handleDelete(ev.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer flex-shrink-0">
-              <Trash2 size={16} />
-            </button>
-          </div>
-        ))}
-        {events.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No events yet.</div>}
-      </div>
+            <Pagination page={page} totalPages={totalPages} total={events.length}
+              onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -247,6 +258,38 @@ function BreakdownTable({ title, rows }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+const PAGE_SIZE = 20;
+
+function PageBadge({ page, total }) {
+  if (total === 0) return null;
+  const from = (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+  return (
+    <span className="text-xs font-normal text-gray-400 ml-2">
+      {from}–{to} of {total}
+    </span>
+  );
+}
+
+function Pagination({ page, totalPages, total, onPrev, onNext }) {
+  if (total <= PAGE_SIZE) return null;
+  return (
+    <div className="flex items-center justify-end mt-4 pt-4 border-t border-gray-100">
+      <div className="flex items-center gap-2">
+        <button onClick={onPrev} disabled={page === 1}
+          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+          ← Prev
+        </button>
+        <span className="text-xs text-gray-500 w-16 text-center">{page} / {totalPages}</span>
+        <button onClick={onNext} disabled={page === totalPages}
+          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+          Next →
+        </button>
+      </div>
     </div>
   );
 }
@@ -407,6 +450,9 @@ function AlumniTab() {
   const [chartView, setChartView] = useState('month');
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
+  const [page, setPage] = useState(1);
+
+  useEffect(() => { setPage(1); }, [search, interestFilter]);
 
   useEffect(() => {
     getAlumni({ search }).then((r) => {
@@ -466,7 +512,7 @@ function AlumniTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
-        <h2 className="text-xl font-bold text-gray-900">Alumni Directory</h2>
+        <h2 className="text-xl font-bold text-gray-900">Alumni Directory <PageBadge page={page} total={filteredAlumni.length} /></h2>
         <div className="flex items-center gap-3 flex-wrap">
           <input
             type="text"
@@ -527,7 +573,7 @@ function AlumniTab() {
             </tr>
           </thead>
           <tbody>
-            {filteredAlumni.map((a) => {
+            {filteredAlumni.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((a) => {
               const interest = parseBioField(a.bio, 'Interested in KUANA Reunion 2027');
               const comment  = parseBioField(a.bio, 'Comment');
               const isSelected = selected.has(a.id);
@@ -574,7 +620,8 @@ function AlumniTab() {
           </tbody>
         </table>
       </div>
-
+      <Pagination page={page} totalPages={Math.ceil(filteredAlumni.length / PAGE_SIZE)} total={filteredAlumni.length}
+        onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
     </div>
   );
 }
@@ -650,6 +697,9 @@ function MessagesTab() {
   const [selected, setSelected] = useState(null);
   const [sortField, setSortField] = useState('time');
   const [sortDir, setSortDir] = useState('desc');
+  const [page, setPage] = useState(1);
+
+  useEffect(() => { setPage(1); }, [sortField, sortDir]);
 
   useEffect(() => {
     getMessages().then((r) => setMessages(r.data)).catch(() => {});
@@ -714,7 +764,7 @@ function MessagesTab() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 mb-4">Contact Messages</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Contact Messages <PageBadge page={page} total={sorted.length} /></h2>
 
       {/* Column headers */}
       <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-100 mb-1">
@@ -725,7 +775,7 @@ function MessagesTab() {
       </div>
 
       <div className="space-y-1">
-        {sorted.map((m) => (
+        {sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((m) => (
           <div
             key={m.id}
             onClick={() => openMessage(m)}
@@ -749,6 +799,8 @@ function MessagesTab() {
         ))}
         {sorted.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No messages yet.</div>}
       </div>
+      <Pagination page={page} totalPages={Math.ceil(sorted.length / PAGE_SIZE)} total={sorted.length}
+        onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
 
       {selected && (
         <MessageModal
@@ -764,6 +816,7 @@ function MessagesTab() {
 function DonationsTab() {
   const [donations, setDonations] = useState([]);
   const [stats, setStats] = useState(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     getDonations().then((r) => setDonations(r.data)).catch(() => {});
@@ -772,7 +825,7 @@ function DonationsTab() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Donations</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-6">Donations <PageBadge page={page} total={donations.length} /></h2>
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
@@ -799,7 +852,7 @@ function DonationsTab() {
             </tr>
           </thead>
           <tbody>
-            {donations.map((d) => (
+            {donations.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((d) => (
               <tr key={d.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="py-3 px-2">
                   <div className="font-medium text-gray-900">{d.donor_name}</div>
@@ -816,6 +869,8 @@ function DonationsTab() {
           </tbody>
         </table>
       </div>
+      <Pagination page={page} totalPages={Math.ceil(donations.length / PAGE_SIZE)} total={donations.length}
+        onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
     </div>
   );
 }
@@ -956,6 +1011,112 @@ function SummaryTab() {
   );
 }
 
+function ChangePasswordModal({ onClose }) {
+  const [form, setForm] = useState({ current_password: '', new_password: '', confirm_password: '' });
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (form.new_password !== form.confirm_password) {
+      setError('New passwords do not match');
+      return;
+    }
+    if (form.new_password.length < 10) {
+      setError('New password must be at least 10 characters');
+      return;
+    }
+    setLoading(true);
+    try {
+      await changePassword({ current_password: form.current_password, new_password: form.new_password });
+      setSuccess(true);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to change password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-bold text-gray-900">Change Password</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
+        </div>
+
+        {success ? (
+          <div className="text-center py-4">
+            <div className="text-green-600 font-semibold mb-2">Password changed successfully!</div>
+            <button onClick={onClose} className="mt-2 px-5 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">Done</button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Current Password</label>
+              <div className="relative">
+                <input
+                  type={showCurrent ? 'text' : 'password'}
+                  required
+                  value={form.current_password}
+                  onChange={(e) => setForm({ ...form, current_password: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0e1b4d] pr-10"
+                />
+                <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer">
+                  {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">New Password <span className="text-gray-400 font-normal">(min 10 chars)</span></label>
+              <div className="relative">
+                <input
+                  type={showNew ? 'text' : 'password'}
+                  required
+                  value={form.new_password}
+                  onChange={(e) => setForm({ ...form, new_password: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0e1b4d] pr-10"
+                />
+                <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer">
+                  {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 mb-1">Confirm New Password</label>
+              <input
+                type="password"
+                required
+                value={form.confirm_password}
+                onChange={(e) => setForm({ ...form, confirm_password: e.target.value })}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-[#0e1b4d]"
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <div className="flex gap-3 pt-1">
+              <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-[#0e1b4d] text-white font-semibold rounded-lg text-sm hover:bg-[#060c22] disabled:opacity-60 cursor-pointer">
+                {loading ? 'Saving...' : 'Change Password'}
+              </button>
+              <button type="button" onClick={onClose} className="px-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
   { id: 'summary',   label: 'Summary',   icon: LayoutDashboard },
   { id: 'alumni',    label: 'Alumni',    icon: Users },
@@ -967,6 +1128,7 @@ const TABS = [
 export default function Admin() {
   const [admin, setAdmin] = useState(null);
   const [tab, setTab] = useState('summary');
+  const [showChangePw, setShowChangePw] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('kuana_token');
@@ -987,6 +1149,8 @@ export default function Admin() {
   if (!admin) return <LoginForm onLogin={setAdmin} />;
 
   return (
+    <>
+    {showChangePw && <ChangePasswordModal onClose={() => setShowChangePw(false)} />}
     <div className="min-h-screen bg-gray-50">
       {/* Top bar */}
       <div className="bg-[#0e1b4d] text-white px-6 py-3 flex items-center justify-between">
@@ -997,6 +1161,9 @@ export default function Admin() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-white/70 text-sm">{admin.email}</span>
+          <button onClick={() => setShowChangePw(true)} className="flex items-center gap-1 text-white/70 hover:text-white text-sm cursor-pointer transition-colors">
+            <KeyRound size={15} /> Change Password
+          </button>
           <button onClick={handleLogout} className="flex items-center gap-1 text-white/70 hover:text-white text-sm cursor-pointer transition-colors">
             <LogOut size={15} /> Sign out
           </button>
@@ -1029,5 +1196,6 @@ export default function Admin() {
         </div>
       </div>
     </div>
+    </>
   );
 }

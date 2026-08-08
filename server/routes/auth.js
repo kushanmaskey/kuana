@@ -69,4 +69,40 @@ router.post('/setup', async (req, res) => {
   }
 });
 
+router.patch('/password', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const token = authHeader.split(' ')[1];
+  let payload;
+  try {
+    payload = require('jsonwebtoken').verify(token, process.env.JWT_SECRET);
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) {
+    return res.status(400).json({ error: 'current_password and new_password are required' });
+  }
+  if (new_password.length < 10) {
+    return res.status(400).json({ error: 'New password must be at least 10 characters' });
+  }
+
+  try {
+    const { rows } = await pool.query('SELECT * FROM admins WHERE id = $1', [payload.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Admin not found' });
+
+    const valid = await bcrypt.compare(current_password, rows[0].password_hash);
+    if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    const hash = await bcrypt.hash(new_password, 12);
+    await pool.query('UPDATE admins SET password_hash = $1 WHERE id = $2', [hash, payload.id]);
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
