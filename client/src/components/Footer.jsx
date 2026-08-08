@@ -20,6 +20,9 @@ export default function Footer() {
             <a href="mailto:info@kuana.org" className="hover:text-[#ffc31d] transition-colors">
               info@kuana.org
             </a>
+            <a href="/admin" className="hover:text-[#ffc31d] transition-colors opacity-40 hover:opacity-100">
+              Admin
+            </a>
           </div>
         </div>
       </div>
