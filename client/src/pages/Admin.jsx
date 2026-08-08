@@ -840,7 +840,7 @@ function SummaryTab() {
       <h2 className="text-xl font-bold text-gray-900">Dashboard</h2>
 
       {/* Alumni Chart */}
-      <div ref={chartRef} className="bg-gray-50 rounded-xl px-4 pt-3 pb-3">
+      <div ref={chartRef} className="bg-gray-50 rounded-xl px-4 pt-3 pb-3 w-1/2">
         <div className="flex items-center justify-between mb-2">
           <select
             value={chartView}
