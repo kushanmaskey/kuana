@@ -194,16 +194,15 @@ const REUNION_BADGE = {
   Maybe: 'bg-yellow-100 text-yellow-700',
 };
 
-const EXPORT_FIELDS = [
-  { value: 'name',       label: 'Name' },
-  { value: 'email',      label: 'Email' },
-  { value: 'phone',      label: 'Phone' },
-  { value: 'grad_year',  label: 'Graduation Year' },
-  { value: 'school',     label: 'School' },
-  { value: 'department', label: 'Department' },
-  { value: 'city',       label: 'City' },
-  { value: 'state',      label: 'State / Province' },
-  { value: 'interest',   label: 'Interested' },
+const COLUMNS = [
+  { value: 'email',      label: 'Email',        th: 'Email',        exportKey: 'Email',           val: (a) => a.email ?? '' },
+  { value: 'phone',      label: 'Phone',        th: 'Phone',        exportKey: 'Phone',           val: (a) => a.phone ?? '' },
+  { value: 'grad_year',  label: 'Grad Year',    th: 'Grad Year',    exportKey: 'Graduation Year', val: (a) => a.graduation_year ?? '' },
+  { value: 'school',     label: 'School',       th: 'School',       exportKey: 'School',          val: (a) => parseBioField(a.bio, 'School') ?? '' },
+  { value: 'department', label: 'Department',   th: 'Department',   exportKey: 'Department',      val: (a) => parseBioField(a.bio, 'Department') ?? '' },
+  { value: 'location',   label: 'City / State', th: 'City / State', exportKey: 'City / State',    val: (a) => a.city ? `${a.city}, ${a.state_province ?? ''}` : '' },
+  { value: 'interest',   label: 'Reunion 2027', th: 'Reunion 2027', exportKey: 'Reunion 2027',    val: (a) => parseBioField(a.bio, 'Interested in KUANA Reunion 2027') ?? '' },
+  { value: 'registered', label: 'Registered',   th: 'Registered',   exportKey: 'Registered',      val: (a) => new Date(a.created_at).toLocaleString() },
 ];
 
 function timestamp() {
@@ -402,8 +401,10 @@ function ControlChart({ data }) {
 function AlumniTab() {
   const [alumni, setAlumni] = useState([]);
   const [search, setSearch] = useState('');
+  const [interestFilter, setInterestFilter] = useState('All');
   const [selected, setSelected] = useState(new Set());
-  const [exportField, setExportField] = useState('name');
+  const [visibleCols, setVisibleCols] = useState(new Set(COLUMNS.map((c) => c.value)));
+  const [chartView, setChartView] = useState('month');
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
 
@@ -414,10 +415,17 @@ function AlumniTab() {
     }).catch(() => {});
   }, [search]);
 
-  const allChecked = alumni.length > 0 && alumni.every((a) => selected.has(a.id));
+  const filteredAlumni = interestFilter === 'All'
+    ? alumni
+    : alumni.filter((a) => {
+        const v = parseBioField(a.bio, 'Interested in KUANA Reunion 2027');
+        return interestFilter === 'Unknown' ? !v : v === interestFilter;
+      });
+
+  const allChecked = filteredAlumni.length > 0 && filteredAlumni.every((a) => selected.has(a.id));
 
   const toggleAll = () => {
-    setSelected(allChecked ? new Set() : new Set(alumni.map((a) => a.id)));
+    setSelected(allChecked ? new Set() : new Set(filteredAlumni.map((a) => a.id)));
     setExportError('');
   };
 
@@ -430,34 +438,30 @@ function AlumniTab() {
     setExportError('');
   };
 
-  const handleExport = () => {
-    if (selected.size === 0) { setExportError('Please select at least one alumni to export.'); return; }
-    setExportError('');
-    const rows = alumni.filter((a) => selected.has(a.id));
-
-    const getSchool     = (a) => parseBioField(a.bio, 'School') ?? '';
-    const getDept       = (a) => parseBioField(a.bio, 'Department') ?? '';
-
-    const colDefs = {
-      name:       { headers: ['Name'],                    row: (a) => [`${a.first_name} ${a.last_name}`] },
-      email:      { headers: ['Name', 'Email'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.email ?? ''] },
-      phone:      { headers: ['Name', 'Phone'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.phone ?? ''] },
-      grad_year:  { headers: ['Name', 'Graduation Year'], row: (a) => [`${a.first_name} ${a.last_name}`, a.graduation_year ?? ''] },
-      school:     { headers: ['Name', 'School'],          row: (a) => [`${a.first_name} ${a.last_name}`, getSchool(a)] },
-      department: { headers: ['Name', 'Department'],      row: (a) => [`${a.first_name} ${a.last_name}`, getDept(a)] },
-      city:       { headers: ['Name', 'City'],            row: (a) => [`${a.first_name} ${a.last_name}`, a.city ?? ''] },
-      state:      { headers: ['Name', 'State'],           row: (a) => [`${a.first_name} ${a.last_name}`, a.state_province ?? ''] },
-      interest:   { headers: ['Name', 'Interested'],      row: (a) => [`${a.first_name} ${a.last_name}`, parseBioField(a.bio, 'Interested in KUANA Reunion 2027') ?? ''] },
-    };
-
-    const { headers, row } = colDefs[exportField];
-    const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows.map(row)]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, sheet, 'Alumni');
-    XLSX.writeFile(wb, `kuana-alumni-${exportField}-${timestamp()}.xlsx`);
+  const toggleCol = (value) => {
+    setVisibleCols((prev) => {
+      const next = new Set(prev);
+      next.has(value) ? next.delete(value) : next.add(value);
+      return next;
+    });
   };
 
-  const COLS = 10;
+  const activeCols = COLUMNS.filter((c) => visibleCols.has(c.value));
+
+  const handleExport = () => {
+    if (selected.size === 0) { setExportError('Please select at least one alumni to export.'); return; }
+    if (activeCols.length === 0) { setExportError('Please select at least one column to export.'); return; }
+    setExportError('');
+    const rows = filteredAlumni.filter((a) => selected.has(a.id));
+    const headers = ['Name', ...activeCols.map((c) => c.exportKey)];
+    const sheet = XLSX.utils.aoa_to_sheet([
+      headers,
+      ...rows.map((a) => [`${a.first_name} ${a.last_name}`, ...activeCols.map((c) => c.val(a))]),
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, sheet, 'Alumni');
+    XLSX.writeFile(wb, `kuana-alumni-${timestamp()}.xlsx`);
+  };
 
   return (
     <div>
@@ -472,13 +476,14 @@ function AlumniTab() {
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] w-52"
           />
           <select
-            value={exportField}
-            onChange={(e) => setExportField(e.target.value)}
+            value={interestFilter}
+            onChange={(e) => setInterestFilter(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] bg-white"
           >
-            {EXPORT_FIELDS.map(({ value, label }) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
+            <option value="All">Interest</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+            <option value="Maybe">Maybe</option>
           </select>
           <button
             onClick={handleExport}
@@ -487,6 +492,22 @@ function AlumniTab() {
             <Download size={15} /> Export
           </button>
         </div>
+      </div>
+
+      {/* Column visibility checkboxes */}
+      <div className="flex items-center gap-x-5 gap-y-2 flex-wrap mb-4 bg-gray-50 rounded-xl px-4 py-3">
+        <span className="text-xs font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">Columns:</span>
+        {COLUMNS.map(({ value, label }) => (
+          <label key={value} className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={visibleCols.has(value)}
+              onChange={() => toggleCol(value)}
+              className="accent-[#0e1b4d] cursor-pointer"
+            />
+            {label}
+          </label>
+        ))}
       </div>
 
       {exportError && <p className="text-red-500 text-sm mb-3">{exportError}</p>}
@@ -500,23 +521,17 @@ function AlumniTab() {
                 <input type="checkbox" checked={allChecked} onChange={toggleAll} className="accent-[#0e1b4d] cursor-pointer" />
               </th>
               <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Name</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Email</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Phone</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Grad Year</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">School</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Department</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">City / State</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Reunion 2027</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Registered</th>
+              {activeCols.map((c) => (
+                <th key={c.value} className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">{c.th}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {alumni.map((a) => {
-              const interest   = parseBioField(a.bio, 'Interested in KUANA Reunion 2027');
-              const school     = parseBioField(a.bio, 'School');
-              const department = parseBioField(a.bio, 'Department');
-              const comment    = parseBioField(a.bio, 'Comment');
+            {filteredAlumni.map((a) => {
+              const interest = parseBioField(a.bio, 'Interested in KUANA Reunion 2027');
+              const comment  = parseBioField(a.bio, 'Comment');
               const isSelected = selected.has(a.id);
+              const colSpan = 2 + activeCols.length;
               return (
                 <>
                   <tr key={a.id} className={`border-b border-gray-50 hover:bg-gray-50 ${isSelected ? 'bg-blue-50/40' : ''}`}>
@@ -526,24 +541,26 @@ function AlumniTab() {
                     <td className="py-3 px-2 font-medium text-gray-900 cursor-pointer whitespace-nowrap" onClick={() => setExpanded(expanded === a.id ? null : a.id)}>
                       {a.first_name} {a.last_name}
                     </td>
-                    <td className="py-3 px-2 text-gray-500">{a.email}</td>
-                    <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{a.phone ?? '—'}</td>
-                    <td className="py-3 px-2 text-gray-500 text-center">{a.graduation_year ?? '—'}</td>
-                    <td className="py-3 px-2 text-gray-500">{school ?? '—'}</td>
-                    <td className="py-3 px-2 text-gray-500">{department ?? '—'}</td>
-                    <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{a.city ? `${a.city}, ${a.state_province ?? ''}` : '—'}</td>
-                    <td className="py-3 px-2">
-                      {interest ? (
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${REUNION_BADGE[interest] ?? 'bg-gray-100 text-gray-500'}`}>
-                          {interest}
-                        </span>
-                      ) : '—'}
-                    </td>
-                    <td className="py-3 px-2 text-gray-400 text-xs whitespace-nowrap">{new Date(a.created_at).toLocaleString()}</td>
+                    {visibleCols.has('email')      && <td className="py-3 px-2 text-gray-500">{a.email ?? '—'}</td>}
+                    {visibleCols.has('phone')      && <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{a.phone ?? '—'}</td>}
+                    {visibleCols.has('grad_year')  && <td className="py-3 px-2 text-gray-500 text-center">{a.graduation_year ?? '—'}</td>}
+                    {visibleCols.has('school')     && <td className="py-3 px-2 text-gray-500">{parseBioField(a.bio, 'School') ?? '—'}</td>}
+                    {visibleCols.has('department') && <td className="py-3 px-2 text-gray-500">{parseBioField(a.bio, 'Department') ?? '—'}</td>}
+                    {visibleCols.has('location')   && <td className="py-3 px-2 text-gray-500 whitespace-nowrap">{a.city ? `${a.city}, ${a.state_province ?? ''}` : '—'}</td>}
+                    {visibleCols.has('interest')   && (
+                      <td className="py-3 px-2">
+                        {interest ? (
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${REUNION_BADGE[interest] ?? 'bg-gray-100 text-gray-500'}`}>
+                            {interest}
+                          </span>
+                        ) : '—'}
+                      </td>
+                    )}
+                    {visibleCols.has('registered') && <td className="py-3 px-2 text-gray-400 text-xs whitespace-nowrap">{new Date(a.created_at).toLocaleString()}</td>}
                   </tr>
                   {expanded === a.id && comment && (
                     <tr key={`${a.id}-comment`} className="bg-gray-50 border-b border-gray-100">
-                      <td colSpan={COLS} className="px-4 py-3 text-sm text-gray-600 italic">
+                      <td colSpan={colSpan} className="px-4 py-3 text-sm text-gray-600 italic">
                         <span className="font-semibold text-gray-500 not-italic">Comment: </span>{comment}
                       </td>
                     </tr>
@@ -551,8 +568,8 @@ function AlumniTab() {
                 </>
               );
             })}
-            {alumni.length === 0 && (
-              <tr><td colSpan={COLS} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
+            {filteredAlumni.length === 0 && (
+              <tr><td colSpan={2 + activeCols.length} className="text-center py-8 text-gray-400">No alumni found.</td></tr>
             )}
           </tbody>
         </table>
