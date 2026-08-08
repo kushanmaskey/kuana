@@ -281,6 +281,35 @@ Delete an event permanently.
 
 ---
 
+### PATCH /events/:id/featured
+
+Toggle the featured status of an event. Featured events are highlighted on the public Events section.
+
+**Authentication:** Required
+
+**URL parameters:** `id` — integer, event ID
+
+**Request body:**
+```json
+{ "is_featured": true }
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `is_featured` | boolean | Yes | `true` to feature the event, `false` to unfeature |
+
+**Success response `200`:** Updated event object
+
+**Error responses:**
+```json
+{ "error": "Invalid event ID" }                    // 400
+{ "error": "is_featured must be a boolean" }       // 400
+{ "error": "Not found" }                           // 404
+{ "error": "Unauthorized" }                        // 401
+```
+
+---
+
 ## Alumni
 
 ### GET /alumni
@@ -520,6 +549,27 @@ Returns paginated list of all contact messages.
 ### PATCH /contact/:id/read
 
 Mark a contact message as read.
+
+**Authentication:** Required
+
+**URL parameters:** `id` — integer, message ID
+
+**Success response `200`:**
+```json
+{ "success": true }
+```
+
+**Error responses:**
+```json
+{ "error": "Invalid message ID" }    // 400
+{ "error": "Not found" }             // 404
+```
+
+---
+
+### PATCH /contact/:id/unread
+
+Mark a contact message as unread.
 
 **Authentication:** Required
 

@@ -581,6 +581,7 @@ function requireAuth(req, res, next) {
 | `GET /api/events/:id` | ✅ | — |
 | `POST /api/events` | — | ✅ |
 | `PUT /api/events/:id` | — | ✅ |
+| `PATCH /api/events/:id/featured` | — | ✅ |
 | `DELETE /api/events/:id` | — | ✅ |
 | `GET /api/alumni` | — | ✅ |
 | `POST /api/alumni/register` | ✅ | — |
@@ -589,6 +590,7 @@ function requireAuth(req, res, next) {
 | `POST /api/contact` | ✅ | — |
 | `GET /api/contact` | — | ✅ |
 | `PATCH /api/contact/:id/read` | — | ✅ |
+| `PATCH /api/contact/:id/unread` | — | ✅ |
 | `POST /api/donations` | ✅ | — |
 | `GET /api/donations` | — | ✅ |
 | `GET /api/donations/stats` | — | ✅ |
@@ -704,6 +706,18 @@ Update an event. Same body as POST.
 
 ---
 
+#### `PATCH /api/events/:id/featured` 🔒
+Toggle featured status of an event.
+
+**Request body:**
+```json
+{ "is_featured": true }
+```
+
+**Response `200`:** Updated event object.
+
+---
+
 #### `DELETE /api/events/:id` 🔒
 Delete an event permanently.
 
@@ -810,6 +824,11 @@ List all messages, newest first.
 
 #### `PATCH /api/contact/:id/read` 🔒
 Mark a message as read.
+
+---
+
+#### `PATCH /api/contact/:id/unread` 🔒
+Mark a message as unread.
 
 ---
 
@@ -1031,6 +1050,8 @@ CREATE TABLE media (
 | Contact submit | `INSERT INTO contact_messages (...)` | ✅ |
 | Get contacts | `SELECT * FROM contact_messages ORDER BY created_at DESC` | ✅ |
 | Mark read | `UPDATE contact_messages SET is_read = true WHERE id = $1` | ✅ |
+| Mark unread | `UPDATE contact_messages SET is_read = false WHERE id = $1` | ✅ |
+| Toggle event featured | `UPDATE events SET is_featured = $1, updated_at = NOW() WHERE id = $2` | ✅ |
 | Donation submit | `INSERT INTO donations (...)` | ✅ |
 | Donation stats | `SELECT COUNT(*), SUM(amount), AVG(amount), COUNT(DISTINCT donor_email) FROM donations WHERE status = 'completed'` | ✅ |
 | Get media | `SELECT m.*, e.title as event_title FROM media m LEFT JOIN events e ON m.event_id = e.id WHERE m.is_published = true` | ✅ |
@@ -1046,19 +1067,50 @@ CREATE TABLE media (
 
 ### Tabs
 
-| Tab | What it does |
-|---|---|
-| **Events** | Create, view, delete reunion events. Toggle featured/published status. |
-| **Alumni** | Search and browse registered alumni by name/email. |
-| **Messages** | View contact form submissions. Mark as read. |
-| **Donations** | View donation records and aggregate stats (total, average, unique donors). |
+| Tab | Default | What it does |
+|---|---|---|
+| **Summary** | ✅ | Dashboard with alumni control chart and latest 5 events / messages / donations. |
+| **Alumni** | — | Search, browse, and export registered alumni. |
+| **Events** | — | Create, view, delete reunion events. Toggle featured/published status. |
+| **Messages** | — | View contact form submissions. Mark as read/unread. |
+| **Donations** | — | View donation records and aggregate stats (total, average, unique donors). |
+
+### Summary Tab
+
+The Summary tab is the default landing tab after login. It shows:
+
+- **Alumni control chart** — rendered at 75% width. Switchable view: by month (registration over time), grad year, city, state, or interest. Supports PNG download via `html-to-image`.
+- **Latest Events panel** — most recent 5 events, each with a star button to toggle `is_featured` via `PATCH /events/:id/featured`. Filled gold star = featured.
+- **Latest Messages panel** — most recent 5 contact messages with read/unread status.
+- **Latest Donations panel** — most recent 5 donations with amount.
+
+### Alumni Tab
+
+The Alumni tab uses a `COLUMNS` constant (defined module-level) that drives both table display and Excel export:
+
+| Column key | Label | Export header | Source |
+|---|---|---|---|
+| `email` | Email | Email | `alumni.email` |
+| `phone` | Phone | Phone | `alumni.phone` |
+| `grad_year` | Grad Year | Graduation Year | `alumni.graduation_year` |
+| `school` | School | School | `parseBioField(bio, 'School')` |
+| `department` | Department | Department | `parseBioField(bio, 'Department')` |
+| `location` | City / State | City / State | `city + state_province` |
+| `interest` | Reunion 2027 | Reunion 2027 | `parseBioField(bio, 'Interested in KUANA Reunion 2027')` |
+| `registered` | Registered | Registered | `created_at` formatted |
+
+**Column checkboxes:** Admins select which columns to display in the table. The same selection controls which columns appear in the exported Excel file. All columns are visible by default.
+
+**Interest filter:** A dropdown (All / Yes / No / Maybe) filters the displayed alumni by their reunion interest response. "All" shows everyone. The filter also applies to Excel export — only filtered rows are exported.
+
+**Excel export:** One sheet (`Alumni`), columns match the active checkbox selection, rows match the current interest filter. No chart sheet is included.
 
 ### Session Management
 - Token decoded from `localStorage` on page load via `atob(token.split('.')[1])`
 - If `exp` is in the past, token is removed and user is redirected to login
 - "Sign out" clears `kuana_token` from localStorage
 
-### API Client (`client/src/api.js`)
+### API Client (`client/src/api/index.js`)
 All calls go through Axios with the token automatically attached via an interceptor.
 
 ---
