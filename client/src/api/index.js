@@ -13,6 +13,7 @@ api.interceptors.request.use((config) => {
 export const getEvents = () => api.get('/events');
 export const createEvent = (data) => api.post('/events', data);
 export const updateEvent = (id, data) => api.put(`/events/${id}`, data);
+export const toggleEventFeatured = (id, is_featured) => api.patch(`/events/${id}/featured`, { is_featured });
 export const deleteEvent = (id) => api.delete(`/events/${id}`);
 
 export const getMedia = (params) => api.get('/media', { params });
