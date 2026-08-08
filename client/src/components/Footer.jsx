@@ -3,12 +3,15 @@ export default function Footer() {
     <footer className="bg-[#040919] text-white/60 py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <img
               src="https://kuana.org/assets/img/KUANA.png"
               alt="KUANA Logo"
               className="h-8 w-auto object-contain opacity-80"
             />
+            <a href="/admin" className="text-xs hover:text-[#ffc31d] transition-colors opacity-40 hover:opacity-100">
+              Admin
+            </a>
           </div>
           <div className="text-center text-xs">
             &copy; 2023 KUANA &bull; kuana.org &bull; Non-Profit Organization
@@ -19,9 +22,6 @@ export default function Footer() {
             </a>
             <a href="mailto:info@kuana.org" className="hover:text-[#ffc31d] transition-colors">
               info@kuana.org
-            </a>
-            <a href="/admin" className="hover:text-[#ffc31d] transition-colors opacity-40 hover:opacity-100">
-              Admin
             </a>
           </div>
         </div>
