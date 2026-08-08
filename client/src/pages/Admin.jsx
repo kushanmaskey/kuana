@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard } from 'lucide-react';
+import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead, markMessageUnread } from '../api';
+import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -831,6 +831,13 @@ function SummaryTab() {
     }
   };
 
+  const handleToggleFeatured = async (ev) => {
+    try {
+      const res = await toggleEventFeatured(ev.id, !ev.is_featured);
+      setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : e));
+    } catch {}
+  };
+
   const latestMessages  = [...messages].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
   const latestDonations = [...donations].sort((a, b) => new Date(b.donated_at) - new Date(a.donated_at)).slice(0, 5);
   const latestEvents    = [...events].sort((a, b) => new Date(b.event_date) - new Date(a.event_date)).slice(0, 5);
@@ -871,11 +878,21 @@ function SummaryTab() {
             {latestEvents.length === 0 && <p className="text-gray-400 text-sm">No events yet.</p>}
             {latestEvents.map((ev) => (
               <div key={ev.id} className="bg-white rounded-lg px-3 py-2.5 border border-gray-100">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-sm font-medium text-gray-900 truncate">{ev.title}</span>
-                  {ev.is_featured && <span className="text-xs bg-[#ffc31d]/20 text-[#0e1b4d] px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium">Featured</span>}
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-sm font-medium text-gray-900 leading-snug">{ev.title}</span>
+                  <button
+                    onClick={() => handleToggleFeatured(ev)}
+                    title={ev.is_featured ? 'Remove featured' : 'Mark as featured'}
+                    className="flex-shrink-0 cursor-pointer transition-colors mt-0.5"
+                  >
+                    <Star
+                      size={15}
+                      className={ev.is_featured ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'}
+                      fill={ev.is_featured ? '#ffc31d' : 'none'}
+                    />
+                  </button>
                 </div>
-                <p className="text-xs text-gray-400">{ev.city}{ev.state_province ? `, ${ev.state_province}` : ''}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{ev.city}{ev.state_province ? `, ${ev.state_province}` : ''}</p>
                 <p className="text-xs text-gray-300 mt-0.5">{new Date(ev.event_date).toLocaleDateString()}</p>
               </div>
             ))}
