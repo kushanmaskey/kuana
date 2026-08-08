@@ -864,6 +864,24 @@ function SummaryTab() {
       {/* Latest 5 panels */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 
+        {/* Latest Events */}
+        <div className="bg-gray-50 rounded-xl p-4">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Latest Events</h3>
+          <div className="space-y-2">
+            {latestEvents.length === 0 && <p className="text-gray-400 text-sm">No events yet.</p>}
+            {latestEvents.map((ev) => (
+              <div key={ev.id} className="bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className="text-sm font-medium text-gray-900 truncate">{ev.title}</span>
+                  {ev.is_featured && <span className="text-xs bg-[#ffc31d]/20 text-[#0e1b4d] px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium">Featured</span>}
+                </div>
+                <p className="text-xs text-gray-400">{ev.city}{ev.state_province ? `, ${ev.state_province}` : ''}</p>
+                <p className="text-xs text-gray-300 mt-0.5">{new Date(ev.event_date).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Latest Messages */}
         <div className="bg-gray-50 rounded-xl p-4">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Latest Messages</h3>
@@ -899,24 +917,6 @@ function SummaryTab() {
           </div>
         </div>
 
-        {/* Latest Events */}
-        <div className="bg-gray-50 rounded-xl p-4">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Latest Events</h3>
-          <div className="space-y-2">
-            {latestEvents.length === 0 && <p className="text-gray-400 text-sm">No events yet.</p>}
-            {latestEvents.map((ev) => (
-              <div key={ev.id} className="bg-white rounded-lg px-3 py-2.5 border border-gray-100">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <span className="text-sm font-medium text-gray-900 truncate">{ev.title}</span>
-                  {ev.is_featured && <span className="text-xs bg-[#ffc31d]/20 text-[#0e1b4d] px-1.5 py-0.5 rounded-full flex-shrink-0 font-medium">Featured</span>}
-                </div>
-                <p className="text-xs text-gray-400">{ev.city}{ev.state_province ? `, ${ev.state_province}` : ''}</p>
-                <p className="text-xs text-gray-300 mt-0.5">{new Date(ev.event_date).toLocaleDateString()}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
       </div>
     </div>
   );
@@ -924,8 +924,8 @@ function SummaryTab() {
 
 const TABS = [
   { id: 'summary',   label: 'Summary',   icon: LayoutDashboard },
-  { id: 'events',    label: 'Events',    icon: Calendar },
   { id: 'alumni',    label: 'Alumni',    icon: Users },
+  { id: 'events',    label: 'Events',    icon: Calendar },
   { id: 'messages',  label: 'Messages',  icon: MessageCircle },
   { id: 'donations', label: 'Donations', icon: Heart },
 ];
