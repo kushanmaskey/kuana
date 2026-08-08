@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download } from 'lucide-react';
+import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, markMessageRead, markMessageUnread } from '../api';
+import { login, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -406,20 +406,6 @@ function AlumniTab() {
   const [exportField, setExportField] = useState('name');
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
-  const chartRef = useRef(null);
-
-  const EXPORT_TO_CHART = {
-    name:       'month',
-    email:      'month',
-    phone:      'month',
-    grad_year:  'grad_year',
-    school:     'school',
-    department: 'department',
-    city:       'city',
-    state:      'state',
-    interest:   'interest',
-  };
-  const chartView = EXPORT_TO_CHART[exportField] ?? 'month';
 
   useEffect(() => {
     getAlumni({ search }).then((r) => {
@@ -465,32 +451,10 @@ function AlumniTab() {
     };
 
     const { headers, row } = colDefs[exportField];
-    const alumniSheet = XLSX.utils.aoa_to_sheet([headers, ...rows.map(row)]);
-
-    const chartData = getChartData(alumni, chartView);
-    const chartViewLabel = CHART_VIEWS.find((v) => v.value === chartView)?.label ?? chartView;
-    const chartSheet = XLSX.utils.aoa_to_sheet(
-      [['Label', 'Count'], ...chartData.map(({ label, value }) => [label, value])]
-    );
-
+    const sheet = XLSX.utils.aoa_to_sheet([headers, ...rows.map(row)]);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, alumniSheet, 'Alumni');
-    XLSX.utils.book_append_sheet(wb, chartSheet, chartViewLabel.slice(0, 31));
-
+    XLSX.utils.book_append_sheet(wb, sheet, 'Alumni');
     XLSX.writeFile(wb, `kuana-alumni-${exportField}-${timestamp()}.xlsx`);
-  };
-
-  const downloadChartImage = async () => {
-    if (!chartRef.current) return;
-    try {
-      const dataUrl = await toPng(chartRef.current, { pixelRatio: 2, backgroundColor: '#f9fafb' });
-      const link = document.createElement('a');
-      link.download = `kuana-chart-${chartView}-${timestamp()}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch {
-      alert('Could not download chart image. Please try again.');
-    }
   };
 
   const COLS = 10;
@@ -594,22 +558,6 @@ function AlumniTab() {
         </table>
       </div>
 
-      {alumni.length > 0 && (
-        <div ref={chartRef} className="mt-6 bg-gray-50 rounded-xl px-4 pt-3 pb-2 w-1/2">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-              {CHART_VIEWS.find((v) => v.value === chartView)?.label}
-            </p>
-            <button
-              onClick={downloadChartImage}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#0e1b4d] transition-colors cursor-pointer"
-            >
-              <Download size={12} /> Save Image
-            </button>
-          </div>
-          <ControlChart data={getChartData(alumni, chartView)} />
-        </div>
-      )}
     </div>
   );
 }
@@ -855,16 +803,153 @@ function DonationsTab() {
   );
 }
 
+function SummaryTab() {
+  const [alumni, setAlumni] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [donations, setDonations] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [chartView, setChartView] = useState('month');
+  const chartRef = useRef(null);
+
+  useEffect(() => {
+    getAlumni({}).then((r) => setAlumni(r.data)).catch(() => {});
+    getMessages().then((r) => setMessages(r.data)).catch(() => {});
+    getDonations().then((r) => setDonations(r.data)).catch(() => {});
+    getEvents().then((r) => setEvents(r.data)).catch(() => {});
+  }, []);
+
+  const downloadChartImage = async () => {
+    if (!chartRef.current) return;
+    try {
+      const dataUrl = await toPng(chartRef.current, { pixelRatio: 2, backgroundColor: '#f9fafb' });
+      const link = document.createElement('a');
+      link.download = `kuana-chart-${chartView}-${timestamp()}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch {
+      alert('Could not download chart image. Please try again.');
+    }
+  };
+
+  const handleToggleFeatured = async (ev) => {
+    try {
+      const res = await toggleEventFeatured(ev.id, !ev.is_featured);
+      setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : e));
+    } catch {}
+  };
+
+  const latestMessages  = [...messages].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
+  const latestDonations = [...donations].sort((a, b) => new Date(b.donated_at) - new Date(a.donated_at)).slice(0, 5);
+  const latestEvents    = [...events].sort((a, b) => new Date(b.event_date) - new Date(a.event_date)).slice(0, 5);
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold text-gray-900">Dashboard</h2>
+
+      {/* Alumni Chart */}
+      <div ref={chartRef} className="bg-gray-50 rounded-xl px-4 pt-3 pb-3 w-3/4">
+        <div className="flex items-center justify-between mb-2">
+          <select
+            value={chartView}
+            onChange={(e) => setChartView(e.target.value)}
+            className="text-xs font-bold text-gray-500 uppercase tracking-wide bg-transparent border-none outline-none cursor-pointer"
+          >
+            {CHART_VIEWS.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+          <button
+            onClick={downloadChartImage}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#0e1b4d] transition-colors cursor-pointer"
+          >
+            <Download size={12} /> Save Image
+          </button>
+        </div>
+        <ControlChart data={getChartData(alumni, chartView)} />
+      </div>
+
+      {/* Latest 5 panels */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+
+        {/* Latest Events */}
+        <div className="bg-gray-50 rounded-xl p-4">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Latest Events</h3>
+          <div className="space-y-2">
+            {latestEvents.length === 0 && <p className="text-gray-400 text-sm">No events yet.</p>}
+            {latestEvents.map((ev) => (
+              <div key={ev.id} className="bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-sm font-medium text-gray-900 leading-snug">{ev.title}</span>
+                  <button
+                    onClick={() => handleToggleFeatured(ev)}
+                    title={ev.is_featured ? 'Remove featured' : 'Mark as featured'}
+                    className="flex-shrink-0 cursor-pointer transition-colors mt-0.5"
+                  >
+                    <Star
+                      size={15}
+                      className={ev.is_featured ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'}
+                      fill={ev.is_featured ? '#ffc31d' : 'none'}
+                    />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-0.5">{ev.city}{ev.state_province ? `, ${ev.state_province}` : ''}</p>
+                <p className="text-xs text-gray-300 mt-0.5">{new Date(ev.event_date).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Latest Messages */}
+        <div className="bg-gray-50 rounded-xl p-4">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Latest Messages</h3>
+          <div className="space-y-2">
+            {latestMessages.length === 0 && <p className="text-gray-400 text-sm">No messages yet.</p>}
+            {latestMessages.map((m) => (
+              <div key={m.id} className="bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  {!m.is_read && <div className="w-1.5 h-1.5 rounded-full bg-[#0e1b4d] flex-shrink-0" />}
+                  <span className={`text-sm text-gray-900 truncate ${m.is_read ? 'font-medium' : 'font-bold'}`}>{m.name}</span>
+                </div>
+                <p className="text-xs text-gray-400 truncate">{m.subject ?? '(no subject)'}</p>
+                <p className="text-xs text-gray-300 mt-0.5">{new Date(m.created_at).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Latest Donations */}
+        <div className="bg-gray-50 rounded-xl p-4">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Latest Donations</h3>
+          <div className="space-y-2">
+            {latestDonations.length === 0 && <p className="text-gray-400 text-sm">No donations yet.</p>}
+            {latestDonations.map((d) => (
+              <div key={d.id} className="bg-white rounded-lg px-3 py-2.5 border border-gray-100">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-gray-900 truncate">{d.donor_name}</span>
+                  <span className="text-sm font-bold text-[#0e1b4d] flex-shrink-0">${parseFloat(d.amount).toLocaleString()}</span>
+                </div>
+                <p className="text-xs text-gray-300 mt-0.5">{new Date(d.donated_at).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
-  { id: 'events', label: 'Events', icon: Calendar },
-  { id: 'alumni', label: 'Alumni', icon: Users },
-  { id: 'messages', label: 'Messages', icon: MessageCircle },
+  { id: 'summary',   label: 'Summary',   icon: LayoutDashboard },
+  { id: 'alumni',    label: 'Alumni',    icon: Users },
+  { id: 'events',    label: 'Events',    icon: Calendar },
+  { id: 'messages',  label: 'Messages',  icon: MessageCircle },
   { id: 'donations', label: 'Donations', icon: Heart },
 ];
 
 export default function Admin() {
   const [admin, setAdmin] = useState(null);
-  const [tab, setTab] = useState('events');
+  const [tab, setTab] = useState('summary');
 
   useEffect(() => {
     const token = localStorage.getItem('kuana_token');
@@ -919,9 +1004,10 @@ export default function Admin() {
 
         {/* Tab content */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-          {tab === 'events' && <EventsTab />}
-          {tab === 'alumni' && <AlumniTab />}
-          {tab === 'messages' && <MessagesTab />}
+          {tab === 'summary'   && <SummaryTab />}
+          {tab === 'events'    && <EventsTab />}
+          {tab === 'alumni'    && <AlumniTab />}
+          {tab === 'messages'  && <MessagesTab />}
           {tab === 'donations' && <DonationsTab />}
         </div>
       </div>
