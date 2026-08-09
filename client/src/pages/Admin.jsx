@@ -341,7 +341,7 @@ function ControlChart({ data }) {
   const yMax = Math.max(ucl * 1.18, mean + 1, 1);
 
   const W = 320, H = 180;
-  const padL = 26, padR = 36, padT = 12, padB = 38;
+  const padL = 26, padR = 36, padT = 12, padB = 20;
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
 
@@ -353,7 +353,7 @@ function ControlChart({ data }) {
   const yTicks = [0, Math.round(mean * 10) / 10, Math.round(ucl * 10) / 10];
   if (lcl > 0) yTicks.push(Math.round(lcl * 10) / 10);
 
-  const TIP_W = 64, TIP_H = 22;
+  const TIP_W = 120, TIP_H = 26;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" onMouseLeave={() => setTooltip(null)}>
@@ -412,26 +412,18 @@ function ControlChart({ data }) {
         <text key={t} x={padL - 3} y={yPos(t) + 3} textAnchor="end" fontSize={7} fill="#9ca3af">{t}</text>
       ))}
 
-      {/* X axis labels — every other label to avoid crowding */}
-      {data.map((d, i) => {
-        if (n > 8 && i % 2 !== 0) return null;
-        const short = d.label.length > 5 ? d.label.slice(0, 4) + '…' : d.label;
-        return (
-          <text key={i} x={xPos(i)} y={padT + chartH + 10} textAnchor="middle" fontSize={7} fill="#6b7280">{short}</text>
-        );
-      })}
 
       {/* Tooltip */}
       {tooltip && (() => {
-        const tx = Math.min(Math.max(tooltip.cx - TIP_W / 2, padL), W - TIP_W - 2);
+        const tx = Math.min(Math.max(tooltip.cx - TIP_W / 2, 2), W - TIP_W - 2);
         const ty = tooltip.cy - TIP_H - 6 < padT ? tooltip.cy + 8 : tooltip.cy - TIP_H - 6;
         return (
           <g pointerEvents="none">
             <rect x={tx} y={ty} width={TIP_W} height={TIP_H} rx={3} fill="#1f2937" opacity={0.9} />
-            <text x={tx + TIP_W / 2} y={ty + 9} textAnchor="middle" fontSize={7} fill="white" fontWeight="bold">
+            <text x={tx + TIP_W / 2} y={ty + 10} textAnchor="middle" fontSize={7} fill="white" fontWeight="bold">
               {tooltip.label}
             </text>
-            <text x={tx + TIP_W / 2} y={ty + 17} textAnchor="middle" fontSize={7} fill="#fca5a5">
+            <text x={tx + TIP_W / 2} y={ty + 20} textAnchor="middle" fontSize={7} fill="#fca5a5">
               {tooltip.value}
             </text>
           </g>

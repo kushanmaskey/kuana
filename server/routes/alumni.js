@@ -62,7 +62,7 @@ router.get('/', requireAuth, async (req, res) => {
     idx++;
   }
 
-  query += ` ORDER BY last_name, first_name LIMIT $${idx} OFFSET $${idx + 1}`;
+  query += ` ORDER BY created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`;
   params.push(PAGE_LIMIT, offset);
 
   try {
