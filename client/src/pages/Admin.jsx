@@ -91,6 +91,7 @@ function EventsTab() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', event_date: '', city: '', state_province: '', venue: '', is_featured: false, is_published: true });
   const [page, setPage] = useState(1);
+  const { sortField: evSortField, sortDir: evSortDir, handleSort: evHandleSort } = useSort('date', 'desc');
 
   useEffect(() => {
     getEvents().then((r) => setEvents(r.data)).catch(() => {});
@@ -162,10 +163,29 @@ function EventsTab() {
       )}
 
       {(() => {
-        const totalPages = Math.ceil(events.length / PAGE_SIZE);
-        const pageEvents = events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+        const sortedEvents = [...events].sort((a, b) => {
+          let vA, vB;
+          if (evSortField === 'title') { vA = a.title.toLowerCase(); vB = b.title.toLowerCase(); }
+          if (evSortField === 'date')  { vA = new Date(a.event_date); vB = new Date(b.event_date); }
+          if (evSortField === 'city')  { vA = (a.city ?? '').toLowerCase(); vB = (b.city ?? '').toLowerCase(); }
+          if (vA < vB) return evSortDir === 'asc' ? -1 : 1;
+          if (vA > vB) return evSortDir === 'asc' ? 1 : -1;
+          return 0;
+        });
+        const totalPages = Math.ceil(sortedEvents.length / PAGE_SIZE);
+        const pageEvents = sortedEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
         return (
           <>
+            <div className="flex items-center gap-1 mb-3 text-xs text-gray-400">
+              <span className="mr-1 font-semibold uppercase tracking-wide">Sort:</span>
+              {[['title','Title'],['date','Date'],['city','City']].map(([f, l]) => (
+                <button key={f} onClick={() => evHandleSort(f)}
+                  className={`flex items-center gap-0.5 px-2 py-1 rounded-lg border transition-colors cursor-pointer ${evSortField === f ? 'border-[#0e1b4d] text-[#0e1b4d] font-semibold' : 'border-gray-200 hover:border-gray-300'}`}>
+                  {l}
+                  {evSortField === f && <span>{evSortDir === 'asc' ? ' ▲' : ' ▼'}</span>}
+                </button>
+              ))}
+            </div>
             <div className="space-y-3">
               {pageEvents.map((ev) => (
                 <div key={ev.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-start justify-between gap-4">
@@ -184,7 +204,7 @@ function EventsTab() {
               ))}
               {events.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No events yet.</div>}
             </div>
-            <Pagination page={page} totalPages={totalPages} total={events.length}
+            <Pagination page={page} totalPages={totalPages} total={sortedEvents.length}
               onPrev={() => setPage((p) => p - 1)} onNext={() => setPage((p) => p + 1)} />
           </>
         );
@@ -206,14 +226,14 @@ const REUNION_BADGE = {
 };
 
 const COLUMNS = [
-  { value: 'email',      label: 'Email',        th: 'Email',        exportKey: 'Email',           val: (a) => a.email ?? '' },
-  { value: 'phone',      label: 'Phone',        th: 'Phone',        exportKey: 'Phone',           val: (a) => a.phone ?? '' },
-  { value: 'grad_year',  label: 'Grad Year',    th: 'Grad Year',    exportKey: 'Graduation Year', val: (a) => a.graduation_year ?? '' },
-  { value: 'school',     label: 'School',       th: 'School',       exportKey: 'School',          val: (a) => parseBioField(a.bio, 'School') ?? '' },
-  { value: 'department', label: 'Department',   th: 'Department',   exportKey: 'Department',      val: (a) => parseBioField(a.bio, 'Department') ?? '' },
-  { value: 'location',   label: 'City / State', th: 'City / State', exportKey: 'City / State',    val: (a) => a.city ? `${a.city}, ${a.state_province ?? ''}` : '' },
-  { value: 'interest',   label: 'Reunion 2027', th: 'Reunion 2027', exportKey: 'Reunion 2027',    val: (a) => parseBioField(a.bio, 'Interested in KUANA Reunion 2027') ?? '' },
-  { value: 'registered', label: 'Registered',   th: 'Registered',   exportKey: 'Registered',      val: (a) => new Date(a.created_at).toLocaleString() },
+  { value: 'email',      label: 'Email',        th: 'Email',        exportKey: 'Email',           val: (a) => a.email ?? '',                                                   sortVal: (a) => (a.email ?? '').toLowerCase() },
+  { value: 'phone',      label: 'Phone',        th: 'Phone',        exportKey: 'Phone',           val: (a) => a.phone ?? '',                                                   sortVal: (a) => a.phone ?? '' },
+  { value: 'grad_year',  label: 'Grad Year',    th: 'Grad Year',    exportKey: 'Graduation Year', val: (a) => a.graduation_year ?? '',                                         sortVal: (a) => a.graduation_year ?? 0 },
+  { value: 'school',     label: 'School',       th: 'School',       exportKey: 'School',          val: (a) => parseBioField(a.bio, 'School') ?? '',                            sortVal: (a) => (parseBioField(a.bio, 'School') ?? '').toLowerCase() },
+  { value: 'department', label: 'Department',   th: 'Department',   exportKey: 'Department',      val: (a) => parseBioField(a.bio, 'Department') ?? '',                        sortVal: (a) => (parseBioField(a.bio, 'Department') ?? '').toLowerCase() },
+  { value: 'location',   label: 'City / State', th: 'City / State', exportKey: 'City / State',    val: (a) => a.city ? `${a.city}, ${a.state_province ?? ''}` : '',           sortVal: (a) => (a.city ?? '').toLowerCase() },
+  { value: 'interest',   label: 'Reunion 2027', th: 'Reunion 2027', exportKey: 'Reunion 2027',    val: (a) => parseBioField(a.bio, 'Interested in KUANA Reunion 2027') ?? '', sortVal: (a) => (parseBioField(a.bio, 'Interested in KUANA Reunion 2027') ?? '').toLowerCase() },
+  { value: 'registered', label: 'Registered',   th: 'Registered',   exportKey: 'Registered',      val: (a) => new Date(a.created_at).toLocaleString(),                         sortVal: (a) => new Date(a.created_at) },
 ];
 
 function timestamp() {
@@ -291,6 +311,33 @@ function Pagination({ page, totalPages, total, onPrev, onNext }) {
         </button>
       </div>
     </div>
+  );
+}
+
+function useSort(defaultField, defaultDir = 'asc') {
+  const [sortField, setSortField] = useState(defaultField);
+  const [sortDir, setSortDir] = useState(defaultDir);
+  const handleSort = (field) => {
+    if (sortField === field) setSortDir((d) => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('asc'); }
+  };
+  return { sortField, sortDir, handleSort };
+}
+
+function SortTh({ field, label, sortField, sortDir, onSort, className = '' }) {
+  return (
+    <th className={`text-left py-3 px-2 text-xs uppercase ${className}`}>
+      <button
+        onClick={() => onSort(field)}
+        className="flex items-center gap-1 font-semibold text-gray-500 hover:text-gray-700 cursor-pointer select-none whitespace-nowrap"
+      >
+        {label}
+        <span className="flex flex-col leading-none text-gray-300 text-[8px]">
+          <span className={sortField === field && sortDir === 'asc' ? 'text-[#0e1b4d]' : ''}>▲</span>
+          <span className={sortField === field && sortDir === 'desc' ? 'text-[#0e1b4d]' : ''}>▼</span>
+        </span>
+      </button>
+    </th>
   );
 }
 
@@ -443,8 +490,9 @@ function AlumniTab() {
   const [exportError, setExportError] = useState('');
   const [expanded, setExpanded] = useState(null);
   const [page, setPage] = useState(1);
+  const { sortField, sortDir, handleSort } = useSort('name', 'asc');
 
-  useEffect(() => { setPage(1); }, [search, interestFilter]);
+  useEffect(() => { setPage(1); }, [search, interestFilter, sortField, sortDir]);
 
   useEffect(() => {
     getAlumni({ search }).then((r) => {
@@ -453,12 +501,25 @@ function AlumniTab() {
     }).catch(() => {});
   }, [search]);
 
-  const filteredAlumni = interestFilter === 'All'
+  const filteredAlumni = (interestFilter === 'All'
     ? alumni
     : alumni.filter((a) => {
         const v = parseBioField(a.bio, 'Interested in KUANA Reunion 2027');
         return interestFilter === 'Unknown' ? !v : v === interestFilter;
-      });
+      })
+  ).slice().sort((a, b) => {
+    let vA, vB;
+    if (sortField === 'name') { vA = `${a.first_name} ${a.last_name}`.toLowerCase(); vB = `${b.first_name} ${b.last_name}`.toLowerCase(); }
+    else {
+      const col = COLUMNS.find((c) => c.value === sortField);
+      if (col) { vA = col.sortVal(a); vB = col.sortVal(b); }
+    }
+    if (vA == null) return 1;
+    if (vB == null) return -1;
+    if (vA < vB) return sortDir === 'asc' ? -1 : 1;
+    if (vA > vB) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const allChecked = filteredAlumni.length > 0 && filteredAlumni.every((a) => selected.has(a.id));
 
@@ -558,9 +619,9 @@ function AlumniTab() {
               <th className="py-3 px-2 w-8">
                 <input type="checkbox" checked={allChecked} onChange={toggleAll} className="accent-[#0e1b4d] cursor-pointer" />
               </th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">Name</th>
+              <SortTh field="name" label="Name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
               {activeCols.map((c) => (
-                <th key={c.value} className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase whitespace-nowrap">{c.th}</th>
+                <SortTh key={c.value} field={c.value} label={c.th} sortField={sortField} sortDir={sortDir} onSort={handleSort} />
               ))}
             </tr>
           </thead>
@@ -687,8 +748,7 @@ function MessageModal({ message, onClose, onToggleRead }) {
 function MessagesTab() {
   const [messages, setMessages] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [sortField, setSortField] = useState('time');
-  const [sortDir, setSortDir] = useState('desc');
+  const { sortField, sortDir, handleSort } = useSort('time', 'desc');
   const [page, setPage] = useState(1);
 
   useEffect(() => { setPage(1); }, [sortField, sortDir]);
@@ -696,15 +756,6 @@ function MessagesTab() {
   useEffect(() => {
     getMessages().then((r) => setMessages(r.data)).catch(() => {});
   }, []);
-
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDir((d) => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDir('asc');
-    }
-  };
 
   const sorted = [...messages].sort((a, b) => {
     let valA, valB;
@@ -741,18 +792,6 @@ function MessagesTab() {
     } catch {}
   };
 
-  const SortHeader = ({ field, label, className = '' }) => (
-    <button
-      onClick={() => handleSort(field)}
-      className={`flex items-center gap-1 text-xs font-semibold text-gray-400 uppercase tracking-wide hover:text-gray-600 cursor-pointer select-none ${className}`}
-    >
-      {label}
-      <span className="flex flex-col leading-none text-gray-300">
-        <span className={sortField === field && sortDir === 'asc' ? 'text-[#0e1b4d]' : ''}>▲</span>
-        <span className={sortField === field && sortDir === 'desc' ? 'text-[#0e1b4d]' : ''}>▼</span>
-      </span>
-    </button>
-  );
 
   return (
     <div>
@@ -761,9 +800,13 @@ function MessagesTab() {
       {/* Column headers */}
       <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-100 mb-1">
         <div className="w-2 flex-shrink-0" />
-        <SortHeader field="name"    label="Name"    className="flex-shrink-0 w-36" />
-        <SortHeader field="subject" label="Subject" className="flex-1" />
-        <SortHeader field="time"    label="Time"    className="flex-shrink-0" />
+        <div className="flex-shrink-0 w-36">
+          <SortTh field="name" label="Name" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+        </div>
+        <div className="flex-1">
+          <SortTh field="subject" label="Subject" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+        </div>
+        <SortTh field="time" label="Time" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
       </div>
 
       <div className="space-y-1">
@@ -809,6 +852,9 @@ function DonationsTab() {
   const [donations, setDonations] = useState([]);
   const [stats, setStats] = useState(null);
   const [page, setPage] = useState(1);
+  const { sortField, sortDir, handleSort } = useSort('date', 'desc');
+
+  useEffect(() => { setPage(1); }, [sortField, sortDir]);
 
   useEffect(() => {
     getDonations().then((r) => setDonations(r.data)).catch(() => {});
@@ -837,14 +883,23 @@ function DonationsTab() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Donor</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Amount</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Purpose</th>
-              <th className="text-left py-3 px-2 font-semibold text-gray-500 text-xs uppercase">Date</th>
+              <SortTh field="donor"   label="Donor"   sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+              <SortTh field="amount"  label="Amount"  sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+              <SortTh field="purpose" label="Purpose" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+              <SortTh field="date"    label="Date"    sortField={sortField} sortDir={sortDir} onSort={handleSort} />
             </tr>
           </thead>
           <tbody>
-            {donations.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((d) => (
+            {[...donations].sort((a, b) => {
+              let vA, vB;
+              if (sortField === 'donor')   { vA = a.donor_name.toLowerCase();   vB = b.donor_name.toLowerCase(); }
+              if (sortField === 'amount')  { vA = parseFloat(a.amount);          vB = parseFloat(b.amount); }
+              if (sortField === 'purpose') { vA = (a.purpose ?? '').toLowerCase(); vB = (b.purpose ?? '').toLowerCase(); }
+              if (sortField === 'date')    { vA = new Date(a.donated_at);        vB = new Date(b.donated_at); }
+              if (vA < vB) return sortDir === 'asc' ? -1 : 1;
+              if (vA > vB) return sortDir === 'asc' ? 1 : -1;
+              return 0;
+            }).slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((d) => (
               <tr key={d.id} className="border-b border-gray-50 hover:bg-gray-50">
                 <td className="py-3 px-2">
                   <div className="font-medium text-gray-900">{d.donor_name}</div>
