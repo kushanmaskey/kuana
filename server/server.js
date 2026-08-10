@@ -48,6 +48,7 @@ app.use('/api/alumni', require('./routes/alumni'));
 app.use('/api/media', require('./routes/media'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/donations', require('./routes/donations'));
+app.use('/api/chat', require('./routes/chat'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'KUANA API' }));
 
