@@ -1226,7 +1226,8 @@ function ChatBot() {
       const res = await sendChatMessage(next.filter((m) => m.role !== 'assistant' || next.indexOf(m) > 0));
       setMessages([...next, { role: 'assistant', content: res.data.reply }]);
     } catch {
-      setMessages([...next, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.' }]);
+      const errMsg = err?.response?.data?.error || 'Sorry, something went wrong. Please try again.';
+      setMessages([...next, { role: 'assistant', content: errMsg }]);
     } finally {
       setLoading(false);
     }

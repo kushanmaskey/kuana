@@ -50,6 +50,10 @@ router.post('/', requireAuth, chatLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Last message must be from user' });
   }
 
+  if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your_anthropic_api_key_here') {
+    return res.status(503).json({ error: 'ANTHROPIC_API_KEY is not configured on the server.' });
+  }
+
   try {
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
@@ -60,7 +64,10 @@ router.post('/', requireAuth, chatLimiter, async (req, res) => {
     res.json({ reply: response.content[0].text });
   } catch (err) {
     console.error('Chat error:', err.message);
-    res.status(500).json({ error: 'AI service error' });
+    const msg = err.status === 401
+      ? 'Invalid API key. Check ANTHROPIC_API_KEY in server/.env.'
+      : 'AI service error — please try again.';
+    res.status(500).json({ error: msg });
   }
 });
 
