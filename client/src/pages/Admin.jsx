@@ -118,13 +118,10 @@ function EventsTab() {
   };
 
   const handleToggleFeatured = async (ev) => {
-    const newVal = !ev.is_featured;
+    if (ev.is_featured) return;
     try {
-      const res = await toggleEventFeatured(ev.id, newVal);
-      setEvents((prev) => prev.map((e) => {
-        if (e.id === ev.id) return res.data;
-        return newVal ? { ...e, is_featured: false } : e;
-      }));
+      const res = await toggleEventFeatured(ev.id, true);
+      setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : { ...e, is_featured: false }));
     } catch {}
   };
 
@@ -209,7 +206,7 @@ function EventsTab() {
                     <div className="text-gray-400 text-xs">{ev.city}, {ev.state_province} &bull; {new Date(ev.event_date).toLocaleDateString()}</div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={() => handleToggleFeatured(ev)} title={ev.is_featured ? 'Remove featured' : 'Mark as featured'} className="transition-colors cursor-pointer">
+                    <button onClick={() => handleToggleFeatured(ev)} title={ev.is_featured ? 'Featured' : 'Set as featured'} className={`transition-colors ${ev.is_featured ? 'cursor-default' : 'cursor-pointer'}`}>
                       <Star size={16} className={ev.is_featured ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'} fill={ev.is_featured ? '#ffc31d' : 'none'} />
                     </button>
                     <button onClick={() => handleDelete(ev.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
@@ -967,13 +964,10 @@ function SummaryTab() {
   };
 
   const handleToggleFeatured = async (ev) => {
-    const newVal = !ev.is_featured;
+    if (ev.is_featured) return;
     try {
-      const res = await toggleEventFeatured(ev.id, newVal);
-      setEvents((prev) => prev.map((e) => {
-        if (e.id === ev.id) return res.data;
-        return newVal ? { ...e, is_featured: false } : e;
-      }));
+      const res = await toggleEventFeatured(ev.id, true);
+      setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : { ...e, is_featured: false }));
     } catch {}
   };
 
@@ -1021,8 +1015,8 @@ function SummaryTab() {
                   <span className="text-sm font-medium text-gray-900 leading-snug">{ev.title}</span>
                   <button
                     onClick={() => handleToggleFeatured(ev)}
-                    title={ev.is_featured ? 'Remove featured' : 'Mark as featured'}
-                    className="flex-shrink-0 cursor-pointer transition-colors mt-0.5"
+                    title={ev.is_featured ? 'Featured' : 'Set as featured'}
+                    className={`flex-shrink-0 transition-colors mt-0.5 ${ev.is_featured ? 'cursor-default' : 'cursor-pointer'}`}
                   >
                     <Star
                       size={15}
