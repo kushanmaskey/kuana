@@ -707,7 +707,7 @@ Update an event. Same body as POST.
 ---
 
 #### `PATCH /api/events/:id/featured` 🔒
-Toggle featured status of an event.
+Toggle featured status of an event. Only one event can be featured at a time. When `is_featured: true`, the server clears `is_featured` on all other events in the same transaction before setting it on the target.
 
 **Request body:**
 ```json
@@ -1051,7 +1051,7 @@ CREATE TABLE media (
 | Get contacts | `SELECT * FROM contact_messages ORDER BY created_at DESC` | ✅ |
 | Mark read | `UPDATE contact_messages SET is_read = true WHERE id = $1` | ✅ |
 | Mark unread | `UPDATE contact_messages SET is_read = false WHERE id = $1` | ✅ |
-| Toggle event featured | `UPDATE events SET is_featured = $1, updated_at = NOW() WHERE id = $2` | ✅ |
+| Toggle event featured | `BEGIN; UPDATE events SET is_featured = false WHERE is_featured = true AND id <> $2; UPDATE events SET is_featured = $1 WHERE id = $2; COMMIT;` | ✅ |
 | Donation submit | `INSERT INTO donations (...)` | ✅ |
 | Donation stats | `SELECT COUNT(*), SUM(amount), AVG(amount), COUNT(DISTINCT donor_email) FROM donations WHERE status = 'completed'` | ✅ |
 | Get media | `SELECT m.*, e.title as event_title FROM media m LEFT JOIN events e ON m.event_id = e.id WHERE m.is_published = true` | ✅ |
@@ -1071,7 +1071,7 @@ CREATE TABLE media (
 |---|---|---|
 | **Summary** | ✅ | Dashboard with alumni control chart and latest 5 events / messages / donations. |
 | **Alumni** | — | Search, browse, and export registered alumni. |
-| **Events** | — | Create, view, delete reunion events. Toggle featured/published status. |
+| **Events** | — | Create, view, delete reunion events. Toggle featured status (radio — only one at a time) from both the Events tab and Summary dashboard. |
 | **Messages** | — | View contact form submissions. Mark as read/unread. |
 | **Donations** | — | View donation records and aggregate stats (total, average, unique donors). |
 
@@ -1080,7 +1080,7 @@ CREATE TABLE media (
 The Summary tab is the default landing tab after login. It shows:
 
 - **Alumni control chart** — rendered at 75% width. Switchable view: by month (registration over time), grad year, city, state, or interest. Supports PNG download via `html-to-image`.
-- **Latest Events panel** — most recent 5 events, each with a star button to toggle `is_featured` via `PATCH /events/:id/featured`. Filled gold star = featured.
+- **Latest Events panel** — most recent 5 events, each with a star button to toggle `is_featured` via `PATCH /events/:id/featured`. Filled gold star = featured. Only one event can be featured at a time; selecting a new one clears the previous.
 - **Latest Messages panel** — most recent 5 contact messages with read/unread status.
 - **Latest Donations panel** — most recent 5 donations with amount.
 

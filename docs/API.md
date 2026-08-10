@@ -283,7 +283,7 @@ Delete an event permanently.
 
 ### PATCH /events/:id/featured
 
-Toggle the featured status of an event. Featured events are highlighted on the public Events section.
+Toggle the featured status of an event. Only one event can be featured at a time. When `is_featured: true` is sent, the server atomically clears `is_featured` on all other events in the same transaction before setting it on the target event. Featured events are highlighted on the public Events section.
 
 **Authentication:** Required
 
@@ -296,7 +296,7 @@ Toggle the featured status of an event. Featured events are highlighted on the p
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `is_featured` | boolean | Yes | `true` to feature the event, `false` to unfeature |
+| `is_featured` | boolean | Yes | `true` to feature the event (clears all others), `false` to unfeature |
 
 **Success response `200`:** Updated event object
 
