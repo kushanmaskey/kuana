@@ -122,7 +122,7 @@ function EventsTab() {
     try {
       const res = await toggleEventFeatured(ev.id, true);
       setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : { ...e, is_featured: false }));
-    } catch {}
+    } catch { alert('Could not update featured event. Please try again.'); }
   };
 
   return (
@@ -968,7 +968,7 @@ function SummaryTab() {
     try {
       const res = await toggleEventFeatured(ev.id, true);
       setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : { ...e, is_featured: false }));
-    } catch {}
+    } catch { alert('Could not update featured event. Please try again.'); }
   };
 
   const latestMessages  = [...messages].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
