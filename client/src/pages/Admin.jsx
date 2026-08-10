@@ -117,6 +117,13 @@ function EventsTab() {
     } catch { alert('Error deleting event'); }
   };
 
+  const handleToggleFeatured = async (ev) => {
+    try {
+      const res = await toggleEventFeatured(ev.id, !ev.is_featured);
+      setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : e));
+    } catch {}
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -197,9 +204,14 @@ function EventsTab() {
                     </div>
                     <div className="text-gray-400 text-xs">{ev.city}, {ev.state_province} &bull; {new Date(ev.event_date).toLocaleDateString()}</div>
                   </div>
-                  <button onClick={() => handleDelete(ev.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer flex-shrink-0">
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => handleToggleFeatured(ev)} title={ev.is_featured ? 'Remove featured' : 'Mark as featured'} className="transition-colors cursor-pointer">
+                      <Star size={16} className={ev.is_featured ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'} fill={ev.is_featured ? '#ffc31d' : 'none'} />
+                    </button>
+                    <button onClick={() => handleDelete(ev.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               ))}
               {events.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No events yet.</div>}
