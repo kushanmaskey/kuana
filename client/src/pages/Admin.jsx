@@ -416,7 +416,18 @@ function ControlChart({ data }) {
   const yTicks = [0, Math.round(mean * 10) / 10, Math.round(ucl * 10) / 10];
   if (lcl > 0) yTicks.push(Math.round(lcl * 10) / 10);
 
-  const TIP_W = 120, TIP_H = 26;
+  const TIP_W = 130;
+  const wrapLabel = (text, maxChars = 18) => {
+    const words = text.split(' ');
+    const lines = [];
+    let cur = '';
+    for (const w of words) {
+      if (cur.length + (cur ? 1 : 0) + w.length > maxChars) { if (cur) lines.push(cur); cur = w; }
+      else cur = cur ? `${cur} ${w}` : w;
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" onMouseLeave={() => setTooltip(null)}>
@@ -478,15 +489,20 @@ function ControlChart({ data }) {
 
       {/* Tooltip */}
       {tooltip && (() => {
+        const lines = wrapLabel(tooltip.label);
+        const LINE_H = 10, PAD = 5;
+        const tipH = PAD + lines.length * LINE_H + LINE_H + PAD;
         const tx = Math.min(Math.max(tooltip.cx - TIP_W / 2, 2), W - TIP_W - 2);
-        const ty = tooltip.cy - TIP_H - 6 < padT ? tooltip.cy + 8 : tooltip.cy - TIP_H - 6;
+        const ty = tooltip.cy - tipH - 6 < padT ? tooltip.cy + 8 : tooltip.cy - tipH - 6;
         return (
           <g pointerEvents="none">
-            <rect x={tx} y={ty} width={TIP_W} height={TIP_H} rx={3} fill="#1f2937" opacity={0.9} />
-            <text x={tx + TIP_W / 2} y={ty + 10} textAnchor="middle" fontSize={7} fill="white" fontWeight="bold">
-              {tooltip.label}
-            </text>
-            <text x={tx + TIP_W / 2} y={ty + 20} textAnchor="middle" fontSize={7} fill="#fca5a5">
+            <rect x={tx} y={ty} width={TIP_W} height={tipH} rx={3} fill="#1f2937" opacity={0.9} />
+            {lines.map((line, j) => (
+              <text key={j} x={tx + TIP_W / 2} y={ty + PAD + (j + 1) * LINE_H} textAnchor="middle" fontSize={7} fill="white" fontWeight="bold">
+                {line}
+              </text>
+            ))}
+            <text x={tx + TIP_W / 2} y={ty + PAD + lines.length * LINE_H + LINE_H} textAnchor="middle" fontSize={7} fill="#fca5a5">
               {tooltip.value}
             </text>
           </g>
