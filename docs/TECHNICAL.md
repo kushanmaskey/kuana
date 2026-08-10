@@ -707,7 +707,7 @@ Update an event. Same body as POST.
 ---
 
 #### `PATCH /api/events/:id/featured` 🔒
-Toggle featured status of an event. Only one event can be featured at a time. When `is_featured: true`, the server clears `is_featured` on all other events in the same transaction before setting it on the target.
+Set or clear the featured status of an event. Only one event can be featured at a time. When `is_featured: true`, the server first clears `is_featured` on all other events, then sets it on the target (two sequential queries — no transaction required). The admin UI enforces radio-button behavior so `false` is never sent.
 
 **Request body:**
 ```json
@@ -1051,7 +1051,7 @@ CREATE TABLE media (
 | Get contacts | `SELECT * FROM contact_messages ORDER BY created_at DESC` | ✅ |
 | Mark read | `UPDATE contact_messages SET is_read = true WHERE id = $1` | ✅ |
 | Mark unread | `UPDATE contact_messages SET is_read = false WHERE id = $1` | ✅ |
-| Toggle event featured | `BEGIN; UPDATE events SET is_featured = false WHERE is_featured = true AND id <> $2; UPDATE events SET is_featured = $1 WHERE id = $2; COMMIT;` | ✅ |
+| Toggle event featured | `UPDATE events SET is_featured = false WHERE is_featured = true AND id <> $1` then `UPDATE events SET is_featured = $1 WHERE id = $2` | ✅ |
 | Donation submit | `INSERT INTO donations (...)` | ✅ |
 | Donation stats | `SELECT COUNT(*), SUM(amount), AVG(amount), COUNT(DISTINCT donor_email) FROM donations WHERE status = 'completed'` | ✅ |
 | Get media | `SELECT m.*, e.title as event_title FROM media m LEFT JOIN events e ON m.event_id = e.id WHERE m.is_published = true` | ✅ |
@@ -1080,7 +1080,7 @@ CREATE TABLE media (
 The Summary tab is the default landing tab after login. It shows:
 
 - **Alumni control chart** — rendered at 75% width. Switchable view: by month (registration over time), grad year, city, state, or interest. Supports PNG download via `html-to-image`.
-- **Latest Events panel** — most recent 5 events, each with a star button to toggle `is_featured` via `PATCH /events/:id/featured`. Filled gold star = featured. Only one event can be featured at a time; selecting a new one clears the previous.
+- **Latest Events panel** — most recent 5 events, each with a star button to set the featured event via `PATCH /events/:id/featured`. Filled gold star = currently featured. Behaves as a radio button: clicking any unselected star moves the featured status to that event; clicking the already-selected star does nothing. The same star button appears on each event card in the Events tab.
 - **Latest Messages panel** — most recent 5 contact messages with read/unread status.
 - **Latest Donations panel** — most recent 5 donations with amount.
 
