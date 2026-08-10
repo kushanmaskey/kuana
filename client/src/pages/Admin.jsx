@@ -3,7 +3,7 @@ import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOf
 import * as XLSX from 'xlsx';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread, sendChatMessage } from '../api';
+import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread, sendChatMessage, getEmailPreview, sendMassEmail } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -1205,10 +1205,13 @@ const TABS = [
 function ChatBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hi! I\'m your KUANA assistant. Ask me anything about the organization, events, or alumni data.' },
+    { role: 'assistant', content: "Hi! I'm your KUANA assistant. Ask me anything, or say \"draft an email to alumni about Reunion 2027\" to compose a mass email." },
   ]);
+  const [drafts, setDrafts] = useState({});   // index → { subject, body }
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [confirm, setConfirm] = useState(null); // { subject, body, count }
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -1224,8 +1227,11 @@ function ChatBot() {
     setLoading(true);
     try {
       const res = await sendChatMessage(next.filter((m) => m.role !== 'assistant' || next.indexOf(m) > 0));
-      setMessages([...next, { role: 'assistant', content: res.data.reply }]);
-    } catch {
+      const { reply, emailDraft } = res.data;
+      const idx = next.length;
+      if (emailDraft) setDrafts((d) => ({ ...d, [idx]: emailDraft }));
+      setMessages([...next, { role: 'assistant', content: reply }]);
+    } catch (err) {
       const errMsg = err?.response?.data?.error || 'Sorry, something went wrong. Please try again.';
       setMessages([...next, { role: 'assistant', content: errMsg }]);
     } finally {
@@ -1235,76 +1241,139 @@ function ChatBot() {
 
   const onKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
 
+  const handleSendClick = async (draft) => {
+    try {
+      const res = await getEmailPreview();
+      setConfirm({ ...draft, count: res.data.count });
+    } catch {
+      alert('Could not fetch alumni count. Please try again.');
+    }
+  };
+
+  const handleConfirmSend = async () => {
+    if (!confirm) return;
+    setSending(true);
+    try {
+      const res = await sendMassEmail(confirm.subject, confirm.body);
+      setConfirm(null);
+      setMessages((prev) => [...prev, { role: 'assistant', content: `✅ Email sent successfully to ${res.data.sent} alumni.` }]);
+    } catch (err) {
+      alert(err?.response?.data?.error || 'Failed to send email. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // Strip the ---EMAIL DRAFT--- markers from displayed message
+  const displayContent = (content) =>
+    content.replace(/---EMAIL DRAFT---([\s\S]*?)---END DRAFT---/g, '[Email draft below ↓]').trim();
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-      {open && (
-        <div className="w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden" style={{ height: '420px' }}>
-          {/* Header */}
-          <div className="bg-[#0e1b4d] px-4 py-3 flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <Bot size={16} className="text-[#ffc31d]" />
-              <span className="text-white text-sm font-semibold">KUANA Assistant</span>
+    <>
+      {/* Confirm send modal */}
+      {confirm && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Send to all alumni?</h3>
+            <p className="text-sm text-gray-500 mb-4">This will send the email to <strong>{confirm.count}</strong> registered alumni.</p>
+            <div className="bg-gray-50 rounded-xl p-4 mb-4 text-sm space-y-2 border border-gray-200">
+              <div><span className="font-semibold text-gray-600">Subject:</span> {confirm.subject}</div>
+              <div className="text-gray-700 whitespace-pre-wrap border-t pt-2">{confirm.body}</div>
             </div>
-            <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white transition-colors cursor-pointer">
-              <ChevronDown size={16} />
-            </button>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed ${
-                  m.role === 'user'
-                    ? 'bg-[#0e1b4d] text-white rounded-br-sm'
-                    : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-                }`}>
-                  {m.content}
-                </div>
-              </div>
-            ))}
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 px-3 py-2 rounded-xl rounded-bl-sm flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Input */}
-          <div className="px-3 py-3 border-t border-gray-100 flex-shrink-0 flex gap-2">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={onKey}
-              placeholder="Ask anything…"
-              rows={1}
-              className="flex-1 resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] leading-snug"
-            />
-            <button
-              onClick={send}
-              disabled={!input.trim() || loading}
-              className="bg-[#0e1b4d] text-white rounded-lg px-3 py-2 hover:bg-[#060c22] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex-shrink-0"
-            >
-              <Send size={14} />
-            </button>
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setConfirm(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 cursor-pointer">Cancel</button>
+              <button onClick={handleConfirmSend} disabled={sending}
+                className="px-4 py-2 bg-[#0e1b4d] text-white text-sm font-semibold rounded-lg hover:bg-[#060c22] disabled:opacity-50 cursor-pointer transition-colors">
+                {sending ? 'Sending…' : `Send to ${confirm.count} alumni`}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Toggle button */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-12 h-12 rounded-full bg-[#0e1b4d] text-white shadow-lg hover:bg-[#060c22] transition-colors cursor-pointer flex items-center justify-center"
-        title="KUANA Assistant"
-      >
-        {open ? <X size={20} /> : <Bot size={20} />}
-      </button>
-    </div>
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        {open && (
+          <div className="w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden" style={{ height: '460px' }}>
+            {/* Header */}
+            <div className="bg-[#0e1b4d] px-4 py-3 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Bot size={16} className="text-[#ffc31d]" />
+                <span className="text-white text-sm font-semibold">KUANA Assistant</span>
+              </div>
+              <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white transition-colors cursor-pointer">
+                <ChevronDown size={16} />
+              </button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed whitespace-pre-wrap ${
+                    m.role === 'user'
+                      ? 'bg-[#0e1b4d] text-white rounded-br-sm'
+                      : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                  }`}>
+                    {displayContent(m.content)}
+                  </div>
+                  {/* Show draft card + send button if this message had a draft */}
+                  {drafts[i] && (
+                    <div className="mt-2 w-full bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs space-y-1">
+                      <div className="font-semibold text-blue-800">📧 {drafts[i].subject}</div>
+                      <div className="text-blue-700 line-clamp-3 whitespace-pre-wrap">{drafts[i].body}</div>
+                      <button
+                        onClick={() => handleSendClick(drafts[i])}
+                        className="mt-2 w-full py-1.5 bg-[#0e1b4d] text-white rounded-lg text-xs font-semibold hover:bg-[#060c22] transition-colors cursor-pointer"
+                      >
+                        Send to all alumni →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 px-3 py-2 rounded-xl rounded-bl-sm flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+
+            {/* Input */}
+            <div className="px-3 py-3 border-t border-gray-100 flex-shrink-0 flex gap-2">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKey}
+                placeholder="Ask anything…"
+                rows={1}
+                className="flex-1 resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] leading-snug"
+              />
+              <button
+                onClick={send}
+                disabled={!input.trim() || loading}
+                className="bg-[#0e1b4d] text-white rounded-lg px-3 py-2 hover:bg-[#060c22] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex-shrink-0"
+              >
+                <Send size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Toggle button */}
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="w-12 h-12 rounded-full bg-[#0e1b4d] text-white shadow-lg hover:bg-[#060c22] transition-colors cursor-pointer flex items-center justify-center"
+          title="KUANA Assistant"
+        >
+          {open ? <X size={20} /> : <Bot size={20} />}
+        </button>
+      </div>
+    </>
   );
 }
 

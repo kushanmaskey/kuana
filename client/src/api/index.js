@@ -37,5 +37,7 @@ export const login = (data) => api.post('/auth/login', data);
 export const changePassword = (data) => api.patch('/auth/password', data);
 
 export const sendChatMessage = (messages) => api.post('/chat', { messages });
+export const getEmailPreview = () => api.get('/chat/email-preview');
+export const sendMassEmail = (subject, body) => api.post('/chat/send-email', { subject, body });
 
 export default api;
