@@ -383,7 +383,10 @@ function getChartData(alumni, view) {
   let rows = tally(alumni, keyFns[view]);
   if (view === 'grad_year') rows = [...rows].sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
   else rows = rows.slice(0, 15);
-  return rows.map(([label, value]) => ({ label: label || 'Unknown', value }));
+  return rows.map(([label, value]) => ({
+    label: (view === 'department' ? (label || 'Unknown').replace(/^Department of\s+/i, '') : label) || 'Unknown',
+    value,
+  }));
 }
 
 function ControlChart({ data }) {
