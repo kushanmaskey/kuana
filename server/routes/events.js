@@ -104,15 +104,24 @@ router.patch('/:id/featured', requireAuth, async (req, res) => {
   if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid event ID' });
   const { is_featured } = req.body;
   if (typeof is_featured !== 'boolean') return res.status(400).json({ error: 'is_featured must be a boolean' });
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
+    await client.query('BEGIN');
+    if (is_featured) {
+      await client.query('UPDATE events SET is_featured = false, updated_at = NOW() WHERE is_featured = true AND id <> $1', [req.params.id]);
+    }
+    const result = await client.query(
       'UPDATE events SET is_featured = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
       [is_featured, req.params.id]
     );
-    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+    await client.query('COMMIT');
+    if (!result.rows.length) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Not found' }); }
     res.json(result.rows[0]);
   } catch {
+    await client.query('ROLLBACK');
     res.status(500).json({ error: 'Server error' });
+  } finally {
+    client.release();
   }
 });
 

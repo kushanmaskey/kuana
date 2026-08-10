@@ -118,9 +118,13 @@ function EventsTab() {
   };
 
   const handleToggleFeatured = async (ev) => {
+    const newVal = !ev.is_featured;
     try {
-      const res = await toggleEventFeatured(ev.id, !ev.is_featured);
-      setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : e));
+      const res = await toggleEventFeatured(ev.id, newVal);
+      setEvents((prev) => prev.map((e) => {
+        if (e.id === ev.id) return res.data;
+        return newVal ? { ...e, is_featured: false } : e;
+      }));
     } catch {}
   };
 
@@ -963,9 +967,13 @@ function SummaryTab() {
   };
 
   const handleToggleFeatured = async (ev) => {
+    const newVal = !ev.is_featured;
     try {
-      const res = await toggleEventFeatured(ev.id, !ev.is_featured);
-      setEvents((prev) => prev.map((e) => e.id === ev.id ? res.data : e));
+      const res = await toggleEventFeatured(ev.id, newVal);
+      setEvents((prev) => prev.map((e) => {
+        if (e.id === ev.id) return res.data;
+        return newVal ? { ...e, is_featured: false } : e;
+      }));
     } catch {}
   };
 
