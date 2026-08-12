@@ -1,0 +1,33 @@
+# Quickstart: Black Duck Security Scan Action with blackducksca:
+#     https://docs.blackduck.com/r/bridge/latest/bridge-cli-guide/quickstart-black-duck-security-scan-action-with-black-duck-sca.html
+name: Black Duck Security Scan
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - stage
+      - release
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+      - stage
+      - release
+  workflow_dispatch: {}
+jobs:
+  blackducksca:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v5
+
+      - name: Black Duck Security Scan
+        id: black-duck-security-scan
+        uses: blackduck-inc/black-duck-security-scan@v2
+        with:
+          ### SCANNING: Required fields
+          blackducksca_url: ${{ vars.BLACKDUCKSCA_URL }}
+          blackducksca_token: ${{ secrets.BLACKDUCKSCA_TOKEN }}
