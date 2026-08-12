@@ -12,6 +12,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "overrides": {
+    "ip-address": "^10.3.1"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
