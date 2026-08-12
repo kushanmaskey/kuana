@@ -17,7 +17,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-intersection-observer": "^10.1.0",
-    "react-router-dom": "^7.18.1",
+    "react-router-dom": "^7.18.2",
     "react-scroll": "^1.9.3",
     "tailwindcss": "^4.3.3",
     "xlsx": "^0.18.5"
