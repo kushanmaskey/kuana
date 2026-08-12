@@ -1,6 +1,6 @@
 import { Heart, CheckCircle, ExternalLink } from 'lucide-react';
 
-const ZEFFY_URL  = 'https://zeffy.com/en-US/donation-form/donate-to-change-lives-19745';
+const ZEFFY_URL  = 'https://www.zeffy.com/en-US/donation-form/donate-to-change-lives-19745';
 
 function ZeffyIcon() {
   return (
