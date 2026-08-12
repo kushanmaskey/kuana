@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star, KeyRound } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
 import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread } from '../api';
@@ -576,19 +576,24 @@ function AlumniTab() {
 
   const activeCols = COLUMNS.filter((c) => visibleCols.has(c.value));
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (selected.size === 0) { setExportError('Please select at least one alumni to export.'); return; }
     if (activeCols.length === 0) { setExportError('Please select at least one column to export.'); return; }
     setExportError('');
     const rows = filteredAlumni.filter((a) => selected.has(a.id));
     const headers = ['Name', ...activeCols.map((c) => c.exportKey)];
-    const sheet = XLSX.utils.aoa_to_sheet([
-      headers,
-      ...rows.map((a) => [`${a.first_name} ${a.last_name}`, ...activeCols.map((c) => c.val(a))]),
-    ]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, sheet, 'Alumni');
-    XLSX.writeFile(wb, `kuana-alumni-${timestamp()}.xlsx`);
+    const wb = new ExcelJS.Workbook();
+    const sheet = wb.addWorksheet('Alumni');
+    sheet.addRow(headers);
+    rows.forEach((a) => sheet.addRow([`${a.first_name} ${a.last_name}`, ...activeCols.map((c) => c.val(a))]));
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kuana-alumni-${timestamp()}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
