@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import About from '../components/About';
+import News from '../components/News';
 import Events from '../components/Events';
 import Speakers from '../components/Speakers';
 import Media from '../components/Media';
@@ -33,6 +34,7 @@ export default function Home() {
         <Events />
         <Speakers />
         <Media />
+        <News />
         <Donate />
         <Contact />
       </main>

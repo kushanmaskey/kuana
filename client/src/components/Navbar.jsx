@@ -27,6 +27,7 @@ const NAV_ITEMS = [
       { label: '2023', filter: { type: 'videos', year: '2023' }, event: 'kuana:media-select' },
     ]},
   ]},
+  { label: 'News', id: 'news' },
   { label: 'Donate', id: 'donate' },
   { label: 'Contact Us', id: 'contact' },
 ];
