@@ -6,7 +6,10 @@ const NAV_ITEMS = [
   { label: 'Home', id: 'home' },
   { label: 'About', id: 'about' },
   { label: 'Board', id: 'board' },
-  { label: 'Mission & Vision', path: '/mission-vision' },
+  { label: 'Mission & Vision', path: '/mission-vision', dropdown: [
+    { label: 'Mission', path: '/mission' },
+    { label: 'Vision',  path: '/vision'  },
+  ]},
   { label: 'Events', id: 'events', dropdown: [
     { label: '2027', filter: '2027', event: 'kuana:events-year', badge: 'Upcoming' },
     { label: '2025', filter: '2025', event: 'kuana:events-year' },
@@ -114,9 +117,9 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-1">
             {NAV_ITEMS.map((item) =>
               item.dropdown ? (
-                <div key={item.id} className="relative">
+                <div key={item.id ?? item.path} className="relative">
                   <button
-                    onClick={() => toggleDropdown(item.id)}
+                    onClick={() => toggleDropdown(item.id ?? item.path)}
                     className={`nav-link px-4 py-2 text-sm font-medium transition-colors cursor-pointer flex items-center gap-1 ${
                       active === item.id ? 'text-[#ffc31d] active' : 'text-white/90 hover:text-white'
                     }`}
@@ -128,10 +131,18 @@ export default function Navbar() {
                     />
                   </button>
 
-                  {openDropdown === item.id && (
+                  {openDropdown === (item.id ?? item.path) && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
                       {item.dropdown.map((dropItem) =>
-                        dropItem.subItems ? (
+                        dropItem.path ? (
+                          <button
+                            key={dropItem.path}
+                            onClick={() => { goTo(dropItem.path); setOpenDropdown(null); }}
+                            className="flex items-center w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-[#0e1b4d] hover:text-white transition-colors cursor-pointer"
+                          >
+                            {dropItem.label}
+                          </button>
+                        ) : dropItem.subItems ? (
                           <div key={dropItem.label}>
                             <button
                               onClick={() => setOpenSub(openSub === dropItem.label ? null : dropItem.label)}
@@ -210,18 +221,26 @@ export default function Navbar() {
         <div className="md:hidden bg-[#0e1b4d] border-t border-[#060c22]">
           {NAV_ITEMS.map((item) =>
             item.dropdown ? (
-              <div key={item.id}>
+              <div key={item.id ?? item.path}>
                 <button
-                  onClick={() => setMobileOpen((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+                  onClick={() => setMobileOpen((prev) => ({ ...prev, [item.id ?? item.path]: !prev[item.id ?? item.path] }))}
                   className={`flex items-center justify-between w-full text-left px-6 py-3 text-sm font-medium transition-colors cursor-pointer ${
                     active === item.id ? 'text-[#ffc31d] bg-[#060c22]' : 'text-white/90 hover:bg-[#060c22]'
                   }`}
                 >
                   {item.label}
-                  <ChevronDown size={14} className={`transition-transform ${mobileOpen[item.id] ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={14} className={`transition-transform ${mobileOpen[item.id ?? item.path] ? 'rotate-180' : ''}`} />
                 </button>
-                {mobileOpen[item.id] && item.dropdown.map((dropItem) =>
-                  dropItem.subItems ? (
+                {mobileOpen[item.id ?? item.path] && item.dropdown.map((dropItem) =>
+                  dropItem.path ? (
+                    <button
+                      key={dropItem.path}
+                      onClick={() => { goTo(dropItem.path); }}
+                      className="flex items-center gap-2 w-full text-left px-10 py-2.5 text-sm text-white/70 hover:text-[#ffc31d] hover:bg-[#060c22] transition-colors cursor-pointer"
+                    >
+                      {dropItem.label}
+                    </button>
+                  ) : dropItem.subItems ? (
                     <div key={dropItem.label}>
                       <button
                         onClick={() => setMobileSub((prev) => ({ ...prev, [dropItem.label]: !prev[dropItem.label] }))}
