@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import About from '../components/About';
+import MissionVision from '../components/MissionVision';
 import News from '../components/News';
 import Events from '../components/Events';
 import Speakers from '../components/Speakers';
@@ -31,6 +32,7 @@ export default function Home() {
       <main>
         <Hero />
         <About />
+        <MissionVision />
         <Events />
         <Speakers />
         <Media />
