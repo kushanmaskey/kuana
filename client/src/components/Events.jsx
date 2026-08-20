@@ -201,7 +201,8 @@ function EventCard({ event, isFeatured }) {
         </div>
       </div>
     </div>
-    </>;
+    </>
+  );
 }
 
 const YEARS = ['2027', '2025', '2023'];
