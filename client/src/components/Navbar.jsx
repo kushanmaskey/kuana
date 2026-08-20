@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: 'Home', id: 'home' },
   { label: 'About', id: 'about' },
   { label: 'Board', id: 'board' },
+  { label: 'Mission & Vision', path: '/mission-vision' },
   { label: 'Events', id: 'events', dropdown: [
     { label: '2027', filter: '2027', event: 'kuana:events-year', badge: 'Upcoming' },
     { label: '2025', filter: '2025', event: 'kuana:events-year' },
@@ -33,6 +35,7 @@ const NAV_ITEMS = [
 ];
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('home');
@@ -66,6 +69,11 @@ export default function Navbar() {
 
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setIsOpen(false);
+  };
+
+  const goTo = (path) => {
+    navigate(path);
     setIsOpen(false);
   };
 
@@ -174,8 +182,8 @@ export default function Navbar() {
                 </div>
               ) : (
                 <button
-                  key={item.id}
-                  onClick={() => scrollTo(item.id)}
+                  key={item.id ?? item.path}
+                  onClick={() => item.path ? goTo(item.path) : scrollTo(item.id)}
                   className={`nav-link px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
                     active === item.id ? 'text-[#ffc31d] active' : 'text-white/90 hover:text-white'
                   }`}
@@ -255,8 +263,8 @@ export default function Navbar() {
               </div>
             ) : (
               <button
-                key={item.id}
-                onClick={() => scrollTo(item.id)}
+                key={item.id ?? item.path}
+                onClick={() => item.path ? goTo(item.path) : scrollTo(item.id)}
                 className={`block w-full text-left px-6 py-3 text-sm font-medium transition-colors cursor-pointer ${
                   active === item.id ? 'text-[#ffc31d] bg-[#060c22]' : 'text-white/90 hover:bg-[#060c22]'
                 }`}
