@@ -72,7 +72,11 @@ const VIDEOS_2023 = [
 const VIDEOS_2027 = [];
 
 const VIDEOS = { '2025': VIDEOS_2025, '2023': VIDEOS_2023, '2027': VIDEOS_2027 };
-const PHOTOS = { '2025': MEDIA_2025, '2023': MEDIA_2023, '2027': [] };
+const MEDIA_2027 = [
+  { id: 'b1', title: 'KUANA Reunion 2027 — Boston, MA', url: '/assets/img/flyer_reconnect.png', thumb: '/assets/img/flyer_reconnect.png' },
+];
+
+const PHOTOS = { '2025': MEDIA_2025, '2023': MEDIA_2023, '2027': MEDIA_2027 };
 
 function LazyThumb({ src, alt }) {
   const ref = useRef(null);
@@ -375,32 +379,34 @@ export default function Media() {
           ))}
         </div>
 
-        {/* 2027 — Coming soon */}
-        {is2027 && (
-          <div className="rounded-2xl overflow-hidden relative bg-gray-900" style={{ minHeight: '400px', maxHeight: '70vh' }}>
-            <img
-              src={`${BASE}/venue-gallery/a.avif`}
-              alt="Coming soon placeholder"
-              className="w-full h-full object-cover absolute inset-0"
-              style={{ filter: 'blur(6px) brightness(0.35)', transform: 'scale(1.05)' }}
-            />
-            <div className="relative z-10 flex flex-col items-center justify-center text-center p-12 h-full" style={{ minHeight: '400px' }}>
-              <div className="w-14 h-14 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mx-auto mb-5">
-                <Clock size={26} className="text-[#ffc31d]" />
-              </div>
-              <h4 className="text-2xl font-bold text-white mb-3">KUANA Reunion 2027 — Boston, MA</h4>
-              <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">
-                {activeType === 'photos' ? 'Photos' : 'Videos'} will be available after the reunion. Stay tuned!
-              </p>
-              <div className="inline-flex items-center gap-2 text-[#0e1b4d] font-semibold text-sm bg-[#ffc31d] px-4 py-2 rounded-full">
-                <MapPin size={14} />
-                Venue TBD &bull; Aug 30–31, 2027
-              </div>
+        {/* 2027 */}
+        {is2027 && activeType === 'photos' && (
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px flex-1 bg-gray-200" />
+              <span className="text-sm font-semibold text-gray-500 flex items-center gap-2">
+                <Image size={14} /> {photos.length} photo · Boston, MA
+              </span>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+            <Carousel items={photos} city="Boston, MA" year="2027" />
+            <div className="mt-6 flex items-center justify-center gap-2 text-[#0e1b4d] font-semibold text-sm bg-[#ffc31d]/20 border border-[#ffc31d]/40 px-5 py-3 rounded-full w-fit mx-auto">
+              <MapPin size={14} />
+              Venue TBD &bull; September 4–5, 2027
             </div>
           </div>
         )}
+        {is2027 && activeType === 'videos' && (
+          <div className="rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center p-16" style={{ minHeight: '300px' }}>
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+              <Clock size={26} className="text-gray-400" />
+            </div>
+            <h4 className="font-semibold text-gray-500 mb-2">Videos coming after the reunion</h4>
+            <p className="text-gray-400 text-sm">Stay tuned for KUANA Reunion 2027 — Boston, MA · September 4–5, 2027</p>
+          </div>
+        )}
 
-        {/* Photos */}
+        {/* Photos — 2025 & 2023 */}
         {!is2027 && activeType === 'photos' && (
           <div>
             <div className="flex items-center gap-3 mb-6">
@@ -414,7 +420,7 @@ export default function Media() {
           </div>
         )}
 
-        {/* Videos */}
+        {/* Videos — 2025 & 2023 */}
         {!is2027 && activeType === 'videos' && (
           <div>
             <div className="flex items-center gap-3 mb-6">

@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Calendar, MapPin, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, X, Image } from 'lucide-react';
 import { getEvents } from '../api';
 
 const SAMPLE_EVENTS = [
   {
     id: 3,
     title: 'KUANA Reunion 2027',
-    description: 'Join us in Boston, MA for the third biennial reunion of Kathmandu University Alumni North America. Two days of reconnecting, networking, cultural programs, and celebrating our shared KU journey.',
+    description: 'Join us in Boston, MA for the third biennial reunion of Kathmandu University Alumni North America. Two days of reconnecting, networking, cultural programs, and celebrating our shared KU journey. September 4: Main Reunion & Celebration · September 5: Optional recreational and family activities.',
     event_date: '2027-09-04',
-    end_date: '2027-09-04',
+    end_date: '2027-09-05',
     city: 'Boston',
     state_province: 'MA',
-    venue: null,
+    venue: 'Venue TBD',
     venue_address: null,
     is_featured: true,
     registration_url: null,
+    flyer: '/assets/img/flyer_reconnect.png',
   },
   {
     id: 1,
@@ -49,12 +50,39 @@ const VENUE_SLUGS = {
   2: 'holiday-inn-trophy-club-2023',
 };
 
+function FlyerModal({ src, title, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6" onClick={onClose}>
+      <div className="relative flex flex-col items-center" style={{ maxHeight: '90vh', maxWidth: '420px', width: '100%' }} onClick={(e) => e.stopPropagation()}>
+        {/* Close button — above the image, always visible */}
+        <button
+          onClick={onClose}
+          className="self-end mb-2 w-9 h-9 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-gray-100 shadow-lg transition-colors cursor-pointer flex-shrink-0"
+        >
+          <X size={18} />
+        </button>
+        <img
+          src={src}
+          alt={title}
+          className="rounded-2xl shadow-2xl object-contain w-full"
+          style={{ maxHeight: 'calc(90vh - 60px)' }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function EventCard({ event, isFeatured }) {
+  const [flyerOpen, setFlyerOpen] = useState(false);
   const date = new Date(event.event_date);
   const isPast = date < new Date();
   const venueSlug = VENUE_SLUGS[event.id];
 
   return (
+    <>
+      {flyerOpen && event.flyer && (
+        <FlyerModal src={event.flyer} title={event.title} onClose={() => setFlyerOpen(false)} />
+      )}
     <div
       id={`event-${event.id}`}
       className={`rounded-2xl overflow-hidden border transition-all duration-200 hover:shadow-xl ${
@@ -161,11 +189,24 @@ function EventCard({ event, isFeatured }) {
                   Venue Details
                 </Link>
               )}
+              {event.flyer && (
+                <button
+                  onClick={() => setFlyerOpen(true)}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all cursor-pointer ${
+                    isFeatured
+                      ? 'bg-white/10 text-white hover:bg-white/20'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Image size={14} /> View Flyer
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
     </div>
+    </>
   );
 }
 
