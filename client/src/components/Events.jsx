@@ -238,7 +238,25 @@ export default function Events() {
 
   useEffect(() => {
     getEvents()
-      .then((res) => { if (res.data?.length) setEvents(res.data); })
+      .then((res) => {
+        if (res.data?.length) {
+          // Merge API data with SAMPLE_EVENTS — API is source of truth but
+          // frontend extras (flyer, updated description/venue/dates) take priority
+          const merged = res.data.map((apiEvent) => {
+            const sample = SAMPLE_EVENTS.find((s) => s.id === apiEvent.id);
+            if (!sample) return apiEvent;
+            return {
+              ...apiEvent,
+              flyer: sample.flyer,
+              // Override stale API fields with our updated SAMPLE_EVENTS values
+              description: sample.description,
+              end_date: sample.end_date ?? apiEvent.end_date,
+              venue: sample.venue ?? apiEvent.venue,
+            };
+          });
+          setEvents(merged);
+        }
+      })
       .catch(() => {});
   }, []);
 
