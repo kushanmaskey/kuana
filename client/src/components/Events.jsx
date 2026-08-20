@@ -52,16 +52,21 @@ const VENUE_SLUGS = {
 
 function FlyerModal({ src, title, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="relative max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6" onClick={onClose}>
+      <div className="relative flex flex-col items-center" style={{ maxHeight: '90vh', maxWidth: '420px', width: '100%' }} onClick={(e) => e.stopPropagation()}>
+        {/* Close button — above the image, always visible */}
         <button
           onClick={onClose}
-          className="absolute -top-3 -right-3 w-9 h-9 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-gray-100 shadow-lg transition-colors cursor-pointer z-10"
+          className="self-end mb-2 w-9 h-9 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-gray-100 shadow-lg transition-colors cursor-pointer flex-shrink-0"
         >
           <X size={18} />
         </button>
-        <img src={src} alt={title} className="w-full rounded-2xl shadow-2xl" />
-        <p className="text-white/60 text-center text-xs mt-3">{title}</p>
+        <img
+          src={src}
+          alt={title}
+          className="rounded-2xl shadow-2xl object-contain w-full"
+          style={{ maxHeight: 'calc(90vh - 60px)' }}
+        />
       </div>
     </div>
   );
