@@ -6,9 +6,9 @@ const NAV_ITEMS = [
   { label: 'Home', id: 'home' },
   { label: 'About', id: 'about' },
   { label: 'Board', id: 'board' },
-  { label: 'Mission & Vision', path: '/mission-vision', dropdown: [
-    { label: 'Mission', path: '/mission' },
-    { label: 'Vision',  path: '/vision'  },
+  { label: 'Mission & Vision', id: 'mission-vision', dropdown: [
+    { label: 'Vision',  id: 'vision'  },
+    { label: 'Mission', id: 'mission' },
   ]},
   { label: 'Events', id: 'events', dropdown: [
     { label: '2027', filter: '2027', event: 'kuana:events-year', badge: 'Upcoming' },
@@ -134,10 +134,10 @@ export default function Navbar() {
                   {openDropdown === (item.id ?? item.path) && (
                     <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
                       {item.dropdown.map((dropItem) =>
-                        dropItem.path ? (
+                        dropItem.id && !dropItem.event ? (
                           <button
-                            key={dropItem.path}
-                            onClick={() => { goTo(dropItem.path); setOpenDropdown(null); }}
+                            key={dropItem.id}
+                            onClick={() => { scrollTo(dropItem.id); setOpenDropdown(null); }}
                             className="flex items-center w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-[#0e1b4d] hover:text-white transition-colors cursor-pointer"
                           >
                             {dropItem.label}
@@ -232,10 +232,10 @@ export default function Navbar() {
                   <ChevronDown size={14} className={`transition-transform ${mobileOpen[item.id ?? item.path] ? 'rotate-180' : ''}`} />
                 </button>
                 {mobileOpen[item.id ?? item.path] && item.dropdown.map((dropItem) =>
-                  dropItem.path ? (
+                  dropItem.id && !dropItem.event ? (
                     <button
-                      key={dropItem.path}
-                      onClick={() => { goTo(dropItem.path); }}
+                      key={dropItem.id}
+                      onClick={() => { scrollTo(dropItem.id); }}
                       className="flex items-center gap-2 w-full text-left px-10 py-2.5 text-sm text-white/70 hover:text-[#ffc31d] hover:bg-[#060c22] transition-colors cursor-pointer"
                     >
                       {dropItem.label}
