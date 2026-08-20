@@ -5,11 +5,11 @@ import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 const NAV_ITEMS = [
   { label: 'Home', id: 'home' },
   { label: 'About', id: 'about' },
-  { label: 'Board', id: 'board' },
   { label: 'Mission & Vision', id: 'mission-vision', dropdown: [
     { label: 'Vision',  id: 'vision'  },
     { label: 'Mission', id: 'mission' },
   ]},
+  { label: 'Board', id: 'board' },
   { label: 'Events', id: 'events', dropdown: [
     { label: '2027', filter: '2027', event: 'kuana:events-year', badge: 'Upcoming' },
     { label: '2025', filter: '2025', event: 'kuana:events-year' },
