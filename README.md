@@ -32,7 +32,7 @@ The KUANA website serves as the central hub for Kathmandu University alumni livi
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18 + Vite + Tailwind CSS |
+| Frontend | React 19 + Vite + Tailwind CSS v4 |
 | Backend | Node.js + Express (port 4000) |
 | Database | PostgreSQL via Neon.tech |
 | Hosting (Frontend) | GoDaddy Economy cPanel |
@@ -74,7 +74,7 @@ SSH public keys are authorized in GoDaddy cPanel → SSH Access → Manage Keys.
 
 ### Neon (PostgreSQL)
 - **Website:** https://neon.tech
-- **Organization:** kuana
+- **Account:** info@kuana.org (not the personal kushan.maskey account)
 - **Plan:** Free tier
 - **Branches:**
   | Branch | Purpose | Endpoint |
@@ -266,10 +266,12 @@ Image directories on server:
 |---------|-------------|
 | Hero | Landing banner with reunion tagline and Boston 2027 announcement |
 | About | KUANA mission, 501(c)(3) status, executive board members table |
+| Mission & Vision | Snippet cards for Mission and Vision; each has "Read full" that opens the respective standalone page |
 | Board | Executive board members section (linked from navbar) |
-| Events | 2023, 2025, 2027 reunion details with year tabs |
+| Events | 2023, 2025, 2027 reunion details with year tabs; Boston 2027 card includes View Flyer button |
 | Speakers | Speaker profiles with photos and social links, filtered by year |
-| Media | Photo and video gallery filtered by year, with lazy-loading thumbnails |
+| Media | Photo and video gallery filtered by year, with lazy-loading thumbnails; 2027 tab shows flyer |
+| News & Announcements | News cards with photo, category badge, and excerpt; full announcement opens in a modal |
 | Donate | Donation section — links to Zeffy (external, no payment data stored on KUANA servers) |
 | Contact | Contact form + social media links |
 
@@ -277,9 +279,16 @@ Image directories on server:
 - **Support KUANA button** — floats bottom-right, hides when donate section is visible
 
 ### Navigation
-- Responsive navbar with dropdowns for Events, Speakers, Media
-- Smooth scroll to sections
-- Active section highlighting
+- Responsive navbar with dropdowns for Mission & Vision, Events, Speakers, Media
+- Mission & Vision dropdown links to `/vision` and `/mission` standalone pages
+- Smooth scroll to sections; active section highlighting
+
+### Standalone Pages
+| Route | Description |
+|-------|-------------|
+| `/mission-vision` | Landing page with Vision and Mission snippet cards |
+| `/vision` | Full Vision page with pillars (Reconnect, Strengthen, Grow Together) |
+| `/mission` | Full Mission page with all 8 mission items and photo highlights |
 
 ### Admin Panel
 - JWT-authenticated admin area
@@ -298,12 +307,32 @@ kuana/
 │   │       └── img/
 │   │           ├── gallery/
 │   │           │   ├── 2023/        # 2023 reunion photos + thumbs/
-│   │           │   └── 2025/        # 2025 reunion photos + thumbs/
-│   │           ├── profile/         # Board member profile photos
-│   │           └── speakers/        # Speaker photos
+│   │           │   ├── 2025/        # 2025 reunion photos + thumbs/
+│   │           │   └── 2027/        # 2027 photos (flyer only for now)
+│   │           ├── profile/         # Board member + alumni profile photos
+│   │           │   └── bivek_baral.png   # Dr. Bivek Baral (News item)
+│   │           ├── speakers/        # Speaker photos
+│   │           ├── flyer_reconnect.png   # Boston 2027 reunion flyer
+│   │           └── flyer_mission_vision.jpg  # Mission & Vision flyer
 │   └── src/
-│       ├── components/      # All page sections
-│       ├── pages/           # Home page
+│       ├── components/
+│       │   ├── About.jsx
+│       │   ├── Contact.jsx
+│       │   ├── Donate.jsx
+│       │   ├── Events.jsx       # Year tabs; Boston 2027 has View Flyer modal
+│       │   ├── FloatDonate.jsx
+│       │   ├── Footer.jsx
+│       │   ├── Hero.jsx
+│       │   ├── Media.jsx        # 2027 tab shows flyer in carousel
+│       │   ├── MissionVision.jsx  # Home section: Vision + Mission snippet cards
+│       │   ├── Navbar.jsx       # Mission & Vision dropdown; News link
+│       │   ├── News.jsx         # News & Announcements section with modal
+│       │   └── Speakers.jsx
+│       ├── pages/
+│       │   ├── Home.jsx         # Main single-page layout
+│       │   ├── Mission.jsx      # Full Mission standalone page (/mission)
+│       │   ├── MissionVision.jsx  # Landing page (/mission-vision)
+│       │   └── Vision.jsx       # Full Vision standalone page (/vision)
 │       └── api/             # API client (axios)
 ├── server/                  # Node.js backend
 │   ├── db/
@@ -329,3 +358,32 @@ kuana/
 - SSH keys are stored as GitHub Actions secrets (`SSH_PRIVATE_KEY`, `PROD_SSH_PRIVATE_KEY`, `SSH_USERNAME`)
 - Render auto-deploys on every push to `main` — no manual action needed for the backend
 - After GoDaddy subscription expires, plan to move domain to Cloudflare (~$10/year)
+
+### SAMPLE_EVENTS merge pattern (Events.jsx)
+
+The Events component keeps a `SAMPLE_EVENTS` array as the frontend-authoritative source for fields that are not kept in sync in the database (flyer path, updated descriptions, end dates). When the API responds, its data is merged with `SAMPLE_EVENTS` — the frontend fields always win for those specific keys:
+
+```js
+const merged = res.data.map((apiEvent) => {
+  const sample = SAMPLE_EVENTS.find((s) => s.id === apiEvent.id);
+  if (!sample) return apiEvent;
+  return { ...apiEvent, flyer: sample.flyer, description: sample.description,
+           end_date: sample.end_date ?? apiEvent.end_date, venue: sample.venue ?? apiEvent.venue };
+});
+```
+
+This prevents the API from silently overwriting frontend-only data (like the Boston 2027 flyer) after a deployment.
+
+### npm dependency overrides (client/package.json)
+
+Some transitive dependencies have security vulnerabilities that cannot be resolved by bumping the direct parent. The `overrides` field in `client/package.json` forces patched versions:
+
+```json
+"overrides": {
+  "postcss": "^8.5.23",
+  "nanoid": "^3.3.17",
+  "uuid": "^14.0.1"
+}
+```
+
+`uuid@^14` is required because `exceljs` pins `uuid@^8`, which has no patched release in the v8 line.

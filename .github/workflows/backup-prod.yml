@@ -1,0 +1,35 @@
+name: Daily Production Backup
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Every day at 6:00 AM UTC (1:00 AM CDT)
+  workflow_dispatch:       # Allow manual trigger anytime
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Run backup
+        working-directory: server
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: node backup.js
+
+      - name: Upload backup as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-backup-${{ github.run_id }}-${{ github.run_attempt }}
+          path: server/backup-*.json
+          retention-days: 90

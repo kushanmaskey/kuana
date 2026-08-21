@@ -9,3 +9,8 @@ server/.env
 !client/.env.staging
 !client/.env.production
 .DS_Store
+server/backup-*.json
+server/sync-prod.js
+server/backup-prod.js
+server/restore-backup.js
+client/*.zip
