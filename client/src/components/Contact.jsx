@@ -35,17 +35,20 @@ import { submitContact } from '../api';
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg('');
     try {
       await submitContact(form);
       setStatus('success');
       setForm({ name: '', email: '', subject: '', message: '' });
-    } catch {
+    } catch (err) {
       setStatus('error');
+      setErrorMsg(err?.response?.data?.error || err?.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -198,7 +201,7 @@ export default function Contact() {
                   className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#dc143c] transition-colors resize-none mb-4"
                 />
                 {status === 'error' && (
-                  <p className="text-red-500 text-sm mb-4">Coming soon. Try again later.</p>
+                  <p className="text-red-500 text-sm mb-4">{errorMsg}</p>
                 )}
                 <button
                   type="submit"

@@ -47,9 +47,11 @@ The KUANA website serves as the central hub for Kathmandu University alumni livi
 
 | Environment | Frontend URL | Database | Backend |
 |-------------|-------------|----------|---------|
-| Dev | http://localhost:5174 | Neon dev branch | http://localhost:4000 |
-| Staging | http://staging.kuana.org | Neon dev branch | https://kuana.onrender.com |
-| Production | https://kuana.org | Neon dev branch | https://kuana.onrender.com |
+| Dev | http://localhost:5174 | Neon kuana dev branch | http://localhost:4000 |
+| Staging | http://staging.kuana.org | Neon kuana dev branch (shared with dev) | https://kuana.onrender.com |
+| Production | https://kuana.org | Neon production branch | https://kuana.onrender.com |
+
+> ⚠️ Staging and production currently share the same Render backend (`kuana.onrender.com`). A second Render service for staging is planned once KUANA has a debit card on file. Until then, staging shares the kuana dev Neon branch with local dev — production data is isolated on the production Neon branch.
 
 ---
 
@@ -77,16 +79,31 @@ SSH public keys are authorized in GoDaddy cPanel → SSH Access → Manage Keys.
 - **Account:** info@kuana.org (not the personal kushan.maskey account)
 - **Plan:** Free tier
 - **Branches:**
-  | Branch | Purpose | Endpoint |
-  |--------|---------|----------|
-  | dev | Local development | ep-soft-fog-au4oew9m-pooler.c-10.us-east-1.aws.neon.tech |
-  | staging | Staging environment | ep-mute-flower-auv3c4tz-pooler.c-10.us-east-1.aws.neon.tech |
-  | production | Live site | ep-shiny-tooth-au3ucc9i-pooler.c-10.us-east-1.aws.neon.tech |
+  | Branch Name | Purpose | Endpoint |
+  |-------------|---------|----------|
+  | kuana dev branch | Local dev + staging (shared) | ep-soft-fog-au4oew9m-pooler.c-10.us-east-1.aws.neon.tech |
+  | staging branch | Reserved for dedicated staging service (future) | ep-mute-flower-auv3c4tz-pooler.c-10.us-east-1.aws.neon.tech |
+  | production | Live site — isolated, never shared | ep-shiny-tooth-au3ucc9i-pooler.c-10.us-east-1.aws.neon.tech |
+
+- **Admin account:** `admin@kuana.org` — exists on all three branches
 
 ### GitHub
 - **Repository:** https://github.com/kushanmaskey/kuana
 - **Main branch:** main
-- **GitHub Actions:** Manual deploy workflows for staging and production
+- **GitHub Actions:**
+  | Workflow | Trigger | Purpose |
+  |----------|---------|---------|
+  | Deploy to Staging | Manual | Build + deploy frontend to staging.kuana.org |
+  | Deploy to Production | Manual | Build + deploy frontend to kuana.org |
+  | Daily Production Backup | Automatic (6 AM UTC daily) + Manual | Back up production DB to GitHub artifact |
+
+- **GitHub Secrets required:**
+  | Secret | Purpose |
+  |--------|---------|
+  | `SSH_PRIVATE_KEY` | Staging deploy SSH key |
+  | `PROD_SSH_PRIVATE_KEY` | Production deploy SSH key |
+  | `SSH_USERNAME` | GoDaddy cPanel username |
+  | `PROD_DATABASE_URL` | Production Neon branch URL (for daily backup) |
 
 ### Render
 - **Account:** info@kuana.org (Info Kuana)
@@ -340,10 +357,16 @@ kuana/
 │   │   ├── migrate.js       # Migration runner
 │   │   └── index.js         # DB connection (pg)
 │   └── routes/              # auth, events, alumni, media, contact, donations
+├── server/
+│   ├── backup.js            # Credential-free backup script (uses DATABASE_URL env var)
+│   ├── sync-prod.js         # Backup prod + sync to staging/dev (gitignored, local only)
+│   ├── restore-backup.js    # Restore from backup JSON to any environment (gitignored)
+│   └── backup-prod.js       # Backup prod only (gitignored, local only)
 ├── .github/
 │   └── workflows/
 │       ├── deploy-staging.yml
-│       └── deploy-production.yml
+│       ├── deploy-production.yml
+│       └── backup-prod.yml  # Daily production backup at 6 AM UTC
 └── README.md
 ```
 
@@ -358,6 +381,37 @@ kuana/
 - SSH keys are stored as GitHub Actions secrets (`SSH_PRIVATE_KEY`, `PROD_SSH_PRIVATE_KEY`, `SSH_USERNAME`)
 - Render auto-deploys on every push to `main` — no manual action needed for the backend
 - After GoDaddy subscription expires, plan to move domain to Cloudflare (~$10/year)
+- **Never run TRUNCATE on any database without first verifying the source has data** — use `INSERT ... ON CONFLICT DO NOTHING` for safe syncs
+- Production database is isolated on the Neon production branch — dev and staging share the kuana dev branch
+- A second Render service for staging is planned once KUANA has a debit card on file
+
+### Database Backup & Sync
+
+**Automatic daily backup:**
+- Runs every day at 6 AM UTC via GitHub Actions (`backup-prod.yml`)
+- Saves a timestamped JSON file as a GitHub artifact (kept 90 days)
+- Requires `PROD_DATABASE_URL` secret in GitHub → Settings → Secrets and variables → Actions
+- Can also be triggered manually from GitHub → Actions → Daily Production Backup → Run workflow
+
+**Manual backup scripts** (local only — gitignored, never commit):
+```bash
+# Backup production data to a local JSON file
+node backup-prod.js
+
+# Backup production + sync to staging and dev (safe — no truncate)
+node sync-prod.js
+
+# Restore from a backup JSON file to any environment
+node restore-backup.js backup-2026-08-21T....json staging
+node restore-backup.js backup-2026-08-21T....json dev
+node restore-backup.js backup-2026-08-21T....json prod
+```
+
+**Sync rules:**
+- Prod → Staging ✓
+- Prod → Dev ✓
+- Never Dev → Staging or Prod ✗
+- Never Staging → Prod ✗
 
 ### SAMPLE_EVENTS merge pattern (Events.jsx)
 
