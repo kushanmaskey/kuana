@@ -15,7 +15,7 @@ const donationLimiter = rateLimit({
 const MAX_DONATION = 100000;
 const PAGE_LIMIT = 50;
 
-router.post('/', donationLimiter, async (req, res) => {
+router.post('/', requireAuth, donationLimiter, async (req, res) => {
   const { donor_name, donor_email, amount, currency, purpose, message, payment_reference, payment_method } = req.body;
 
   if (!donor_name || !donor_email || !amount) {
