@@ -31,6 +31,27 @@ function IconLinkedIn({ size = 14 }) {
 
 const NEWS = [
   {
+    id: 2,
+    date: 'September 2026',
+    category: 'Breaking News',
+    title: 'Heartfelt Condolences on the Passing of Prof. Dr. Suresh Raj Sharma, Founding Vice-Chancellor of Kathmandu University',
+    excerpt: 'KUANA is deeply saddened by the passing of Prof. Dr. Suresh Raj Sharma, Founding Vice Chancellor of Kathmandu University — a visionary educator whose leadership shaped our alma mater.',
+    breaking: true,
+    thumbnail: '/assets/img/profile/suresh_raj_sharma.png',
+    person: {
+      name: 'Prof. Dr. Suresh Raj Sharma',
+      title: 'Founding Vice-Chancellor, Kathmandu University',
+    },
+    body: [
+      'Kathmandu University Alumni North America (KUANA) is deeply saddened by the passing of Prof. Dr. Suresh Raj Sharma, Founding Vice Chancellor of Kathmandu University.',
+      'Prof. Sharma was a visionary educator and institution builder whose leadership and lifelong dedication helped lay the foundation of Kathmandu University and shape it into the institution we proudly call our alma mater today. His contributions to education have touched generations of students, faculty, and alumni in Nepal and around the world.',
+      'The entire KU alumni community in North America joins the Kathmandu University family in mourning this profound loss. We remain deeply grateful for his remarkable legacy and for the institution he helped build; one that has connected and inspired generations of KU graduates across the globe.',
+      'On behalf of KUANA, we extend our heartfelt condolences to Prof. Sharma\'s family, loved ones, colleagues, and the entire Kathmandu University community during this difficult time.',
+      'May his departed soul rest in eternal peace. His vision, leadership, and legacy will continue to inspire generations to come.',
+      'हार्दिक श्रद्धाञ्जली। 🙏',
+    ],
+  },
+  {
     id: 1,
     date: 'August 2026',
     category: 'Felicitation',
@@ -61,6 +82,7 @@ const CATEGORY_COLORS = {
   Felicitation: 'bg-yellow-100 text-yellow-800',
   Announcement: 'bg-blue-100 text-blue-700',
   Event: 'bg-green-100 text-green-700',
+  'Breaking News': 'bg-red-100 text-red-700',
 };
 
 function SocialLinks({ social }) {
@@ -117,10 +139,16 @@ function NewsModal({ item, onClose }) {
           {/* Header — sticky */}
           <div className="flex items-start justify-between gap-3 p-5 border-b border-white/10 flex-shrink-0">
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 flex-wrap mb-2">
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${CATEGORY_COLORS[item.category] ?? 'bg-gray-100 text-gray-600'}`}>
                   {item.category}
                 </span>
+                {item.breaking && (
+                  <span className="flex items-center gap-1 text-xs font-bold text-red-400 uppercase tracking-wide">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                    Breaking
+                  </span>
+                )}
                 <span className="text-xs text-white/40">{item.date}</span>
               </div>
               {item.person && (
@@ -170,12 +198,18 @@ export default function News() {
           {NEWS.map((item) => (
             <div
               key={item.id}
-              className="bg-gray-50 border border-gray-200 rounded-2xl p-6 flex flex-col gap-4 hover:shadow-md transition-shadow"
+              className={`bg-gray-50 border rounded-2xl p-6 flex flex-col gap-4 hover:shadow-md transition-shadow ${item.breaking ? 'border-red-300 shadow-sm shadow-red-100' : 'border-gray-200'}`}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${CATEGORY_COLORS[item.category] ?? 'bg-gray-100 text-gray-600'}`}>
                   {item.category}
                 </span>
+                {item.breaking && (
+                  <span className="flex items-center gap-1 text-xs font-bold text-red-600 uppercase tracking-wide">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    Breaking
+                  </span>
+                )}
                 <span className="text-xs text-gray-400">{item.date}</span>
               </div>
 
