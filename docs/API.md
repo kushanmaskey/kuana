@@ -680,6 +680,43 @@ Returns a paginated list of all donations.
 
 ---
 
+### POST /donations/webhook
+
+Zeffy webhook endpoint — automatically called by Zeffy whenever a donation is completed. Logs the donation to the database.
+
+**Authentication:** None (endpoint is public; Zeffy calls it directly)
+
+**Headers:** Standard HTTP POST from Zeffy
+
+**Request body (sent by Zeffy):**
+```json
+{
+  "type": "payment.completed",
+  "data": {
+    "id": "0b2c6ef2-010d-4b46-ac26-00b51f6f7cd8",
+    "amount": 100,
+    "currency": "USD",
+    "payer": {
+      "firstName": "Kushan",
+      "lastName": "Maskey",
+      "email": "kushan.maskey@gmail.com"
+    },
+    "form": { "title": "Donate to Change Lives" }
+  }
+}
+```
+
+> **Note:** Zeffy sends `amount` in cents (e.g. `100` = $1.00). The webhook divides by 100 before storing.
+
+**Success response `200`:**
+```json
+{ "received": true }
+```
+
+> Duplicate donations are silently ignored via `ON CONFLICT (payment_reference) DO NOTHING`.
+
+---
+
 ### GET /donations/stats
 
 Returns aggregated donation statistics.

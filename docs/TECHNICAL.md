@@ -592,6 +592,7 @@ function requireAuth(req, res, next) {
 | `PATCH /api/contact/:id/read` | — | ✅ |
 | `PATCH /api/contact/:id/unread` | — | ✅ |
 | `POST /api/donations` | ✅ | — |
+| `POST /api/donations/webhook` | ✅ | — |
 | `GET /api/donations` | — | ✅ |
 | `GET /api/donations/stats` | — | ✅ |
 | `GET /api/media` | ✅ | — |
@@ -1011,7 +1012,7 @@ CREATE TABLE donations (
   currency          VARCHAR(10) DEFAULT 'USD',
   purpose           TEXT,
   message           TEXT,
-  payment_reference TEXT,
+  payment_reference TEXT UNIQUE,  -- prevents duplicate webhook deliveries
   payment_method    VARCHAR(50),
   status            VARCHAR(20) DEFAULT 'completed',
   donated_at        TIMESTAMPTZ DEFAULT NOW()
@@ -1053,6 +1054,7 @@ CREATE TABLE media (
 | Mark unread | `UPDATE contact_messages SET is_read = false WHERE id = $1` | ✅ |
 | Toggle event featured | `UPDATE events SET is_featured = false WHERE is_featured = true AND id <> $1` then `UPDATE events SET is_featured = $1 WHERE id = $2` | ✅ |
 | Donation submit | `INSERT INTO donations (...)` | ✅ |
+| Zeffy webhook | `INSERT INTO donations (...) ON CONFLICT (payment_reference) DO NOTHING` | ✅ |
 | Donation stats | `SELECT COUNT(*), SUM(amount), AVG(amount), COUNT(DISTINCT donor_email) FROM donations WHERE status = 'completed'` | ✅ |
 | Get media | `SELECT m.*, e.title as event_title FROM media m LEFT JOIN events e ON m.event_id = e.id WHERE m.is_published = true` | ✅ |
 
@@ -1311,6 +1313,52 @@ sendContactEmail({ name: 'Test', email: 'test@example.com', subject: 'Test', mes
   .catch(e => console.error(e.message));
 "
 ```
+
+---
+
+## 11. Zeffy Donation Webhook Integration
+
+KUANA uses [Zeffy](https://www.zeffy.com) as its donation platform (0% platform fees). When a donor completes a payment on Zeffy, Zeffy calls our webhook endpoint which automatically logs the donation to the database.
+
+### How It Works
+
+```
+Donor pays on Zeffy → Zeffy calls POST /api/donations/webhook → Server logs donation to DB → Appears in admin panel
+```
+
+### Webhook Endpoint
+
+**Route:** `POST /api/donations/webhook`
+**File:** `server/routes/zeffy-webhook.js`
+
+The endpoint is registered **before** `express.json()` in `server.js` so it can receive the raw request body. It:
+1. Parses the JSON payload from Zeffy
+2. Extracts donor name, email, amount, and payment reference
+3. Converts amount from cents to dollars (Zeffy sends `100` for $1.00)
+4. Inserts into the `donations` table — duplicate `payment_reference` values are silently ignored
+
+### Environment Variable
+
+| Variable | Description |
+|---|---|
+| `ZEFFY_WEBHOOK_SECRET` | Signing secret from Zeffy dashboard (Settings → Integrations → Webhook) |
+
+### Zeffy Configuration
+
+1. Go to zeffy.com → Settings → Integrations (Beta) → Webhook tab
+2. Set Webhook URL: `https://kuana.onrender.com/api/donations/webhook`
+3. Enable webhook and check `payment.completed` event
+4. Copy the signing secret and add it to Render environment variables
+
+### Admin View
+
+Donations are visible in the admin panel at `/admin` → **Donations** tab. The tab shows:
+- Stats: total donations, total raised, average, unique donors
+- Table: donor name, email, amount, purpose, payment method, date & time
+
+### Database Migration
+
+Migration `004_donation_payment_reference_unique.sql` added a `UNIQUE` constraint on the `payment_reference` column to prevent duplicate entries when Zeffy retries a failed webhook delivery.
 
 ---
 
