@@ -13,13 +13,16 @@ const writeLimiter = rateLimit({
 });
 
 router.get('/', async (req, res) => {
-  const { type, event_id } = req.query;
+  const { type, event_id, year } = req.query;
 
   if (type && !ALLOWED_MEDIA_TYPES.includes(type)) {
     return res.status(400).json({ error: `type must be one of: ${ALLOWED_MEDIA_TYPES.join(', ')}` });
   }
   if (event_id && !isValidId(event_id)) {
     return res.status(400).json({ error: 'Invalid event_id' });
+  }
+  if (year && !/^\d{4}$/.test(year)) {
+    return res.status(400).json({ error: 'Invalid year' });
   }
 
   let query = 'SELECT m.*, e.title as event_title FROM media m LEFT JOIN events e ON m.event_id = e.id WHERE m.is_published = true';
@@ -34,6 +37,11 @@ router.get('/', async (req, res) => {
   if (event_id) {
     query += ` AND m.event_id = $${idx}`;
     params.push(event_id);
+    idx++;
+  }
+  if (year) {
+    query += ` AND m.year = $${idx}`;
+    params.push(parseInt(year, 10));
     idx++;
   }
   query += ' ORDER BY m.sort_order, m.created_at DESC';

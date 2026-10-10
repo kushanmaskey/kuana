@@ -1,60 +1,65 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Clock, MapPin, Image, ZoomIn, Video } from 'lucide-react';
+import { getMedia } from '../api';
 
 const BASE = 'https://kuana.org/assets/img';
 
-const MEDIA_2025 = [
-  { id: 's14', title: 'Online Call — Pre-event', url: `${BASE}/Images/online_call.jpg` },
-  { id: 'g1',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0009.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0009.jpg' },
-  { id: 'g2',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0025.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0025.jpg' },
-  { id: 'g3',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0034.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0034.jpg' },
-  { id: 'g4',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0044.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0044.jpg' },
-  { id: 'g5',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0047.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0047.jpg' },
-  { id: 'g6',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0050.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0050.jpg' },
-  { id: 'g7',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0065.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0065.jpg' },
-  { id: 'g8',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0171.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0171.jpg' },
-  { id: 'g9',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0191.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0191.jpg' },
-  { id: 'g10', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0218.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0218.jpg' },
-  { id: 'g11', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0386.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0386.jpg' },
-  { id: 'g12', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0509.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0509.jpg' },
-  { id: 'g13', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0510.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0510.jpg' },
-  { id: 'g14', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9783.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9783.jpg' },
-  { id: 'g15', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9786.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9786.jpg' },
-  { id: 'g16', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9787.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9787.jpg' },
-  { id: 'g17', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9793.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9793.jpg' },
-  { id: 'g18', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9829.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9829.jpg' },
-  { id: 'g19', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9847.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9847.jpg' },
-  { id: 'g20', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9900.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9900.jpg' },
-  { id: 'g21', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9902.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9902.jpg' },
-  { id: 'g22', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9911.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9911.jpg' },
-  { id: 'g23', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9922.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9922.jpg' },
-  { id: 'g24', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9969.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9969.jpg' },
-  { id: 'g25', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9972.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9972.jpg' },
-  { id: 'g26', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9980.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9980.jpg' },
-];
-
-const MEDIA_2023 = [
-  { id: '23_1', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_1.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_1.jpg' },
-  { id: '23_2', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_2.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_2.jpg' },
-  { id: '23_3', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_3.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_3.jpg' },
-  { id: '23_4', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_4.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_4.jpg' },
-  { id: '23_5', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_5.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_5.jpg' },
-  { id: '23_6', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_6.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_6.jpg' },
-  { id: '23_7', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_7.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_7.jpg' },
-  { id: '23_8', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_8.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_8.jpg' },
-  { id: '23_9', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_9.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_9.jpg' },
-  { id: 'm1',  title: 'Alumni Gathering', url: '/assets/img/gallery/2023/1_.jpeg', thumb: '/assets/img/gallery/2023/thumbs/1_.jpeg' },
-  { id: 'm3',  title: 'Alumni Gathering', url: '/assets/img/gallery/2023/3_.jpg',  thumb: '/assets/img/gallery/2023/thumbs/3_.jpg' },
-  { id: 'm7',  title: 'Alumni Gathering', url: '/assets/img/gallery/2023/7_.jpg',  thumb: '/assets/img/gallery/2023/thumbs/7_.jpg' },
-  { id: 'm8',  title: 'Alumni Gathering', url: '/assets/img/gallery/2023/8_.jpg',  thumb: '/assets/img/gallery/2023/thumbs/8_.jpg' },
-  { id: 'm11', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/11_.jpg', thumb: '/assets/img/gallery/2023/thumbs/11_.jpg' },
-  { id: 'm20', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/20_.jpg', thumb: '/assets/img/gallery/2023/thumbs/20_.jpg' },
-  { id: 'm21', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/21_.jpg', thumb: '/assets/img/gallery/2023/thumbs/21_.jpg' },
-  { id: 'm26', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/26_.jpg', thumb: '/assets/img/gallery/2023/thumbs/26_.jpg' },
-  { id: 'm30', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/30_.jpg', thumb: '/assets/img/gallery/2023/thumbs/30_.jpg' },
-  { id: 'm37', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/37_.jpg', thumb: '/assets/img/gallery/2023/thumbs/37_.jpg' },
-  { id: 'm49', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/49_.jpg', thumb: '/assets/img/gallery/2023/thumbs/49_.jpg' },
-];
+const HARDCODED_PHOTOS = {
+  '2025': [
+    { id: 's14', title: 'Online Call — Pre-event', url: `${BASE}/Images/online_call.jpg` },
+    { id: 'g1',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0009.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0009.jpg' },
+    { id: 'g2',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0025.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0025.jpg' },
+    { id: 'g3',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0034.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0034.jpg' },
+    { id: 'g4',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0044.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0044.jpg' },
+    { id: 'g5',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0047.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0047.jpg' },
+    { id: 'g6',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0050.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0050.jpg' },
+    { id: 'g7',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0065.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0065.jpg' },
+    { id: 'g8',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0171.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0171.jpg' },
+    { id: 'g9',  title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0191.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0191.jpg' },
+    { id: 'g10', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0218.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0218.jpg' },
+    { id: 'g11', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0386.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0386.jpg' },
+    { id: 'g12', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0509.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0509.jpg' },
+    { id: 'g13', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B0510.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B0510.jpg' },
+    { id: 'g14', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9783.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9783.jpg' },
+    { id: 'g15', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9786.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9786.jpg' },
+    { id: 'g16', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9787.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9787.jpg' },
+    { id: 'g17', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9793.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9793.jpg' },
+    { id: 'g18', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9829.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9829.jpg' },
+    { id: 'g19', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9847.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9847.jpg' },
+    { id: 'g20', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9900.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9900.jpg' },
+    { id: 'g21', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9902.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9902.jpg' },
+    { id: 'g22', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9911.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9911.jpg' },
+    { id: 'g23', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9922.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9922.jpg' },
+    { id: 'g24', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9969.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9969.jpg' },
+    { id: 'g25', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9972.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9972.jpg' },
+    { id: 'g26', title: 'Reunion 2025', url: '/assets/img/gallery/2025/R6_B9980.jpg', thumb: '/assets/img/gallery/2025/thumbs/R6_B9980.jpg' },
+  ],
+  '2023': [
+    { id: '23_1', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_1.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_1.jpg' },
+    { id: '23_2', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_2.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_2.jpg' },
+    { id: '23_3', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_3.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_3.jpg' },
+    { id: '23_4', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_4.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_4.jpg' },
+    { id: '23_5', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_5.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_5.jpg' },
+    { id: '23_6', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_6.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_6.jpg' },
+    { id: '23_7', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_7.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_7.jpg' },
+    { id: '23_8', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_8.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_8.jpg' },
+    { id: '23_9', title: 'Reunion Moments', url: '/assets/img/gallery/2023/23_9.jpg', thumb: '/assets/img/gallery/2023/thumbs/23_9.jpg' },
+    { id: 'm1',  title: 'Alumni Gathering', url: '/assets/img/gallery/2023/1_.jpeg', thumb: '/assets/img/gallery/2023/thumbs/1_.jpeg' },
+    { id: 'm3',  title: 'Alumni Gathering', url: '/assets/img/gallery/2023/3_.jpg',  thumb: '/assets/img/gallery/2023/thumbs/3_.jpg' },
+    { id: 'm7',  title: 'Alumni Gathering', url: '/assets/img/gallery/2023/7_.jpg',  thumb: '/assets/img/gallery/2023/thumbs/7_.jpg' },
+    { id: 'm8',  title: 'Alumni Gathering', url: '/assets/img/gallery/2023/8_.jpg',  thumb: '/assets/img/gallery/2023/thumbs/8_.jpg' },
+    { id: 'm11', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/11_.jpg', thumb: '/assets/img/gallery/2023/thumbs/11_.jpg' },
+    { id: 'm20', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/20_.jpg', thumb: '/assets/img/gallery/2023/thumbs/20_.jpg' },
+    { id: 'm21', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/21_.jpg', thumb: '/assets/img/gallery/2023/thumbs/21_.jpg' },
+    { id: 'm26', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/26_.jpg', thumb: '/assets/img/gallery/2023/thumbs/26_.jpg' },
+    { id: 'm30', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/30_.jpg', thumb: '/assets/img/gallery/2023/thumbs/30_.jpg' },
+    { id: 'm37', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/37_.jpg', thumb: '/assets/img/gallery/2023/thumbs/37_.jpg' },
+    { id: 'm49', title: 'Alumni Gathering', url: '/assets/img/gallery/2023/49_.jpg', thumb: '/assets/img/gallery/2023/thumbs/49_.jpg' },
+  ],
+  '2027': [
+    { id: 'b1', title: 'KUANA Reunion 2027 — Boston, MA', url: '/assets/img/flyer_reconnect.png', thumb: '/assets/img/flyer_reconnect.png' },
+  ],
+};
 
 const YEARS = [
   { value: '2027', label: '2027', upcoming: true },
@@ -62,21 +67,21 @@ const YEARS = [
   { value: '2023', label: '2023' },
 ];
 
-// YouTube video IDs — add IDs here as videos become available
-const VIDEOS_2025 = [
-  // { id: 'v1', title: 'Highlights', youtubeId: 'YOUTUBE_ID_HERE' },
-];
-const VIDEOS_2023 = [
-  // { id: 'v1', title: 'Highlights', youtubeId: 'YOUTUBE_ID_HERE' },
-];
-const VIDEOS_2027 = [];
+const CITY = { '2027': 'Boston, MA', '2025': 'Lewisville, TX', '2023': 'Trophy Club, TX' };
 
-const VIDEOS = { '2025': VIDEOS_2025, '2023': VIDEOS_2023, '2027': VIDEOS_2027 };
-const MEDIA_2027 = [
-  { id: 'b1', title: 'KUANA Reunion 2027 — Boston, MA', url: '/assets/img/flyer_reconnect.png', thumb: '/assets/img/flyer_reconnect.png' },
-];
+function extractYouTubeId(url) {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([^&\s?]+)/);
+  return match ? match[1] : null;
+}
 
-const PHOTOS = { '2025': MEDIA_2025, '2023': MEDIA_2023, '2027': MEDIA_2027 };
+function normalizePhoto(m) {
+  return { id: `api-${m.id}`, title: m.title, url: m.url, thumb: m.thumbnail_url || m.url };
+}
+
+function normalizeVideo(m) {
+  return { id: `api-${m.id}`, title: m.title, youtubeId: extractYouTubeId(m.url) };
+}
 
 function LazyThumb({ src, alt }) {
   const ref = useRef(null);
@@ -112,12 +117,10 @@ function Carousel({ items, city, year }) {
   const go = (idx) => {
     const next = (idx + items.length) % items.length;
     setCurrent(next);
-    // Scroll thumbnail into view
     const thumb = thumbsRef.current?.children[next];
     thumb?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   };
 
-  // Keyboard navigation
   useEffect(() => {
     if (!lightbox) return;
     const handler = (e) => {
@@ -133,7 +136,6 @@ function Carousel({ items, city, year }) {
 
   return (
     <div>
-      {/* Main image */}
       <div className="relative rounded-2xl overflow-hidden bg-gray-900 mb-3 group flex items-center justify-center" style={{ minHeight: '400px', maxHeight: '70vh' }}>
         <img
           src={item.url}
@@ -142,11 +144,7 @@ function Carousel({ items, city, year }) {
           style={{ maxHeight: '70vh' }}
           loading="lazy"
         />
-
-        {/* Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-        {/* Caption */}
         <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end justify-between">
           <div>
             <p className="text-white font-semibold text-sm">{item.title}</p>
@@ -160,99 +158,55 @@ function Carousel({ items, city, year }) {
             <ZoomIn size={16} />
           </button>
         </div>
-
-        {/* Prev / Next arrows */}
-        <button
-          onClick={() => go(current - 1)}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors cursor-pointer"
-        >
+        <button onClick={() => go(current - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors cursor-pointer">
           <ChevronLeft size={20} />
         </button>
-        <button
-          onClick={() => go(current + 1)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors cursor-pointer"
-        >
+        <button onClick={() => go(current + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors cursor-pointer">
           <ChevronRight size={20} />
         </button>
       </div>
 
-      {/* Dot indicator */}
       <div className="flex justify-center gap-1 mb-3">
         {items.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => go(i)}
-            className={`rounded-full transition-all cursor-pointer ${
-              i === current ? 'w-5 h-1.5 bg-[#0e1b4d]' : 'w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400'
-            }`}
+          <button key={i} onClick={() => go(i)}
+            className={`rounded-full transition-all cursor-pointer ${i === current ? 'w-5 h-1.5 bg-[#0e1b4d]' : 'w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400'}`}
           />
         ))}
       </div>
 
-      {/* Thumbnail strip */}
       <div className="relative flex items-center gap-1">
-        <button
-          onClick={() => scrollThumbs(-1)}
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition-colors cursor-pointer"
-        >
+        <button onClick={() => scrollThumbs(-1)} className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition-colors cursor-pointer">
           <ChevronLeft size={16} />
         </button>
-        <div
-          ref={thumbsRef}
-          className="flex gap-2 overflow-x-auto pb-2 scroll-smooth flex-1"
-          style={{ scrollbarWidth: 'none' }}
-        >
+        <div ref={thumbsRef} className="flex gap-2 overflow-x-auto pb-2 scroll-smooth flex-1" style={{ scrollbarWidth: 'none' }}>
           {items.map((img, i) => (
-            <button
-              key={img.id}
-              onClick={() => go(i)}
-              className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
-                i === current ? 'border-[#0e1b4d] opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-90'
-              }`}
-            >
+            <button key={img.id} onClick={() => go(i)}
+              className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${i === current ? 'border-[#0e1b4d] opacity-100 scale-105' : 'border-transparent opacity-60 hover:opacity-90'}`}>
               <LazyThumb src={img.thumb || img.url} alt={img.title} />
             </button>
           ))}
         </div>
-        <button
-          onClick={() => scrollThumbs(1)}
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition-colors cursor-pointer"
-        >
+        <button onClick={() => scrollThumbs(1)} className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition-colors cursor-pointer">
           <ChevronRight size={16} />
         </button>
       </div>
 
-      {/* Lightbox */}
       {lightbox && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setLightbox(false)}
-        >
-          <button
-            className="absolute top-4 right-4 text-white/70 hover:text-white cursor-pointer z-10"
-            onClick={() => setLightbox(false)}
-          >
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4" onClick={() => setLightbox(false)}>
+          <button className="absolute top-4 right-4 text-white/70 hover:text-white cursor-pointer z-10" onClick={() => setLightbox(false)}>
             <X size={28} />
           </button>
-          <button
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
-            onClick={(e) => { e.stopPropagation(); go(current - 1); }}
-          >
+          <button className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
+            onClick={(e) => { e.stopPropagation(); go(current - 1); }}>
             <ChevronLeft size={24} />
           </button>
           <div className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={item.url}
-              alt={item.title}
-              className="w-full max-h-[82vh] object-contain rounded-xl"
-            />
+            <img src={item.url} alt={item.title} className="w-full max-h-[82vh] object-contain rounded-xl" />
             <p className="text-white/70 text-center mt-3 text-sm">{item.title}</p>
             <p className="text-white/40 text-center text-xs mt-1">{current + 1} / {items.length}</p>
           </div>
-          <button
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
-            onClick={(e) => { e.stopPropagation(); go(current + 1); }}
-          >
+          <button className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 cursor-pointer z-10"
+            onClick={(e) => { e.stopPropagation(); go(current + 1); }}>
             <ChevronRight size={24} />
           </button>
         </div>
@@ -260,8 +214,6 @@ function Carousel({ items, city, year }) {
     </div>
   );
 }
-
-const CITY = { '2027': 'Boston, MA', '2025': 'Lewisville, TX', '2023': 'Trophy Club, TX' };
 
 function VideoGallery({ videos, year }) {
   if (videos.length === 0) {
@@ -300,6 +252,8 @@ function VideoGallery({ videos, year }) {
 export default function Media() {
   const [activeYear, setActiveYear] = useState('2025');
   const [activeType, setActiveType] = useState('photos');
+  const [mediaCache, setMediaCache] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const handler = (e) => {
@@ -318,9 +272,29 @@ export default function Media() {
     };
   }, []);
 
+  useEffect(() => {
+    const mediaType = activeType === 'photos' ? 'photo' : 'video';
+    const key = `${activeYear}-${mediaType}`;
+    if (mediaCache[key] !== undefined) return;
+    setLoading(true);
+    getMedia({ type: mediaType, year: activeYear })
+      .then(r => setMediaCache(prev => ({ ...prev, [key]: r.data })))
+      .catch(() => setMediaCache(prev => ({ ...prev, [key]: [] })))
+      .finally(() => setLoading(false));
+  }, [activeYear, activeType]);
+
+  const mediaType = activeType === 'photos' ? 'photo' : 'video';
+  const key = `${activeYear}-${mediaType}`;
+  const apiItems = mediaCache[key] ?? [];
+
+  const photos = activeType === 'photos'
+    ? [...apiItems.map(normalizePhoto), ...(HARDCODED_PHOTOS[activeYear] || [])]
+    : [];
+  const videos = activeType === 'videos'
+    ? [...apiItems.map(normalizeVideo).filter(v => v.youtubeId)]
+    : [];
+
   const is2027 = activeYear === '2027';
-  const photos = PHOTOS[activeYear] || [];
-  const videos = VIDEOS[activeYear] || [];
   const city = CITY[activeYear];
 
   return (
@@ -335,43 +309,29 @@ export default function Media() {
           </p>
         </div>
 
-        {/* Type tabs — Photos / Videos */}
         <div className="flex gap-2 justify-center mb-6">
           {[
             { value: 'photos', label: 'Photos', Icon: Image },
             { value: 'videos', label: 'Videos', Icon: Video },
           ].map(({ value, label, Icon }) => (
-            <button
-              key={value}
-              onClick={() => setActiveType(value)}
+            <button key={value} onClick={() => setActiveType(value)}
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
-                activeType === value
-                  ? 'bg-[#dc143c] text-white shadow'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
+                activeType === value ? 'bg-[#dc143c] text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}>
               <Icon size={14} /> {label}
             </button>
           ))}
         </div>
 
-        {/* Year tabs */}
         <div className="flex flex-wrap gap-2 justify-center mb-10">
           {YEARS.map(({ label, value, upcoming }) => (
-            <button
-              key={value}
-              onClick={() => setActiveYear(value)}
+            <button key={value} onClick={() => setActiveYear(value)}
               className={`px-6 py-2.5 rounded-full text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
-                activeYear === value
-                  ? 'bg-[#0e1b4d] text-white shadow'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
+                activeYear === value ? 'bg-[#0e1b4d] text-white shadow' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}>
               {label}
               {upcoming && (
-                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                  activeYear === value ? 'bg-[#ffc31d] text-[#0e1b4d]' : 'bg-green-100 text-green-700'
-                }`}>
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${activeYear === value ? 'bg-[#ffc31d] text-[#0e1b4d]' : 'bg-green-100 text-green-700'}`}>
                   Upcoming
                 </span>
               )}
@@ -379,58 +339,51 @@ export default function Media() {
           ))}
         </div>
 
-        {/* 2027 */}
-        {is2027 && activeType === 'photos' && (
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-sm font-semibold text-gray-500 flex items-center gap-2">
-                <Image size={14} /> {photos.length} photo · Boston, MA
-              </span>
-              <div className="h-px flex-1 bg-gray-200" />
-            </div>
-            <Carousel items={photos} city="Boston, MA" year="2027" />
-            <div className="mt-6 flex items-center justify-center gap-2 text-[#0e1b4d] font-semibold text-sm bg-[#ffc31d]/20 border border-[#ffc31d]/40 px-5 py-3 rounded-full w-fit mx-auto">
-              <MapPin size={14} />
-              Venue TBD &bull; September 4–5, 2027
-            </div>
-          </div>
-        )}
-        {is2027 && activeType === 'videos' && (
-          <div className="rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center p-16" style={{ minHeight: '300px' }}>
-            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <Clock size={26} className="text-gray-400" />
-            </div>
-            <h4 className="font-semibold text-gray-500 mb-2">Videos coming after the reunion</h4>
-            <p className="text-gray-400 text-sm">Stay tuned for KUANA Reunion 2027 — Boston, MA · September 4–5, 2027</p>
-          </div>
+        {loading && (
+          <div className="text-center py-12 text-gray-400 text-sm">Loading…</div>
         )}
 
-        {/* Photos — 2025 & 2023 */}
-        {!is2027 && activeType === 'photos' && (
+        {!loading && activeType === 'photos' && photos.length > 0 && (
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px flex-1 bg-gray-200" />
               <span className="text-sm font-semibold text-gray-500 flex items-center gap-2">
-                <Image size={14} /> {photos.length} photos · {city}
+                <Image size={14} /> {photos.length} photo{photos.length !== 1 ? 's' : ''} · {city}
               </span>
               <div className="h-px flex-1 bg-gray-200" />
             </div>
             <Carousel items={photos} city={city} year={activeYear} />
+            {is2027 && (
+              <div className="mt-6 flex items-center justify-center gap-2 text-[#0e1b4d] font-semibold text-sm bg-[#ffc31d]/20 border border-[#ffc31d]/40 px-5 py-3 rounded-full w-fit mx-auto">
+                <MapPin size={14} />
+                Venue TBD &bull; September 4–5, 2027
+              </div>
+            )}
           </div>
         )}
 
-        {/* Videos — 2025 & 2023 */}
-        {!is2027 && activeType === 'videos' && (
+        {!loading && activeType === 'videos' && (
           <div>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-px flex-1 bg-gray-200" />
-              <span className="text-sm font-semibold text-gray-500 flex items-center gap-2">
-                <Video size={14} /> {videos.length} videos · {city}
-              </span>
-              <div className="h-px flex-1 bg-gray-200" />
-            </div>
-            <VideoGallery videos={videos} year={activeYear} />
+            {is2027 ? (
+              <div className="rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center p-16" style={{ minHeight: '300px' }}>
+                <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                  <Clock size={26} className="text-gray-400" />
+                </div>
+                <h4 className="font-semibold text-gray-500 mb-2">Videos coming after the reunion</h4>
+                <p className="text-gray-400 text-sm">Stay tuned for KUANA Reunion 2027 — Boston, MA · September 4–5, 2027</p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-px flex-1 bg-gray-200" />
+                  <span className="text-sm font-semibold text-gray-500 flex items-center gap-2">
+                    <Video size={14} /> {videos.length} video{videos.length !== 1 ? 's' : ''} · {city}
+                  </span>
+                  <div className="h-px flex-1 bg-gray-200" />
+                </div>
+                <VideoGallery videos={videos} year={activeYear} />
+              </div>
+            )}
           </div>
         )}
       </div>
