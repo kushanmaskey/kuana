@@ -29,33 +29,32 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  console.log('[zeffy-webhook] Event received:', payload.type, JSON.stringify(payload.data));
+  // Log full payload so we can see exactly what Zeffy sends
+  console.log('[zeffy-webhook] Full payload:', JSON.stringify(payload));
 
-  // Zeffy sends order.completed for successful donations
-  const HANDLED_TYPES = ['order.completed', 'order.created', 'payment.completed', 'donation.completed'];
-  if (!HANDLED_TYPES.includes(payload.type)) {
-    return res.json({ received: true });
-  }
+  const data = payload.data || payload || {};
 
-  const data = payload.data || {};
-  const payer = data.payer || data.buyer || data.donor || {};
+  // Extract payer — try every field name Zeffy might use
+  const payer = data.payer || data.buyer || data.donor || data.customer || data.user || {};
+  const firstName = payer.firstName || payer.first_name || payer.firstname || '';
+  const lastName = payer.lastName || payer.last_name || payer.lastname || '';
+  const donorName = [firstName, lastName].filter(Boolean).join(' ') || payer.name || payer.fullName || 'Anonymous';
+  const donorEmail = (payer.email || data.email || '').trim().toLowerCase();
 
-  const firstName = payer.firstName || payer.first_name || '';
-  const lastName = payer.lastName || payer.last_name || '';
-  const donorName = [firstName, lastName].filter(Boolean).join(' ') || payer.name || 'Anonymous';
-  const donorEmail = (payer.email || '').trim().toLowerCase();
-
-  // Zeffy sends amounts in cents
-  const amountCents = data.amount ?? data.total ?? 0;
-  const amount = amountCents / 100;
+  // Handle amount in both cents and dollars
+  const rawAmount = data.amount ?? data.total ?? data.amountInCents ?? data.price ?? 0;
+  // If amount looks like it's already in dollars (small number), use as-is; otherwise divide by 100
+  const amount = rawAmount > 500 ? rawAmount / 100 : rawAmount;
   const currency = (data.currency || 'USD').toUpperCase();
 
-  const purpose = data.form?.title || data.campaign?.title || null;
+  const purpose = data.form?.title || data.campaign?.title || data.formTitle || data.campaignTitle || null;
   const message = data.note || data.message || data.comment || null;
-  const paymentReference = data.id || data.orderId || data.order_id || null;
+  const paymentReference = data.id || data.orderId || data.order_id || data.paymentId || null;
+
+  console.log(`[zeffy-webhook] Extracted — event: ${payload.type}, email: ${donorEmail}, amount: ${amount}, ref: ${paymentReference}`);
 
   if (!donorEmail || amount <= 0) {
-    console.warn('[zeffy-webhook] Missing donor email or zero amount — skipping');
+    console.warn('[zeffy-webhook] Missing donor email or zero amount — skipping. Full data:', JSON.stringify(data));
     return res.json({ received: true });
   }
 
@@ -73,7 +72,7 @@ module.exports = async (req, res) => {
       [alumniRows[0]?.id ?? null, donorName, donorEmail, amount, currency, purpose, message, paymentReference]
     );
 
-    console.log(`[zeffy-webhook] Saved donation $${amount} from ${donorEmail}`);
+    console.log(`[zeffy-webhook] Saved $${amount} from ${donorEmail}`);
     res.json({ received: true });
   } catch (err) {
     console.error('[zeffy-webhook] DB error:', err.message);
