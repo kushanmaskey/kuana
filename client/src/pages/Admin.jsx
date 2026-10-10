@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star, KeyRound } from 'lucide-react';
+import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star, KeyRound, Pencil, X } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread } from '../api';
+import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, updateEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -86,10 +86,28 @@ function StatCard({ icon: Icon, label, value, color }) {
   );
 }
 
+const EMPTY_EVENT_FORM = { title: '', description: '', event_date: '', end_date: '', city: '', state_province: '', venue: '', is_featured: false, is_published: true };
+
+function eventToForm(ev) {
+  return {
+    title: ev.title || '',
+    description: ev.description || '',
+    event_date: ev.event_date ? ev.event_date.substring(0, 10) : '',
+    end_date: ev.end_date ? ev.end_date.substring(0, 10) : '',
+    city: ev.city || '',
+    state_province: ev.state_province || '',
+    venue: ev.venue || '',
+    is_featured: ev.is_featured || false,
+    is_published: ev.is_published ?? true,
+  };
+}
+
 function EventsTab() {
   const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', description: '', event_date: '', city: '', state_province: '', venue: '', is_featured: false, is_published: true });
+  const [form, setForm] = useState(EMPTY_EVENT_FORM);
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState(EMPTY_EVENT_FORM);
   const [page, setPage] = useState(1);
   const { sortField: evSortField, sortDir: evSortDir, handleSort: evHandleSort } = useSort('date', 'desc');
 
@@ -103,10 +121,19 @@ function EventsTab() {
       const res = await createEvent(form);
       setEvents([res.data, ...events]);
       setShowForm(false);
-      setForm({ title: '', description: '', event_date: '', city: '', state_province: '', venue: '', is_featured: false, is_published: true });
+      setForm(EMPTY_EVENT_FORM);
     } catch (err) {
       alert('Error creating event');
     }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await updateEvent(editingId, editForm);
+      setEvents(events.map((ev) => ev.id === editingId ? res.data : ev));
+      setEditingId(null);
+    } catch { alert('Error updating event'); }
   };
 
   const handleDelete = async (id) => {
@@ -196,23 +223,69 @@ function EventsTab() {
             </div>
             <div className="space-y-3">
               {pageEvents.map((ev) => (
-                <div key={ev.id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-gray-900 text-sm">{ev.title}</span>
-                      {ev.is_featured && <span className="bg-[#ffc31d]/20 text-[#0e1b4d] text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
-                      {!ev.is_published && <span className="bg-gray-100 text-gray-400 text-xs px-2 py-0.5 rounded-full">Draft</span>}
+                <div key={ev.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  {editingId === ev.id ? (
+                    <form onSubmit={handleUpdate} className="p-4">
+                      <div className="grid sm:grid-cols-2 gap-3 mb-3">
+                        <input required placeholder="Event title" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+                        <input placeholder="City" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+                        <input placeholder="State/Province" value={editForm.state_province} onChange={(e) => setEditForm({ ...editForm, state_province: e.target.value })}
+                          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+                        <input placeholder="Venue" value={editForm.venue} onChange={(e) => setEditForm({ ...editForm, venue: e.target.value })}
+                          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs text-gray-400">Start date</label>
+                          <input required type="date" value={editForm.event_date} onChange={(e) => setEditForm({ ...editForm, event_date: e.target.value })}
+                            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs text-gray-400">End date (optional)</label>
+                          <input type="date" value={editForm.end_date} onChange={(e) => setEditForm({ ...editForm, end_date: e.target.value })}
+                            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+                        </div>
+                      </div>
+                      <textarea placeholder="Description" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                        rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] resize-none mb-3" />
+                      <div className="flex items-center gap-6 mb-3 text-sm">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={editForm.is_featured} onChange={(e) => setEditForm({ ...editForm, is_featured: e.target.checked })} />
+                          Featured
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" checked={editForm.is_published} onChange={(e) => setEditForm({ ...editForm, is_published: e.target.checked })} />
+                          Published
+                        </label>
+                      </div>
+                      <div className="flex gap-2">
+                        <button type="submit" className="px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">Save</button>
+                        <button type="button" onClick={() => setEditingId(null)} className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="p-4 flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-gray-900 text-sm">{ev.title}</span>
+                          {ev.is_featured && <span className="bg-[#ffc31d]/20 text-[#0e1b4d] text-xs px-2 py-0.5 rounded-full font-medium">Featured</span>}
+                          {!ev.is_published && <span className="bg-gray-100 text-gray-400 text-xs px-2 py-0.5 rounded-full">Draft</span>}
+                        </div>
+                        <div className="text-gray-400 text-xs">{ev.city}, {ev.state_province} &bull; {new Date(ev.event_date).toLocaleDateString()}</div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button onClick={() => handleToggleFeatured(ev)} title={ev.is_featured ? 'Featured' : 'Set as featured'} className={`transition-colors ${ev.is_featured ? 'cursor-default' : 'cursor-pointer'}`}>
+                          <Star size={16} className={ev.is_featured ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'} fill={ev.is_featured ? '#ffc31d' : 'none'} />
+                        </button>
+                        <button onClick={() => { setEditingId(ev.id); setEditForm(eventToForm(ev)); }} className="text-gray-300 hover:text-[#0e1b4d] transition-colors cursor-pointer">
+                          <Pencil size={16} />
+                        </button>
+                        <button onClick={() => handleDelete(ev.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="text-gray-400 text-xs">{ev.city}, {ev.state_province} &bull; {new Date(ev.event_date).toLocaleDateString()}</div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={() => handleToggleFeatured(ev)} title={ev.is_featured ? 'Featured' : 'Set as featured'} className={`transition-colors ${ev.is_featured ? 'cursor-default' : 'cursor-pointer'}`}>
-                      <Star size={16} className={ev.is_featured ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'} fill={ev.is_featured ? '#ffc31d' : 'none'} />
-                    </button>
-                    <button onClick={() => handleDelete(ev.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                  )}
                 </div>
               ))}
               {events.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No events yet.</div>}
