@@ -18,7 +18,15 @@ export const deleteEvent = (id) => api.delete(`/events/${id}`);
 
 export const getMedia = (params) => api.get('/media', { params });
 export const createMedia = (data) => api.post('/media', data);
+export const updateMedia = (id, data) => api.put(`/media/${id}`, data);
+export const toggleMediaFeatured = (id, is_featured) => api.patch(`/media/${id}/featured`, { is_featured });
 export const deleteMedia = (id) => api.delete(`/media/${id}`);
+
+export const getSpeakers = (params) => api.get('/speakers', { params });
+export const createSpeaker = (data) => api.post('/speakers', data);
+export const updateSpeaker = (id, data) => api.put(`/speakers/${id}`, data);
+export const toggleSpeakerFeatured = (id, is_featured, year) => api.patch(`/speakers/${id}/featured`, { is_featured, year });
+export const deleteSpeaker = (id) => api.delete(`/speakers/${id}`);
 
 export const getAlumni = (params) => api.get('/alumni', { params });
 export const registerAlumni = (data) => api.post('/alumni/register', data);

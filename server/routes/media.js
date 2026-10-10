@@ -78,6 +78,51 @@ router.post('/', requireAuth, writeLimiter, async (req, res) => {
   }
 });
 
+router.put('/:id', requireAuth, writeLimiter, async (req, res) => {
+  if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid media ID' });
+  const { title, description, url, thumbnail_url, sort_order, is_published, is_featured } = req.body;
+  if (!title) return res.status(400).json({ error: 'title is required' });
+  if (title.length > 200) return res.status(400).json({ error: 'title must be 200 characters or fewer' });
+  try {
+    const { rows } = await pool.query(
+      `UPDATE media SET title=$1, description=$2, url=$3, thumbnail_url=$4, sort_order=$5, is_published=$6, is_featured=$7
+       WHERE id=$8 RETURNING *`,
+      [title.trim(), description?.trim() || null, url?.trim() || null, thumbnail_url?.trim() || null,
+       sort_order ?? 0, is_published ?? true, is_featured ?? false, req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
+  } catch {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.patch('/:id/featured', requireAuth, async (req, res) => {
+  if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid media ID' });
+  const { is_featured } = req.body;
+  if (typeof is_featured !== 'boolean') return res.status(400).json({ error: 'is_featured must be a boolean' });
+  try {
+    // Only one featured item per media_type per year
+    if (is_featured) {
+      const { rows: cur } = await pool.query('SELECT media_type, year FROM media WHERE id = $1', [req.params.id]);
+      if (cur.length) {
+        await pool.query(
+          'UPDATE media SET is_featured = false WHERE media_type = $1 AND year = $2 AND id <> $3',
+          [cur[0].media_type, cur[0].year, req.params.id]
+        );
+      }
+    }
+    const { rows } = await pool.query(
+      'UPDATE media SET is_featured = $1 WHERE id = $2 RETURNING *',
+      [is_featured, req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
+  } catch {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.delete('/:id', requireAuth, writeLimiter, async (req, res) => {
   if (!isValidId(req.params.id)) return res.status(400).json({ error: 'Invalid media ID' });
   try {

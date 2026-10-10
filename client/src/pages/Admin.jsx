@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star, KeyRound, Pencil, X } from 'lucide-react';
+import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star, KeyRound, Pencil, X, Mic, Image } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, updateEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread } from '../api';
+import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, updateEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread, getMedia, createMedia, updateMedia, toggleMediaFeatured, deleteMedia, getSpeakers, createSpeaker, updateSpeaker, toggleSpeakerFeatured, deleteSpeaker } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -1272,10 +1272,317 @@ function ChangePasswordModal({ onClose }) {
   );
 }
 
+const EMPTY_SPEAKER = { name: '', role: '', org: '', bio: '', photo_url: '', tag: 'Speaker', tag_color: 'bg-[#0e1b4d] text-white', year: 2025, facebook_url: '', linkedin_url: '', instagram_url: '', is_featured: false, is_published: true, sort_order: 0 };
+
+function SpeakersTab() {
+  const [speakers, setSpeakers] = useState([]);
+  const [yearFilter, setYearFilter] = useState('2025');
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ ...EMPTY_SPEAKER });
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ ...EMPTY_SPEAKER });
+
+  const load = (yr) => getSpeakers({ year: yr }).then(r => setSpeakers(r.data)).catch(() => {});
+  useEffect(() => { load(yearFilter); }, [yearFilter]);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await createSpeaker(form);
+      setSpeakers(prev => form.is_featured ? [res.data, ...prev.filter(s => !s.is_featured)] : [...prev, res.data]);
+      setShowForm(false);
+      setForm({ ...EMPTY_SPEAKER, year: parseInt(yearFilter) });
+    } catch { alert('Error creating speaker'); }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await updateSpeaker(editingId, editForm);
+      setSpeakers(prev => prev.map(s => s.id === editingId ? res.data : (editForm.is_featured ? { ...s, is_featured: false } : s)));
+      setEditingId(null);
+    } catch { alert('Error updating speaker'); }
+  };
+
+  const handleToggleFeatured = async (sp) => {
+    if (sp.is_featured) return;
+    try {
+      const res = await toggleSpeakerFeatured(sp.id, true, sp.year);
+      setSpeakers(prev => prev.map(s => s.id === sp.id ? res.data : { ...s, is_featured: false }));
+    } catch { alert('Error updating featured speaker'); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this speaker?')) return;
+    try { await deleteSpeaker(id); setSpeakers(prev => prev.filter(s => s.id !== id)); }
+    catch { alert('Error deleting speaker'); }
+  };
+
+  const SpeakerForm = ({ values, onChange, onSubmit, onCancel, submitLabel }) => (
+    <form onSubmit={onSubmit} className="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-4">
+      <div className="grid sm:grid-cols-2 gap-3 mb-3">
+        <input required placeholder="Name" value={values.name} onChange={e => onChange({ ...values, name: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Role / Title" value={values.role} onChange={e => onChange({ ...values, role: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Organization" value={values.org} onChange={e => onChange({ ...values, org: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Photo URL" value={values.photo_url} onChange={e => onChange({ ...values, photo_url: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Tag (e.g. Keynote, Speaker)" value={values.tag} onChange={e => onChange({ ...values, tag: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <select value={values.year} onChange={e => onChange({ ...values, year: parseInt(e.target.value) })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]">
+          <option value={2027}>2027</option>
+          <option value={2025}>2025</option>
+          <option value={2023}>2023</option>
+        </select>
+        <input placeholder="LinkedIn URL" value={values.linkedin_url} onChange={e => onChange({ ...values, linkedin_url: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Facebook URL" value={values.facebook_url} onChange={e => onChange({ ...values, facebook_url: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+      </div>
+      <textarea placeholder="Bio" value={values.bio} onChange={e => onChange({ ...values, bio: e.target.value })}
+        rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] resize-none mb-3" />
+      <div className="flex items-center gap-6 mb-3 text-sm">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={values.is_featured} onChange={e => onChange({ ...values, is_featured: e.target.checked })} /> Featured
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={values.is_published} onChange={e => onChange({ ...values, is_published: e.target.checked })} /> Published
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <button type="submit" className="px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">{submitLabel}</button>
+        <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
+      </div>
+    </form>
+  );
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-gray-900">Speakers</h2>
+          <div className="flex gap-1">
+            {['2025', '2027', '2023'].map(y => (
+              <button key={y} onClick={() => setYearFilter(y)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${yearFilter === y ? 'bg-[#0e1b4d] text-white' : 'border border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                {y}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button onClick={() => { setShowForm(!showForm); setForm({ ...EMPTY_SPEAKER, year: parseInt(yearFilter) }); }}
+          className="flex items-center gap-2 px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">
+          <Plus size={16} /> Add Speaker
+        </button>
+      </div>
+      {showForm && <SpeakerForm values={form} onChange={setForm} onSubmit={handleCreate} onCancel={() => setShowForm(false)} submitLabel="Add Speaker" />}
+      <div className="space-y-3">
+        {speakers.map(sp => (
+          <div key={sp.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {editingId === sp.id ? (
+              <div className="p-4">
+                <SpeakerForm values={editForm} onChange={setEditForm} onSubmit={handleUpdate} onCancel={() => setEditingId(null)} submitLabel="Save" />
+              </div>
+            ) : (
+              <div className="p-4 flex items-center gap-4">
+                {sp.photo_url && <img src={sp.photo_url} alt={sp.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-semibold text-gray-900 text-sm">{sp.name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sp.tag_color}`}>{sp.tag}</span>
+                    {!sp.is_published && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">Draft</span>}
+                  </div>
+                  <div className="text-gray-400 text-xs truncate">{sp.role}{sp.org ? ` · ${sp.org}` : ''}</div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => handleToggleFeatured(sp)} title={sp.is_featured ? 'Featured' : 'Set as featured'} className={sp.is_featured ? 'cursor-default' : 'cursor-pointer'}>
+                    <Star size={16} className={sp.is_featured ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'} fill={sp.is_featured ? '#ffc31d' : 'none'} />
+                  </button>
+                  <button onClick={() => { setEditingId(sp.id); setEditForm({ name: sp.name, role: sp.role||'', org: sp.org||'', bio: sp.bio||'', photo_url: sp.photo_url||'', tag: sp.tag||'Speaker', tag_color: sp.tag_color||'bg-[#0e1b4d] text-white', year: sp.year||2025, facebook_url: sp.facebook_url||'', linkedin_url: sp.linkedin_url||'', instagram_url: sp.instagram_url||'', is_featured: sp.is_featured, is_published: sp.is_published, sort_order: sp.sort_order||0 }); }} className="text-gray-300 hover:text-[#0e1b4d] transition-colors cursor-pointer">
+                    <Pencil size={16} />
+                  </button>
+                  <button onClick={() => handleDelete(sp.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {speakers.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No speakers for {yearFilter}.</div>}
+      </div>
+    </div>
+  );
+}
+
+const MEDIA_TYPES = ['photo', 'video'];
+
+function MediaTab() {
+  const [items, setItems] = useState([]);
+  const [typeFilter, setTypeFilter] = useState('photo');
+  const [yearFilter, setYearFilter] = useState('2025');
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ title: '', url: '', thumbnail_url: '', media_type: 'photo', year: 2025, city: '', is_featured: false, is_published: true, sort_order: 0 });
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
+  const load = () => getMedia({ type: typeFilter, ...(yearFilter !== 'all' ? {} : {}) }).then(r => {
+    setItems(r.data.filter(m => String(m.year) === yearFilter));
+  }).catch(() => {});
+
+  useEffect(() => { load(); }, [typeFilter, yearFilter]);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await createMedia({ ...form, year: parseInt(yearFilter) });
+      setItems(prev => form.is_featured ? [res.data, ...prev.filter(m => !m.is_featured)] : [...prev, res.data]);
+      setShowForm(false);
+      setForm({ title: '', url: '', thumbnail_url: '', media_type: typeFilter, year: parseInt(yearFilter), city: '', is_featured: false, is_published: true, sort_order: 0 });
+    } catch { alert('Error adding media'); }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await updateMedia(editingId, editForm);
+      setItems(prev => prev.map(m => m.id === editingId ? res.data : (editForm.is_featured ? { ...m, is_featured: false } : m)));
+      setEditingId(null);
+    } catch { alert('Error updating media'); }
+  };
+
+  const handleToggleFeatured = async (item) => {
+    const newVal = !item.is_featured;
+    try {
+      const res = await toggleMediaFeatured(item.id, newVal);
+      setItems(prev => prev.map(m => m.id === item.id ? res.data : (newVal ? { ...m, is_featured: false } : m)));
+    } catch { alert('Error updating featured'); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this media item?')) return;
+    try { await deleteMedia(id); setItems(prev => prev.filter(m => m.id !== id)); }
+    catch { alert('Error deleting media'); }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-gray-900">Media</h2>
+          <div className="flex gap-1">
+            {['photo', 'video'].map(t => (
+              <button key={t} onClick={() => setTypeFilter(t)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize cursor-pointer transition-colors ${typeFilter === t ? 'bg-[#0e1b4d] text-white' : 'border border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                {t}s
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1">
+            {['2025', '2027', '2023'].map(y => (
+              <button key={y} onClick={() => setYearFilter(y)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${yearFilter === y ? 'bg-[#ffc31d] text-[#0e1b4d]' : 'border border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                {y}
+              </button>
+            ))}
+          </div>
+        </div>
+        <button onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">
+          <Plus size={16} /> Add {typeFilter === 'photo' ? 'Photo' : 'Video'}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleCreate} className="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-4">
+          <div className="grid sm:grid-cols-2 gap-3 mb-3">
+            <input required placeholder="Title / Label" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
+            <input required placeholder={typeFilter === 'video' ? 'YouTube embed URL' : 'Image URL'} value={form.url} onChange={e => setForm({ ...form, url: e.target.value })}
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
+            {typeFilter === 'video' && (
+              <input placeholder="Thumbnail URL (optional)" value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
+            )}
+          </div>
+          <div className="flex items-center gap-6 mb-3 text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.is_featured} onChange={e => setForm({ ...form, is_featured: e.target.checked })} /> Featured
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={form.is_published} onChange={e => setForm({ ...form, is_published: e.target.checked })} /> Published
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" className="px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">Add</button>
+            <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      <div className="space-y-3">
+        {items.map(item => (
+          <div key={item.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {editingId === item.id ? (
+              <form onSubmit={handleUpdate} className="p-4">
+                <div className="grid sm:grid-cols-2 gap-3 mb-3">
+                  <input required placeholder="Title / Label" value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
+                  <input placeholder="URL" value={editForm.url} onChange={e => setEditForm({ ...editForm, url: e.target.value })}
+                    className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
+                </div>
+                <div className="flex items-center gap-6 mb-3 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={editForm.is_featured} onChange={e => setEditForm({ ...editForm, is_featured: e.target.checked })} /> Featured
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={editForm.is_published} onChange={e => setEditForm({ ...editForm, is_published: e.target.checked })} /> Published
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">Save</button>
+                  <button type="button" onClick={() => setEditingId(null)} className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
+                </div>
+              </form>
+            ) : (
+              <div className="p-4 flex items-center gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-semibold text-gray-900 text-sm truncate">{item.title}</span>
+                    {item.is_featured && <span className="bg-[#ffc31d]/20 text-[#0e1b4d] text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0">Featured</span>}
+                  </div>
+                  <div className="text-gray-400 text-xs truncate">{item.url}</div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button onClick={() => handleToggleFeatured(item)} title={item.is_featured ? 'Unfeature' : 'Set as featured'} className="cursor-pointer">
+                    <Star size={16} className={item.is_featured ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'} fill={item.is_featured ? '#ffc31d' : 'none'} />
+                  </button>
+                  <button onClick={() => { setEditingId(item.id); setEditForm({ title: item.title, url: item.url||'', thumbnail_url: item.thumbnail_url||'', is_featured: item.is_featured, is_published: item.is_published, sort_order: item.sort_order||0 }); }} className="text-gray-300 hover:text-[#0e1b4d] transition-colors cursor-pointer">
+                    <Pencil size={16} />
+                  </button>
+                  <button onClick={() => handleDelete(item.id)} className="text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {items.length === 0 && <div className="text-gray-400 text-sm text-center py-8">No {typeFilter}s for {yearFilter}.</div>}
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
   { id: 'summary',   label: 'Summary',   icon: LayoutDashboard },
   { id: 'alumni',    label: 'Alumni',    icon: Users },
   { id: 'events',    label: 'Events',    icon: Calendar },
+  { id: 'speakers',  label: 'Speakers',  icon: Mic },
+  { id: 'media',     label: 'Media',     icon: Image },
   { id: 'messages',  label: 'Messages',  icon: MessageCircle },
   { id: 'donations', label: 'Donations', icon: Heart },
 ];
@@ -1346,6 +1653,8 @@ export default function Admin() {
           {tab === 'summary'   && <SummaryTab />}
           {tab === 'events'    && <EventsTab />}
           {tab === 'alumni'    && <AlumniTab />}
+          {tab === 'speakers'  && <SpeakersTab />}
+          {tab === 'media'     && <MediaTab />}
           {tab === 'messages'  && <MessagesTab />}
           {tab === 'donations' && <DonationsTab />}
         </div>
