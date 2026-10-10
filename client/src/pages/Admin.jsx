@@ -1357,7 +1357,7 @@ function SpeakerForm({ values, onChange, onSubmit, onCancel, submitLabel }) {
 
 function SpeakersTab() {
   const [speakers, setSpeakers] = useState([]);
-  const [yearFilter, setYearFilter] = useState('2025');
+  const [yearFilter, setYearFilter] = useState('2027');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ ...EMPTY_SPEAKER });
   const [editingId, setEditingId] = useState(null);
