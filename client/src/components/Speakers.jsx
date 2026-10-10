@@ -106,7 +106,7 @@ function SpeakerModal({ speaker, onClose }) {
         </button>
         <div className={`flex-shrink-0 ${hasBio ? 'md:w-64' : 'w-full'}`}>
           {speaker.photo
-            ? <img src={speaker.photo} alt={speaker.name} className="w-full h-72 md:h-full object-cover" style={{ objectPosition: 'center top' }} />
+            ? <img src={speaker.photo} alt={speaker.name} className="w-full h-72 md:h-full object-cover" style={{ objectPosition: 'center center' }} />
             : <div className="w-full h-72 md:h-full bg-gradient-to-br from-[#0e1b4d] to-[#dc143c] flex items-center justify-center">
                 <Mic size={56} className="text-white/40" />
               </div>
@@ -141,10 +141,10 @@ function SpeakerCard({ speaker, onClick }) {
       className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden cursor-pointer">
       <div className="relative">
         {speaker.photo
-          ? <img src={speaker.photo} alt={speaker.name} className="w-full h-52 object-cover" style={{ objectPosition: 'center top' }}
+          ? <img src={speaker.photo} alt={speaker.name} className="w-full h-48 object-contain bg-gray-100"
               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
           : null}
-        <div className={`w-full h-52 bg-gradient-to-br from-[#0e1b4d] to-[#dc143c] items-center justify-center ${speaker.photo ? 'hidden' : 'flex'}`}>
+        <div className={`w-full h-48 bg-gradient-to-br from-[#0e1b4d] to-[#dc143c] items-center justify-center ${speaker.photo ? 'hidden' : 'flex'}`}>
           <Mic size={40} className="text-white/40" />
         </div>
         <span className={`absolute top-3 left-3 text-xs font-bold px-3 py-1 rounded-full ${speaker.tagColor}`}>{speaker.tag}</span>
