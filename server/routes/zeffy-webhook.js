@@ -24,9 +24,9 @@ module.exports = async (req, res) => {
   const donorName = [firstName, lastName].filter(Boolean).join(' ') || payer.name || payer.fullName || 'Anonymous';
   const donorEmail = (payer.email || data.email || '').trim().toLowerCase();
 
-  // Handle amount in both cents and dollars
+  // Zeffy sends amounts in cents (e.g. 100 = $1.00)
   const rawAmount = data.amount ?? data.total ?? data.amountInCents ?? data.price ?? 0;
-  const amount = rawAmount > 500 ? rawAmount / 100 : rawAmount;
+  const amount = rawAmount / 100;
   const currency = (data.currency || 'USD').toUpperCase();
 
   const purpose = data.form?.title || data.campaign?.title || data.formTitle || data.campaignTitle || null;
