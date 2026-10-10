@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MapPin, MessageCircle, CheckCircle } from 'lucide-react';
+import { Mail, MapPin, MessageCircle, CheckCircle, Star } from 'lucide-react';
 
 function FacebookIcon() {
   return (
@@ -146,9 +146,10 @@ export default function Contact() {
                 href="https://docs.google.com/forms/d/e/1FAIpQLSeHXdB-WaE9DBiI1kRLM9H2E0Jyww_KU7VzX8t0NtxmcGXd4A/viewform"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block mt-3 text-[#ffc31d] text-sm font-semibold hover:underline"
+                className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#ffc31d] text-[#0e1b4d] text-sm font-bold shadow-lg hover:bg-yellow-300 hover:scale-105 active:scale-95 transition-all duration-200 animate-pulse"
               >
-                Register for Boston 2027 Reunion →
+                <Star size={15} className="text-[#dc143c] fill-[#dc143c]" />
+                Register for Boston 2027 Reunion
               </a>
             </div>
           </div>
