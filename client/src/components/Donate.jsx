@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Heart, CheckCircle, ExternalLink, ShieldCheck } from 'lucide-react';
-import { getDonations, getDonationStats } from '../api';
+import { Heart, CheckCircle, ExternalLink } from 'lucide-react';
 
 const ZEFFY_URL  = 'https://www.zeffy.com/en-US/donation-form/donate-to-change-lives-19745';
 
@@ -33,78 +31,6 @@ const PLATFORMS = [
     url: ZEFFY_URL,
   },
 ];
-
-function AdminDonationLog() {
-  const [donations, setDonations] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (!localStorage.getItem('kuana_token')) return;
-    getDonations()
-      .then((r) => { setDonations(r.data); setIsAdmin(true); })
-      .catch(() => {});
-    getDonationStats()
-      .then((r) => setStats(r.data))
-      .catch(() => {});
-  }, []);
-
-  if (!isAdmin) return null;
-
-  return (
-    <div className="mt-16 border-t border-dashed border-[#0e1b4d]/20 pt-12">
-      <div className="flex items-center gap-2 mb-6">
-        <ShieldCheck size={18} className="text-[#0e1b4d]" />
-        <span className="text-sm font-bold text-[#0e1b4d] uppercase tracking-widest">Admin — Donation Log</span>
-      </div>
-
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          {[
-            { label: 'Total Donations', value: stats.total_donations ?? 0 },
-            { label: 'Total Raised', value: `$${parseFloat(stats.total_amount || 0).toLocaleString()}` },
-            { label: 'Avg Donation', value: `$${parseFloat(stats.average_amount || 0).toFixed(2)}` },
-            { label: 'Unique Donors', value: stats.unique_donors ?? 0 },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-[#0e1b4d]/5 rounded-xl p-4 text-center">
-              <div className="text-lg font-bold text-[#0e1b4d]">{value}</div>
-              <div className="text-gray-500 text-xs mt-1">{label}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="overflow-x-auto rounded-xl border border-gray-200">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              {['Donor', 'Amount', 'Purpose', 'Method', 'Date'].map((h) => (
-                <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {donations.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-8 text-gray-400 text-sm">No donations yet.</td></tr>
-            )}
-            {donations.map((d) => (
-              <tr key={d.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                <td className="py-3 px-4">
-                  <div className="font-medium text-gray-900">{d.donor_name}</div>
-                  <div className="text-gray-400 text-xs">{d.donor_email}</div>
-                </td>
-                <td className="py-3 px-4 font-bold text-[#0e1b4d]">${parseFloat(d.amount).toFixed(2)}</td>
-                <td className="py-3 px-4 text-gray-500">{d.purpose ?? 'General Fund'}</td>
-                <td className="py-3 px-4 text-gray-400 capitalize">{d.payment_method ?? '—'}</td>
-                <td className="py-3 px-4 text-gray-400 text-xs">{new Date(d.donated_at).toLocaleString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
 
 export default function Donate() {
   return (
@@ -184,8 +110,6 @@ export default function Donate() {
             </p>
           </div>
         </div>
-
-        <AdminDonationLog />
       </div>
     </section>
   );
