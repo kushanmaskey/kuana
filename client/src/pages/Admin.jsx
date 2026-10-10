@@ -1311,6 +1311,50 @@ function ChangePasswordModal({ onClose }) {
 
 const EMPTY_SPEAKER = { name: '', role: '', org: '', bio: '', photo_url: '', tag: 'Speaker', tag_color: 'bg-[#0e1b4d] text-white', year: 2025, facebook_url: '', linkedin_url: '', instagram_url: '', is_featured: false, is_published: true, sort_order: 0 };
 
+function SpeakerForm({ values, onChange, onSubmit, onCancel, submitLabel }) {
+  return (
+    <form onSubmit={onSubmit} className="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-4">
+      <div className="grid sm:grid-cols-2 gap-3 mb-3">
+        <input required placeholder="Name" value={values.name} onChange={e => onChange({ ...values, name: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Role / Title" value={values.role} onChange={e => onChange({ ...values, role: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Organization" value={values.org} onChange={e => onChange({ ...values, org: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Tag (e.g. Keynote, Speaker)" value={values.tag} onChange={e => onChange({ ...values, tag: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <select value={values.year} onChange={e => onChange({ ...values, year: parseInt(e.target.value) })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]">
+          <option value={2027}>2027</option>
+          <option value={2025}>2025</option>
+          <option value={2023}>2023</option>
+        </select>
+        <input placeholder="LinkedIn URL" value={values.linkedin_url} onChange={e => onChange({ ...values, linkedin_url: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+        <input placeholder="Facebook URL" value={values.facebook_url} onChange={e => onChange({ ...values, facebook_url: e.target.value })}
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+      </div>
+      <div className="mb-3">
+        <ImageUpload value={values.photo_url} onChange={v => onChange({ ...values, photo_url: v })} folder="kuana/speakers" label="Photo" />
+      </div>
+      <textarea placeholder="Bio" value={values.bio} onChange={e => onChange({ ...values, bio: e.target.value })}
+        rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] resize-none mb-3" />
+      <div className="flex items-center gap-6 mb-3 text-sm">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={values.is_featured} onChange={e => onChange({ ...values, is_featured: e.target.checked })} /> Featured
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={values.is_published} onChange={e => onChange({ ...values, is_published: e.target.checked })} /> Published
+        </label>
+      </div>
+      <div className="flex gap-2">
+        <button type="submit" className="px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">{submitLabel}</button>
+        <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
+      </div>
+    </form>
+  );
+}
+
 function SpeakersTab() {
   const [speakers, setSpeakers] = useState([]);
   const [yearFilter, setYearFilter] = useState('2025');
@@ -1354,48 +1398,6 @@ function SpeakersTab() {
     try { await deleteSpeaker(id); setSpeakers(prev => prev.filter(s => s.id !== id)); }
     catch { alert('Error deleting speaker'); }
   };
-
-  const SpeakerForm = ({ values, onChange, onSubmit, onCancel, submitLabel }) => (
-    <form onSubmit={onSubmit} className="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-4">
-      <div className="grid sm:grid-cols-2 gap-3 mb-3">
-        <input required placeholder="Name" value={values.name} onChange={e => onChange({ ...values, name: e.target.value })}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
-        <input placeholder="Role / Title" value={values.role} onChange={e => onChange({ ...values, role: e.target.value })}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
-        <input placeholder="Organization" value={values.org} onChange={e => onChange({ ...values, org: e.target.value })}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
-        <input placeholder="Tag (e.g. Keynote, Speaker)" value={values.tag} onChange={e => onChange({ ...values, tag: e.target.value })}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
-        <select value={values.year} onChange={e => onChange({ ...values, year: parseInt(e.target.value) })}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]">
-          <option value={2027}>2027</option>
-          <option value={2025}>2025</option>
-          <option value={2023}>2023</option>
-        </select>
-        <input placeholder="LinkedIn URL" value={values.linkedin_url} onChange={e => onChange({ ...values, linkedin_url: e.target.value })}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
-        <input placeholder="Facebook URL" value={values.facebook_url} onChange={e => onChange({ ...values, facebook_url: e.target.value })}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
-      </div>
-      <div className="mb-3">
-        <ImageUpload value={values.photo_url} onChange={v => onChange({ ...values, photo_url: v })} folder="kuana/speakers" label="Photo" />
-      </div>
-      <textarea placeholder="Bio" value={values.bio} onChange={e => onChange({ ...values, bio: e.target.value })}
-        rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] resize-none mb-3" />
-      <div className="flex items-center gap-6 mb-3 text-sm">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={values.is_featured} onChange={e => onChange({ ...values, is_featured: e.target.checked })} /> Featured
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" checked={values.is_published} onChange={e => onChange({ ...values, is_published: e.target.checked })} /> Published
-        </label>
-      </div>
-      <div className="flex gap-2">
-        <button type="submit" className="px-4 py-2 bg-[#0e1b4d] text-white rounded-lg text-sm font-semibold hover:bg-[#060c22] cursor-pointer">{submitLabel}</button>
-        <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer">Cancel</button>
-      </div>
-    </form>
-  );
 
   return (
     <div>
