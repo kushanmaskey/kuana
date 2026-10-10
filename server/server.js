@@ -30,6 +30,9 @@ app.use(cors({
   credentials: true,
 }));
 
+// Zeffy webhook — raw body required for signature verification, must be before express.json()
+app.post('/api/donations/webhook', express.raw({ type: 'application/json' }), require('./routes/zeffy-webhook'));
+
 // Body size limits
 app.use(express.json({ limit: '50kb' }));
 
