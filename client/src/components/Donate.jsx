@@ -96,7 +96,7 @@ function AdminDonationLog() {
                 <td className="py-3 px-4 font-bold text-[#0e1b4d]">${parseFloat(d.amount).toFixed(2)}</td>
                 <td className="py-3 px-4 text-gray-500">{d.purpose ?? 'General Fund'}</td>
                 <td className="py-3 px-4 text-gray-400 capitalize">{d.payment_method ?? '—'}</td>
-                <td className="py-3 px-4 text-gray-400 text-xs">{new Date(d.donated_at).toLocaleDateString()}</td>
+                <td className="py-3 px-4 text-gray-400 text-xs">{new Date(d.donated_at).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>

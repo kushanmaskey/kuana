@@ -941,7 +941,7 @@ function DonationsTab() {
                 </td>
                 <td className="py-3 px-2 font-bold text-[#0e1b4d]">${parseFloat(d.amount).toLocaleString()}</td>
                 <td className="py-3 px-2 text-gray-500">{d.purpose ?? 'General Fund'}</td>
-                <td className="py-3 px-2 text-gray-400 text-xs">{new Date(d.donated_at).toLocaleDateString()}</td>
+                <td className="py-3 px-2 text-gray-400 text-xs">{new Date(d.donated_at).toLocaleString()}</td>
               </tr>
             ))}
             {donations.length === 0 && (
@@ -1082,7 +1082,7 @@ function SummaryTab() {
                   <span className="text-sm font-medium text-gray-900 truncate">{d.donor_name}</span>
                   <span className="text-sm font-bold text-[#0e1b4d] flex-shrink-0">${parseFloat(d.amount).toLocaleString()}</span>
                 </div>
-                <p className="text-xs text-gray-300 mt-0.5">{new Date(d.donated_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-300 mt-0.5">{new Date(d.donated_at).toLocaleString()}</p>
               </div>
             ))}
           </div>
