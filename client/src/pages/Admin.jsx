@@ -1463,10 +1463,10 @@ const MEDIA_TYPES = ['photo', 'video'];
 function MediaTab() {
   const [items, setItems] = useState([]);
   const [typeFilter, setTypeFilter] = useState('photo');
-  const [yearFilter, setYearFilter] = useState('2025');
+  const [yearFilter, setYearFilter] = useState('2027');
   const [featuredYear, setFeaturedYear] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: '', url: '', thumbnail_url: '', media_type: 'photo', year: 2025, city: '', is_featured: false, is_published: true, sort_order: 0 });
+  const [form, setForm] = useState({ title: '', url: '', thumbnail_url: '', media_type: 'photo', year: 2027, city: '', is_featured: false, is_published: true, sort_order: 0 });
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
