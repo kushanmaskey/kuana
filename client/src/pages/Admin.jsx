@@ -1405,7 +1405,7 @@ function SpeakersTab() {
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-gray-900">Speakers</h2>
           <div className="flex gap-1">
-            {['2025', '2027', '2023'].map(y => (
+            {['2027', '2025', '2023'].map(y => (
               <button key={y} onClick={() => setYearFilter(y)}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${yearFilter === y ? 'bg-[#0e1b4d] text-white' : 'border border-gray-200 text-gray-500 hover:border-gray-300'}`}>
                 {y}
@@ -1534,7 +1534,7 @@ function MediaTab() {
             ))}
           </div>
           <div className="flex gap-1">
-            {['2025', '2027', '2023'].map(y => (
+            {['2027', '2025', '2023'].map(y => (
               <div key={y} className="flex items-center gap-0.5">
                 <button onClick={() => setYearFilter(y)}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${yearFilter === y ? 'bg-[#ffc31d] text-[#0e1b4d]' : 'border border-gray-200 text-gray-500 hover:border-gray-300'}`}>
