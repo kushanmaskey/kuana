@@ -3,7 +3,7 @@ import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOf
 import ExcelJS from 'exceljs';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, updateEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread, getMedia, createMedia, updateMedia, toggleMediaFeatured, deleteMedia, getSpeakers, createSpeaker, updateSpeaker, toggleSpeakerFeatured, deleteSpeaker } from '../api';
+import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, updateEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread, getMedia, createMedia, updateMedia, toggleMediaFeatured, deleteMedia, getSpeakers, createSpeaker, updateSpeaker, toggleSpeakerFeatured, deleteSpeaker, getSetting, updateSetting } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -1424,16 +1424,28 @@ function MediaTab() {
   const [items, setItems] = useState([]);
   const [typeFilter, setTypeFilter] = useState('photo');
   const [yearFilter, setYearFilter] = useState('2025');
+  const [featuredYear, setFeaturedYear] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', url: '', thumbnail_url: '', media_type: 'photo', year: 2025, city: '', is_featured: false, is_published: true, sort_order: 0 });
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
-  const load = () => getMedia({ type: typeFilter, ...(yearFilter !== 'all' ? {} : {}) }).then(r => {
+  const load = () => getMedia({ type: typeFilter }).then(r => {
     setItems(r.data.filter(m => String(m.year) === yearFilter));
   }).catch(() => {});
 
+  useEffect(() => {
+    getSetting('media_featured_year').then(r => setFeaturedYear(r.data.value)).catch(() => {});
+  }, []);
+
   useEffect(() => { load(); }, [typeFilter, yearFilter]);
+
+  const handleSetFeaturedYear = async (year) => {
+    try {
+      await updateSetting('media_featured_year', year);
+      setFeaturedYear(year);
+    } catch { alert('Error updating featured year'); }
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -1483,10 +1495,15 @@ function MediaTab() {
           </div>
           <div className="flex gap-1">
             {['2025', '2027', '2023'].map(y => (
-              <button key={y} onClick={() => setYearFilter(y)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${yearFilter === y ? 'bg-[#ffc31d] text-[#0e1b4d]' : 'border border-gray-200 text-gray-500 hover:border-gray-300'}`}>
-                {y}
-              </button>
+              <div key={y} className="flex items-center gap-0.5">
+                <button onClick={() => setYearFilter(y)}
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer transition-colors ${yearFilter === y ? 'bg-[#ffc31d] text-[#0e1b4d]' : 'border border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                  {y}
+                </button>
+                <button onClick={() => handleSetFeaturedYear(featuredYear === y ? null : y)} title={featuredYear === y ? 'Unfeature year' : 'Set as featured year on public page'} className="cursor-pointer p-0.5">
+                  <Star size={12} className={featuredYear === y ? 'text-[#ffc31d]' : 'text-gray-300 hover:text-[#ffc31d]'} fill={featuredYear === y ? '#ffc31d' : 'none'} />
+                </button>
+              </div>
             ))}
           </div>
         </div>

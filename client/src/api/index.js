@@ -41,6 +41,9 @@ export const submitDonation = (data) => api.post('/donations', data);
 export const getDonations = () => api.get('/donations');
 export const getDonationStats = () => api.get('/donations/stats');
 
+export const getSetting = (key) => api.get(`/settings/${key}`);
+export const updateSetting = (key, value) => api.put(`/settings/${key}`, { value });
+
 export const login = (data) => api.post('/auth/login', data);
 export const changePassword = (data) => api.patch('/auth/password', data);
 
