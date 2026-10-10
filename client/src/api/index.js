@@ -41,6 +41,13 @@ export const submitDonation = (data) => api.post('/donations', data);
 export const getDonations = () => api.get('/donations');
 export const getDonationStats = () => api.get('/donations/stats');
 
+export const uploadImage = (file, folder) => {
+  const form = new FormData();
+  form.append('file', file);
+  if (folder) form.append('folder', folder);
+  return api.post('/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+};
+
 export const getSetting = (key) => api.get(`/settings/${key}`);
 export const updateSetting = (key, value) => api.put(`/settings/${key}`, { value });
 

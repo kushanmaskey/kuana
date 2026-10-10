@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star, KeyRound, Pencil, X, Mic, Image } from 'lucide-react';
+import { LogOut, Users, Calendar, MessageCircle, Heart, Plus, Trash2, Eye, EyeOff, Download, LayoutDashboard, Star, KeyRound, Pencil, X, Mic, Image, Upload } from 'lucide-react';
 import ExcelJS from 'exceljs';
 import { toPng } from 'html-to-image';
 import { Link } from 'react-router-dom';
-import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, updateEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread, getMedia, createMedia, updateMedia, toggleMediaFeatured, deleteMedia, getSpeakers, createSpeaker, updateSpeaker, toggleSpeakerFeatured, deleteSpeaker, getSetting, updateSetting } from '../api';
+import { login, changePassword, getAlumni, getEvents, getMessages, getDonations, getDonationStats, createEvent, updateEvent, deleteEvent, toggleEventFeatured, markMessageRead, markMessageUnread, getMedia, createMedia, updateMedia, toggleMediaFeatured, deleteMedia, getSpeakers, createSpeaker, updateSpeaker, toggleSpeakerFeatured, deleteSpeaker, getSetting, updateSetting, uploadImage } from '../api';
 
 function LoginForm({ onLogin }) {
   const [creds, setCreds] = useState({ email: '', password: '' });
@@ -70,6 +70,43 @@ function LoginForm({ onLogin }) {
           </button>
         </form>
       </div>
+    </div>
+  );
+}
+
+function ImageUpload({ value, onChange, folder = 'kuana', label = 'Photo' }) {
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res = await uploadImage(file, folder);
+      onChange(res.data.url);
+    } catch {
+      alert('Upload failed. Make sure Cloudinary env vars are set on the server.');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
+
+  return (
+    <div className="flex gap-2 items-center">
+      <input
+        placeholder={`${label} URL`}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]"
+      />
+      <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading}
+        className="flex items-center gap-1.5 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer disabled:opacity-50 whitespace-nowrap">
+        <Upload size={14} /> {uploading ? 'Uploading…' : 'Upload'}
+      </button>
+      {value && <img src={value} alt="preview" className="w-9 h-9 rounded-lg object-cover border border-gray-200 flex-shrink-0" />}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   );
 }
@@ -1327,8 +1364,6 @@ function SpeakersTab() {
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
         <input placeholder="Organization" value={values.org} onChange={e => onChange({ ...values, org: e.target.value })}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
-        <input placeholder="Photo URL" value={values.photo_url} onChange={e => onChange({ ...values, photo_url: e.target.value })}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
         <input placeholder="Tag (e.g. Keynote, Speaker)" value={values.tag} onChange={e => onChange({ ...values, tag: e.target.value })}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
         <select value={values.year} onChange={e => onChange({ ...values, year: parseInt(e.target.value) })}
@@ -1341,6 +1376,9 @@ function SpeakersTab() {
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
         <input placeholder="Facebook URL" value={values.facebook_url} onChange={e => onChange({ ...values, facebook_url: e.target.value })}
           className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d]" />
+      </div>
+      <div className="mb-3">
+        <ImageUpload value={values.photo_url} onChange={v => onChange({ ...values, photo_url: v })} folder="kuana/speakers" label="Photo" />
       </div>
       <textarea placeholder="Bio" value={values.bio} onChange={e => onChange({ ...values, bio: e.target.value })}
         rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] resize-none mb-3" />
@@ -1518,8 +1556,14 @@ function MediaTab() {
           <div className="grid sm:grid-cols-2 gap-3 mb-3">
             <input required placeholder="Title / Label" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
-            <input required placeholder={typeFilter === 'video' ? 'YouTube embed URL' : 'Image URL'} value={form.url} onChange={e => setForm({ ...form, url: e.target.value })}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
+            {typeFilter === 'photo' ? (
+              <div className="sm:col-span-2">
+                <ImageUpload value={form.url} onChange={v => setForm({ ...form, url: v })} folder={`kuana/media/${yearFilter}`} label="Image" />
+              </div>
+            ) : (
+              <input required placeholder="YouTube embed URL (https://www.youtube.com/embed/...)" value={form.url} onChange={e => setForm({ ...form, url: e.target.value })}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
+            )}
             {typeFilter === 'video' && (
               <input placeholder="Thumbnail URL (optional)" value={form.thumbnail_url} onChange={e => setForm({ ...form, thumbnail_url: e.target.value })}
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0e1b4d] sm:col-span-2" />
