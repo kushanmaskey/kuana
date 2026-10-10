@@ -1,10 +1,8 @@
 const { pool } = require('../db');
+const { encrypt } = require('../utils/fieldEncryption');
 
 module.exports = async (req, res) => {
   const rawBody = req.body instanceof Buffer ? req.body.toString('utf8') : String(req.body);
-
-  // Log headers so we can see exactly what Zeffy sends
-  console.log('[zeffy-webhook] Headers:', JSON.stringify(req.headers));
 
   let payload;
   try {
@@ -12,8 +10,6 @@ module.exports = async (req, res) => {
   } catch {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
-
-  console.log('[zeffy-webhook] Full payload:', JSON.stringify(payload));
 
   const data = payload.data || payload || {};
 
@@ -33,17 +29,18 @@ module.exports = async (req, res) => {
   const message = data.note || data.message || data.comment || null;
   const paymentReference = data.id || data.orderId || data.order_id || data.paymentId || null;
 
-  console.log(`[zeffy-webhook] Extracted — event: ${payload.type}, email: ${donorEmail}, amount: ${amount}, ref: ${paymentReference}`);
+  console.log(`[zeffy-webhook] event: ${payload.type}, amount: ${amount}, ref: ${paymentReference}`);
 
   if (!donorEmail || amount <= 0) {
-    console.warn('[zeffy-webhook] Missing donor email or zero amount — skipping. Data:', JSON.stringify(data));
+    console.warn('[zeffy-webhook] Missing donor email or zero amount — skipping');
     return res.json({ received: true });
   }
 
   try {
+    const encryptedEmail = encrypt(donorEmail);
     const { rows: alumniRows } = await pool.query(
       'SELECT id FROM alumni WHERE email = $1',
-      [donorEmail]
+      [encryptedEmail]
     );
 
     await pool.query(
@@ -51,10 +48,10 @@ module.exports = async (req, res) => {
          (alumni_id, donor_name, donor_email, amount, currency, purpose, message, payment_reference, payment_method, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'zeffy','completed')
        ON CONFLICT (payment_reference) DO NOTHING`,
-      [alumniRows[0]?.id ?? null, donorName, donorEmail, amount, currency, purpose, message, paymentReference]
+      [alumniRows[0]?.id ?? null, donorName, encryptedEmail, amount, currency, purpose, message, paymentReference]
     );
 
-    console.log(`[zeffy-webhook] Saved $${amount} from ${donorEmail}`);
+    console.log(`[zeffy-webhook] Saved $${amount} ref: ${paymentReference}`);
     res.json({ received: true });
   } catch (err) {
     console.error('[zeffy-webhook] DB error:', err.message);

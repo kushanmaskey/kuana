@@ -11,10 +11,9 @@ const isProd = process.env.NODE_ENV === 'production';
 // Trust Render's proxy so rate-limiter reads the real client IP
 app.set('trust proxy', 1);
 
-// Security headers
+// Security headers — CSP enabled in all environments
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
-  contentSecurityPolicy: isProd ? undefined : false,
 }));
 
 // CORS — lock to your domain in production
@@ -30,8 +29,15 @@ app.use(cors({
   credentials: true,
 }));
 
-// Zeffy webhook — raw body required for signature verification, must be before express.json()
-app.post('/api/donations/webhook', express.raw({ type: 'application/json' }), require('./routes/zeffy-webhook'));
+// Zeffy webhook — raw body must be parsed before express.json(); separate rate limit
+const webhookLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many webhook requests' },
+});
+app.post('/api/donations/webhook', webhookLimiter, express.raw({ type: 'application/json' }), require('./routes/zeffy-webhook'));
 
 // Body size limits
 app.use(express.json({ limit: '50kb' }));

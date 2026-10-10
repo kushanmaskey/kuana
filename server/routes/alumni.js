@@ -3,6 +3,9 @@ const rateLimit = require('express-rate-limit');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { EMAIL_REGEX, isValidId } = require('../utils/validate');
+const { encrypt, decrypt } = require('../utils/fieldEncryption');
+
+const SAFE_URL_RE = /^https?:\/\//i;
 
 const router = express.Router();
 
@@ -36,7 +39,7 @@ router.get('/', requireAuth, async (req, res) => {
   let idx = 1;
 
   if (search) {
-    query += ` AND (first_name ILIKE $${idx} OR last_name ILIKE $${idx} OR email ILIKE $${idx})`;
+    query += ` AND (first_name ILIKE $${idx} OR last_name ILIKE $${idx})`;
     params.push(`%${search.substring(0, MAX_SEARCH_LEN)}%`);
     idx++;
   }
@@ -67,7 +70,7 @@ router.get('/', requireAuth, async (req, res) => {
 
   try {
     const { rows } = await pool.query(query, params);
-    res.json(rows);
+    res.json(rows.map(r => ({ ...r, email: decrypt(r.email) })));
   } catch {
     res.status(500).json({ error: 'Server error' });
   }
@@ -94,19 +97,23 @@ router.post('/register', registerLimiter, async (req, res) => {
   if (graduation_year && (isNaN(graduation_year) || graduation_year < 1991 || graduation_year > new Date().getFullYear() + 1)) {
     return res.status(400).json({ error: 'Invalid graduation year' });
   }
+  if (linkedin_url && !SAFE_URL_RE.test(linkedin_url.trim())) {
+    return res.status(400).json({ error: 'LinkedIn URL must start with http:// or https://' });
+  }
 
   try {
     const { rows } = await pool.query(
       `INSERT INTO alumni (first_name, last_name, email, phone, graduation_year, degree, department, city, state_province, country, bio, linkedin_url)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id, first_name, last_name, email`,
       [
-        first_name.trim(), last_name.trim(), email.trim().toLowerCase(),
+        first_name.trim(), last_name.trim(), encrypt(email.trim().toLowerCase()),
         phone?.trim() || null, graduation_year || null, degree?.trim() || null, department?.trim() || null,
         city?.trim() || null, state_province?.trim() || null, (country ?? 'USA').trim(),
         bio?.substring(0, 1000) || null, linkedin_url?.trim() || null,
       ]
     );
-    res.status(201).json({ success: true, alumni: rows[0] });
+    const row = rows[0];
+    res.status(201).json({ success: true, alumni: { ...row, email: decrypt(row.email) } });
   } catch (err) {
     console.error('Alumni register error:', err.message);
     if (err.code === '23505') return res.status(409).json({ error: 'Email already registered' });

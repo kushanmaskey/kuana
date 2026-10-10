@@ -4,6 +4,7 @@ const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { sendContactEmail } = require('../utils/mailer');
 const { EMAIL_REGEX, isValidId } = require('../utils/validate');
+const { encrypt, decrypt } = require('../utils/fieldEncryption');
 
 const router = express.Router();
 
@@ -35,7 +36,7 @@ router.post('/', contactLimiter, async (req, res) => {
     };
     await pool.query(
       'INSERT INTO contact_messages (name, email, subject, message) VALUES ($1,$2,$3,$4)',
-      [trimmed.name, trimmed.email, trimmed.subject, trimmed.message]
+      [trimmed.name, encrypt(trimmed.email), trimmed.subject, trimmed.message]
     );
     sendContactEmail(trimmed).catch((err) => console.error('Email send failed:', err));
     res.json({ success: true, message: 'Your message has been received. We will get back to you soon!' });
@@ -52,7 +53,7 @@ router.get('/', requireAuth, async (req, res) => {
       'SELECT * FROM contact_messages ORDER BY created_at DESC LIMIT $1 OFFSET $2',
       [PAGE_LIMIT, offset]
     );
-    res.json(rows);
+    res.json(rows.map(r => ({ ...r, email: decrypt(r.email) })));
   } catch {
     res.status(500).json({ error: 'Server error' });
   }

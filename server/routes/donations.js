@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { EMAIL_REGEX } = require('../utils/validate');
+const { encrypt, decrypt } = require('../utils/fieldEncryption');
 
 const router = express.Router();
 
@@ -35,14 +36,16 @@ router.post('/', requireAuth, donationLimiter, async (req, res) => {
   if (message && message.length > 1000) return res.status(400).json({ error: 'message too long' });
 
   try {
-    const alumniResult = await pool.query('SELECT id FROM alumni WHERE email = $1', [donor_email.toLowerCase()]);
+    const normalizedEmail = donor_email.trim().toLowerCase();
+    const encryptedEmail = encrypt(normalizedEmail);
+    const alumniResult = await pool.query('SELECT id FROM alumni WHERE email = $1', [encryptedEmail]);
     const alumni_id = alumniResult.rows[0]?.id || null;
 
     const { rows } = await pool.query(
       `INSERT INTO donations (alumni_id, donor_name, donor_email, amount, currency, purpose, message, payment_reference, payment_method, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'completed') RETURNING id, amount, donor_name`,
       [
-        alumni_id, donor_name.trim(), donor_email.trim().toLowerCase(),
+        alumni_id, donor_name.trim(), encryptedEmail,
         numAmount, currency ?? 'USD', purpose?.trim() || null,
         message?.trim() || null, payment_reference || null, payment_method || null,
       ]
@@ -63,7 +66,7 @@ router.get('/', requireAuth, async (req, res) => {
        ORDER BY d.donated_at DESC LIMIT $1 OFFSET $2`,
       [PAGE_LIMIT, offset]
     );
-    res.json(rows);
+    res.json(rows.map(r => ({ ...r, donor_email: decrypt(r.donor_email) })));
   } catch {
     res.status(500).json({ error: 'Server error' });
   }
