@@ -142,6 +142,14 @@ export default function Contact() {
               >
                 Register as Alumni →
               </Link>
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLSeHXdB-WaE9DBiI1kRLM9H2E0Jyww_KU7VzX8t0NtxmcGXd4A/viewform"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mt-3 text-[#ffc31d] text-sm font-semibold hover:underline"
+              >
+                Register for Boston 2027 Reunion →
+              </a>
             </div>
           </div>
 
